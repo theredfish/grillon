@@ -1,0 +1,13 @@
+[package]
+name = "api-rs"
+version = "0.1.0"
+authors = ["theredfish <did.julian@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+hyper = { version = "0.14.7", features = ["client", "http1", "http2", "runtime"] }
+serde = "1.0.125"
+serde_json = "1.0.64"
+
+[dev-dependencies]
+tokio-test = "0.4.1"
