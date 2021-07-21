@@ -1,11 +1,11 @@
 use self::core::body::ExpectBody;
-pub use self::core::errors::{Error, Result};
 use hyper::body::{Body, Buf};
 use hyper::{http::request::Builder as RequestBuilder, http::response::Parts};
 use hyper::{Client, Method, Uri};
 
 mod core;
 
+pub use self::core::errors::{Error, Result};
 pub use hyper::StatusCode;
 pub use serde_json::{json, Value};
 
@@ -134,10 +134,7 @@ impl ApiHoursExpect {
     }
 
     pub fn body<T: ExpectBody>(self, expected: T) -> ApiHoursExpect {
-        let actual = self.response.data.clone();
-        let expected = expected.to_value();
-
-        assert_eq!(actual, expected);
+        assert!(expected.matches(self.response.data.clone()));
 
         self
     }

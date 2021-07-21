@@ -1,23 +1,27 @@
 use serde_json::Value;
 
 pub trait ExpectBody {
-    fn to_value(&self) -> Value;
+    fn matches(&self, other: Value) -> bool;
 }
 
 impl ExpectBody for String {
-    fn to_value(&self) -> Value {
-        serde_json::from_str(self).unwrap()
+    fn matches(&self, other: Value) -> bool {
+        let actual: Value = serde_json::from_str(self).unwrap();
+
+        actual == other
     }
 }
 
 impl ExpectBody for &str {
-    fn to_value(&self) -> Value {
-        serde_json::from_str(self).unwrap()
+    fn matches(&self, other: Value) -> bool {
+        let actual: Value = serde_json::from_str(self).unwrap();
+
+        actual == other
     }
 }
 
 impl ExpectBody for Value {
-    fn to_value(&self) -> Value {
-        self.to_owned()
+    fn matches(&self, other: Value) -> bool {
+        self.to_owned() == other
     }
 }
