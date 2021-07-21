@@ -1,14 +1,13 @@
-use hyper::body::Buf;
+use self::core::body::ExpectBody;
+pub use self::core::errors::{Error, Result};
+use hyper::body::{Body, Buf};
 use hyper::{http::request::Builder as RequestBuilder, http::response::Parts};
-use hyper::{Body, Client, Method, Uri};
-use serde_json;
+use hyper::{Client, Method, Uri};
 
-mod errors;
-pub use errors::ApiHoursError;
+mod core;
+
 pub use hyper::StatusCode;
 pub use serde_json::{json, Value};
-
-type Result<T> = std::result::Result<T, ApiHoursError>;
 
 pub struct HttpRequest {
     pub builder: RequestBuilder,
@@ -34,7 +33,7 @@ impl ApiHours {
     pub fn new(base_url: &str) -> ApiHours {
         ApiHours {
             base_url: base_url.to_string(),
-            request: Err(ApiHoursError::IncompleteHttRequest),
+            request: Err(Error::IncompleteHttRequest),
         }
     }
 
@@ -134,8 +133,12 @@ impl ApiHoursExpect {
         self
     }
 
-    pub fn body(self, expected: Value) -> ApiHoursExpect {
-        assert_eq!(self.response.data, expected);
+    pub fn body<T: ExpectBody>(self, expected: T) -> ApiHoursExpect {
+        let actual = self.response.data.clone();
+        let expected = expected.to_value();
+
+        assert_eq!(actual, expected);
+
         self
     }
 }
