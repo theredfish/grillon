@@ -1,4 +1,4 @@
-use self::core::body::ExpectBody;
+use self::core::{body::ExpectBody, header::ExpectHeaders};
 use hyper::body::{Body, Buf};
 use hyper::{http::request::Builder as RequestBuilder, http::response::Parts};
 use hyper::{Client, Method, Uri};
@@ -6,7 +6,7 @@ use hyper::{Client, Method, Uri};
 mod core;
 
 pub use self::core::errors::{Error, Result};
-pub use hyper::StatusCode;
+pub use hyper::{header, StatusCode};
 pub use serde_json::{json, Value};
 
 pub struct HttpRequest {
@@ -133,8 +133,14 @@ impl ApiHoursExpect {
         self
     }
 
-    pub fn body<T: ExpectBody>(self, expected: T) -> ApiHoursExpect {
-        assert!(expected.matches(self.response.data.clone()));
+    pub fn body<T: ExpectBody>(self, body: T) -> ApiHoursExpect {
+        assert!(body.matches(self.response.data.clone()));
+
+        self
+    }
+
+    pub fn has_headers<T: ExpectHeaders>(self, headers: T) -> ApiHoursExpect {
+        assert!(headers.matches(self.response.parts.headers.clone()));
 
         self
     }
