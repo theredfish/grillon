@@ -1,4 +1,7 @@
-use self::core::{body::ExpectBody, header::ExpectHeaders};
+use self::core::{
+    body::BodyMatch,
+    header::{HeadersExcept, HeadersMatch},
+};
 use hyper::body::{Body, Buf};
 use hyper::{http::request::Builder as RequestBuilder, http::response::Parts};
 use hyper::{Client, Method, Uri};
@@ -133,14 +136,20 @@ impl ApiHoursExpect {
         self
     }
 
-    pub fn body<T: ExpectBody>(self, body: T) -> ApiHoursExpect {
+    pub fn body<T: BodyMatch>(self, body: T) -> ApiHoursExpect {
         assert!(body.matches(self.response.data.clone()));
 
         self
     }
 
-    pub fn has_headers<T: ExpectHeaders>(self, headers: T) -> ApiHoursExpect {
+    pub fn headers_eq<T: HeadersMatch>(self, headers: T) -> ApiHoursExpect {
         assert!(headers.matches(self.response.parts.headers.clone()));
+
+        self
+    }
+
+    pub fn headers_ne<T: HeadersExcept>(self, headers: T) -> ApiHoursExpect {
+        assert!(headers.except(self.response.parts.headers.clone()));
 
         self
     }

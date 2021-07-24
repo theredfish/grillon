@@ -1,10 +1,10 @@
 use serde_json::Value;
 
-pub trait ExpectBody {
+pub trait BodyMatch {
     fn matches(&self, other: Value) -> bool;
 }
 
-impl ExpectBody for String {
+impl BodyMatch for String {
     fn matches(&self, other: Value) -> bool {
         let actual: Value = serde_json::from_str(self).unwrap();
 
@@ -12,7 +12,7 @@ impl ExpectBody for String {
     }
 }
 
-impl ExpectBody for &str {
+impl BodyMatch for &str {
     fn matches(&self, other: Value) -> bool {
         let actual: Value = serde_json::from_str(self).unwrap();
 
@@ -20,7 +20,7 @@ impl ExpectBody for &str {
     }
 }
 
-impl ExpectBody for Value {
+impl BodyMatch for Value {
     fn matches(&self, other: Value) -> bool {
         self.to_owned() == other
     }
