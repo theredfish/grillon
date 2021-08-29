@@ -4,15 +4,15 @@ use hyper::{
 };
 
 pub trait HeadersMatch {
-    fn matches(&self, other: HeaderMap) -> bool;
+    fn matches(&self, other: &HeaderMap) -> bool;
 }
 
 pub trait HeadersExcept {
-    fn except(&self, other: HeaderMap) -> bool;
+    fn except(&self, other: &HeaderMap) -> bool;
 }
 
 impl HeadersMatch for Vec<(HeaderName, HeaderValue)> {
-    fn matches(&self, other: HeaderMap) -> bool {
+    fn matches(&self, other: &HeaderMap) -> bool {
         for (key, expected_val) in self {
             match other.get(key) {
                 // the header key doesn't exist
@@ -28,7 +28,7 @@ impl HeadersMatch for Vec<(HeaderName, HeaderValue)> {
 }
 
 impl HeadersMatch for HeaderMap {
-    fn matches(&self, other: HeaderMap) -> bool {
+    fn matches(&self, other: &HeaderMap) -> bool {
         for (key, expected_val) in self {
             match other.get(key) {
                 // the header key doesn't exist
@@ -44,7 +44,7 @@ impl HeadersMatch for HeaderMap {
 }
 
 impl HeadersExcept for Vec<(HeaderName, HeaderValue)> {
-    fn except(&self, other: HeaderMap) -> bool {
+    fn except(&self, other: &HeaderMap) -> bool {
         for (key, expected_val) in self {
             match other.get(key) {
                 // if the header value is present, then the test fails
@@ -59,7 +59,7 @@ impl HeadersExcept for Vec<(HeaderName, HeaderValue)> {
 }
 
 impl HeadersExcept for HeaderMap {
-    fn except(&self, other: HeaderMap) -> bool {
+    fn except(&self, other: &HeaderMap) -> bool {
         for (key, expected_val) in self {
             match other.get(key) {
                 // if the header value is present, then the test fails

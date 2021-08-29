@@ -1,6 +1,6 @@
-use api_rs::{
+use mantis::{
     header::{HeaderMap, HeaderName, HeaderValue, CONTENT_TYPE},
-    json, ApiHours, Error, StatusCode,
+    json, Assert, Error, Mantis, Response, StatusCode,
 };
 use tokio_test::block_on;
 
@@ -17,10 +17,10 @@ fn basic_get_request() -> Result<(), Error> {
             HeaderValue::from_static("Express"),
         );
 
-        ApiHours::new("http://jsonplaceholder.typicode.com")
-            .get("/todos/1")
-            .verify()
-            .await?
+        Mantis::new("http://jsonplaceholder.typicode.com")?
+            .get("todos/1")
+            .assert()
+            .await
             .status_success()
             .status(StatusCode::OK)
             .body(json!({
@@ -74,15 +74,15 @@ fn basic_get_request() -> Result<(), Error> {
 #[test]
 fn basic_post_request() -> Result<(), Error> {
     block_on(async {
-        ApiHours::new("http://jsonplaceholder.typicode.com")
-            .post("/posts")
+        Mantis::new("http://jsonplaceholder.typicode.com")?
+            .post("posts")
             .payload(json!({
                 "title": "foo",
                 "body": "bar",
                 "userId": 1
             }))
-            .verify()
-            .await?
+            .assert()
+            .await
             .status_success()
             .status(StatusCode::CREATED)
             .headers_eq(vec![(
@@ -92,6 +92,89 @@ fn basic_post_request() -> Result<(), Error> {
             .body(json!({
                 "id": 101,
             }));
+
+        Ok(())
+    })
+}
+
+#[test]
+fn reuse_client_for_multiple_tests() -> Result<(), Error> {
+    block_on(async {
+        let mantis = Mantis::new("http://jsonplaceholder.typicode.com")?;
+
+        mantis
+            .post("posts")
+            .payload(json!({
+                "title": "foo",
+                "body": "bar",
+                "userId": 1
+            }))
+            .assert()
+            .await
+            .status_success()
+            .status(StatusCode::CREATED);
+
+        // TODO : Handle trailing slashes
+        mantis
+            .get("todos/1")
+            .assert()
+            .await
+            .status_success()
+            .status(StatusCode::OK)
+            .body(json!({
+                "completed": false,
+                "id": 1,
+                "title": "delectus aut autem",
+                "userId": 1
+            }));
+
+        Ok(())
+    })
+}
+
+#[test]
+fn use_custom_response_struct() -> Result<(), Error> {
+    use serde_json::Value;
+    use std::{future::Future, pin::Pin};
+
+    block_on(async {
+        struct MyResponse {
+            status: u16,
+            body: serde_json::Value,
+            headers: HeaderMap,
+        }
+
+        let response = reqwest::get("http://jsonplaceholder.typicode.com/todos/1")
+            .await
+            .expect("Valid reqwest::Response");
+
+        let status = response.status().as_u16();
+        let headers = response.headers().clone();
+        let body: Value = response.json().await.expect("Valid json");
+
+        let response = MyResponse {
+            status,
+            headers,
+            body,
+        };
+
+        impl Response for MyResponse {
+            fn status(&self) -> StatusCode {
+                StatusCode::from_u16(self.status).expect("Valid status code from u16")
+            }
+
+            fn json(self) -> Pin<Box<dyn Future<Output = Option<Value>> + Send>> {
+                let json = async move { Some(self.body) };
+
+                Box::pin(json)
+            }
+
+            fn headers(&self) -> HeaderMap {
+                self.headers.clone()
+            }
+        }
+
+        Assert::new(response).await.status_success();
 
         Ok(())
     })
