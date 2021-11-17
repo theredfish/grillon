@@ -40,7 +40,7 @@ impl Assert {
     pub fn status_success(self) -> Assert {
         assert!(
             self.status.is_success(),
-            "Status {} expected, found {}",
+            "{} expected, found {}",
             StatusCode::OK,
             self.status
         );
@@ -58,11 +58,18 @@ impl Assert {
     }
 
     pub fn body(self, body: impl BodyMatch) -> Assert {
-        if let Some(json) = self.json.as_ref() {
-            assert!(body.matches(json));
-        } else {
-            panic!("There is no json body to compare against.");
-        }
+        let json = self.json.as_ref();
+
+        assert!(
+            json.is_some() && !json.unwrap().is_null(),
+            "There is no json body to compare against."
+        );
+
+        assert!(
+            body.matches(json.unwrap()),
+            "The json body doesn't match the expected one. Actual = {:#?}",
+            json.unwrap()
+        );
 
         self
     }

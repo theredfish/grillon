@@ -179,3 +179,20 @@ fn use_custom_response_struct() -> Result<(), Error> {
         Ok(())
     })
 }
+
+#[test]
+#[should_panic]
+fn it_should_fail_to_compare_inexistant_body() {
+    block_on(async {
+        Mantis::new("http://jsonplaceholder.typicode.com")
+            .unwrap()
+            .delete("posts/1")
+            .assert()
+            .await
+            .status_success()
+            .status(StatusCode::OK)
+            .body(json!({
+                "id": 1,
+            }));
+    });
+}

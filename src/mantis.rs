@@ -64,20 +64,26 @@ impl Mantis {
     }
 
     pub fn get(&self, path: &str) -> Request {
-        let uri = crate::url::concat(self.base_url.clone(), path).unwrap_or_else(|err| panic!(err));
-        Request {
-            method: Method::GET,
-            uri,
-            payload: None,
-            client: &self.client,
-        }
+        self.request(Method::GET, path)
     }
 
     pub fn post(&self, path: &str) -> Request {
-        let uri = crate::url::concat(self.base_url.clone(), path).unwrap_or_else(|err| panic!(err));
+        self.request(Method::POST, path)
+    }
+
+    pub fn put(&self, path: &str) -> Request {
+        self.request(Method::PUT, path)
+    }
+
+    pub fn delete(&self, path: &str) -> Request {
+        self.request(Method::DELETE, path)
+    }
+
+    pub fn request(&self, method: Method, path: &str) -> Request {
+        let uri = crate::url::concat(&self.base_url, path).unwrap_or_else(|err| panic!(err));
 
         Request {
-            method: Method::POST,
+            method,
             uri,
             payload: None,
             client: &self.client,
@@ -98,6 +104,17 @@ impl Request<'_> {
     }
 
     pub fn payload(mut self, json: Value) -> Self {
+        match self.method {
+            Method::GET => {
+                println!(
+                    "{} does not support HTTP body. No payload will be sent.",
+                    self.method
+                );
+                return self;
+            }
+            _ => (),
+        }
+
         self.payload = Some(Body::from(json.to_string()));
 
         self
