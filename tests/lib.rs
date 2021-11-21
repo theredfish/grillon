@@ -4,6 +4,9 @@ use mantis::{
 };
 use tokio_test::block_on;
 
+mod basic_http;
+mod http_mock_server;
+
 #[test]
 fn basic_get_request() -> Result<(), Error> {
     block_on(async {
@@ -66,32 +69,6 @@ fn basic_get_request() -> Result<(), Error> {
                 CONTENT_TYPE,
                 HeaderValue::from_static("text/html; charset=utf-8"),
             )]);
-
-        Ok(())
-    })
-}
-
-#[test]
-fn basic_post_request() -> Result<(), Error> {
-    block_on(async {
-        Mantis::new("http://jsonplaceholder.typicode.com")?
-            .post("posts")
-            .payload(json!({
-                "title": "foo",
-                "body": "bar",
-                "userId": 1
-            }))
-            .assert()
-            .await
-            .status_success()
-            .status(StatusCode::CREATED)
-            .headers_eq(vec![(
-                CONTENT_TYPE,
-                HeaderValue::from_static("application/json; charset=utf-8"),
-            )])
-            .body(json!({
-                "id": 101,
-            }));
 
         Ok(())
     })

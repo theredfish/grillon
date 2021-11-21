@@ -1,10 +1,12 @@
 use crate::assert::Assert;
 use crate::error::Result;
-use http::StatusCode;
-use hyper::body::{Body, Buf};
-use hyper::header::{self, HeaderMap, HeaderValue};
-use hyper::{client::HttpConnector, Client, Method, Uri};
-use hyper::{http::request::Builder, http::response::Response as HyperResponse};
+use hyper::{
+    body::{Body, Buf},
+    client::HttpConnector,
+    header::{HeaderMap, HeaderName, HeaderValue},
+    http::{request::Request as HyperRequest, response::Response as HyperResponse, StatusCode},
+    Client, Method, Uri,
+};
 use serde_json::Value;
 use std::{future::Future, pin::Pin};
 
@@ -16,8 +18,39 @@ pub struct Mantis {
 pub struct Request<'c> {
     pub method: Method,
     pub uri: Uri,
+    pub headers: HeaderMap,
     pub payload: Option<Body>,
     pub client: &'c Client<HttpConnector>,
+}
+
+const METHODS_NO_BODY: &'static [Method] = &[
+    Method::CONNECT,
+    Method::HEAD,
+    Method::GET,
+    Method::OPTIONS,
+    Method::TRACE,
+];
+
+pub trait RequestHeaders {
+    fn to_header_map(&self) -> HeaderMap;
+}
+
+impl RequestHeaders for Vec<(HeaderName, HeaderValue)> {
+    fn to_header_map(&self) -> HeaderMap {
+        let mut map = HeaderMap::new();
+
+        for (key, value) in self {
+            map.append(key, value.clone());
+        }
+
+        map
+    }
+}
+
+impl RequestHeaders for HeaderMap {
+    fn to_header_map(&self) -> HeaderMap {
+        self.clone()
+    }
 }
 
 pub trait Response {
@@ -51,14 +84,9 @@ impl Response for HyperResponse<Body> {
 }
 
 impl Mantis {
-    pub fn new(url: &str) -> Result<Mantis> {
-        let mut headers: HeaderMap<HeaderValue> = HeaderMap::with_capacity(2);
-        headers.insert(header::ACCEPT, HeaderValue::from_static("*/*"));
-
-        let base_url = url.parse::<Uri>()?;
-
+    pub fn new(api_base_url: &str) -> Result<Mantis> {
         Ok(Mantis {
-            base_url,
+            base_url: api_base_url.parse::<Uri>()?,
             client: Client::builder().build_http(),
         })
     }
@@ -85,6 +113,7 @@ impl Mantis {
         Request {
             method,
             uri,
+            headers: HeaderMap::new(),
             payload: None,
             client: &self.client,
         }
@@ -93,26 +122,30 @@ impl Mantis {
 
 impl Request<'_> {
     pub async fn assert(self) -> Assert {
-        let builder = Builder::new().method(self.method).uri(self.uri);
+        let mut req = HyperRequest::new(self.payload.unwrap_or_else(|| Body::empty()));
+        *req.method_mut() = self.method;
+        *req.headers_mut() = self.headers;
+        *req.uri_mut() = self.uri;
 
-        let req = builder
-            .body(self.payload.unwrap_or_else(|| Body::empty()))
-            .expect("valid body");
         let response = self.client.request(req).await.expect("valid response");
 
         Assert::new(response).await
     }
 
+    pub fn headers<H: RequestHeaders>(mut self, headers: H) -> Self {
+        self.headers = headers.to_header_map();
+
+        self
+    }
+
     pub fn payload(mut self, json: Value) -> Self {
-        match self.method {
-            Method::GET => {
-                println!(
-                    "{} does not support HTTP body. No payload will be sent.",
-                    self.method
-                );
-                return self;
-            }
-            _ => (),
+        if METHODS_NO_BODY.contains(&self.method) {
+            println!(
+                "{} does not support HTTP body. No payload will be sent.",
+                self.method
+            );
+
+            return self;
         }
 
         self.payload = Some(Body::from(json.to_string()));

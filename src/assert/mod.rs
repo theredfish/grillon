@@ -40,8 +40,7 @@ impl Assert {
     pub fn status_success(self) -> Assert {
         assert!(
             self.status.is_success(),
-            "{} expected, found {}",
-            StatusCode::OK,
+            "200-299 status expected, found {}",
             self.status
         );
         self
