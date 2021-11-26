@@ -6,6 +6,12 @@ pub struct HttpMockServer {
     pub server: httpmock::MockServer,
 }
 
+impl Default for HttpMockServer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl HttpMockServer {
     pub fn new() -> Self {
         Self {
@@ -16,7 +22,7 @@ impl HttpMockServer {
     pub fn get_valid_user(&self) -> Mock {
         self.server.mock(|when, then| {
             when.method(GET).path("/users/1");
-            then.status(201)
+            then.status(200)
                 .header("content-type", "application/json")
                 .json_body(json!({ "id": 1, "name": "Isaac" }));
         })
@@ -32,6 +38,13 @@ impl HttpMockServer {
             then.status(201)
                 .header("content-type", "application/json")
                 .json_body(json!({ "id": 1, "name": "Isaac" }));
+        })
+    }
+
+    pub fn get_empty_response(&self) -> Mock {
+        self.server.mock(|when, then| {
+            when.method(GET).path("/empty");
+            then.status(200);
         })
     }
 }

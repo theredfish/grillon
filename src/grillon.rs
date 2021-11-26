@@ -10,7 +10,7 @@ use hyper::{
 use serde_json::Value;
 use std::{future::Future, pin::Pin};
 
-pub struct Mantis {
+pub struct Grillon {
     pub base_url: Uri,
     pub client: Client<HttpConnector>,
 }
@@ -23,7 +23,7 @@ pub struct Request<'c> {
     pub client: &'c Client<HttpConnector>,
 }
 
-const METHODS_NO_BODY: &'static [Method] = &[
+const METHODS_NO_BODY: &[Method] = &[
     Method::CONNECT,
     Method::HEAD,
     Method::GET,
@@ -70,7 +70,12 @@ impl Response for HyperResponse<Body> {
 
         let json = async move {
             let body = body.await.expect("Valid buffer");
-            let json: Value = serde_json::from_reader(body.reader()).expect("Can't decode json");
+            if !body.has_remaining() {
+                return None;
+            }
+
+            let json: Value =
+                serde_json::from_reader(body.reader()).expect("Failed to decode json");
 
             Some(json)
         };
@@ -83,9 +88,9 @@ impl Response for HyperResponse<Body> {
     }
 }
 
-impl Mantis {
-    pub fn new(api_base_url: &str) -> Result<Mantis> {
-        Ok(Mantis {
+impl Grillon {
+    pub fn new(api_base_url: &str) -> Result<Grillon> {
+        Ok(Grillon {
             base_url: api_base_url.parse::<Uri>()?,
             client: Client::builder().build_http(),
         })
@@ -108,7 +113,7 @@ impl Mantis {
     }
 
     pub fn request(&self, method: Method, path: &str) -> Request {
-        let uri = crate::url::concat(&self.base_url, path).unwrap_or_else(|err| panic!(err));
+        let uri = crate::url::concat(&self.base_url, path).unwrap_or_else(|err| panic!("{}", err));
 
         Request {
             method,
@@ -122,7 +127,7 @@ impl Mantis {
 
 impl Request<'_> {
     pub async fn assert(self) -> Assert {
-        let mut req = HyperRequest::new(self.payload.unwrap_or_else(|| Body::empty()));
+        let mut req = HyperRequest::new(self.payload.unwrap_or_else(Body::empty));
         *req.method_mut() = self.method;
         *req.headers_mut() = self.headers;
         *req.uri_mut() = self.uri;

@@ -1,8 +1,11 @@
 [package]
-name = "mantis"
+name = "grillon"
 version = "0.1.0"
 authors = ["theredfish <did.julian@gmail.com>"]
-edition = "2018"
+description = "Grillon offers an elegant and natural way to approach end-to-end HTTP API testing in Rust."
+keywords = ["test", "http", "e2e", "end-to-end"]
+categories = ["development-tools::testing", "web-programming::http-client"]
+edition = "2021"
 
 [dependencies]
 hyper = { version = "0.14.7", features = ["client", "http1", "http2", "runtime"] }
@@ -13,7 +16,6 @@ url = "2.2.2"
 futures = "0.3"
 
 [dev-dependencies]
-tokio-test = "0.4.1"
 tokio = { version = "1.12", features = ["macros"] }
 reqwest = { version = "0.11.4", features = ["json"] }
 httpmock = "0.6.2"
