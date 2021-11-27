@@ -8,16 +8,28 @@ Grillon offers an elegant and natural way to approach end-to-end HTTP API testin
 
 # Example
 
+This example enables the optional `diff` feature and uses [Tokio](https://tokio.rs/) as asynchronous runtime.
+Generally, testing libs are used in unit or integration tests. You can declare `grillon` as a dev-dependency.
+
+## Cargo
+
+```toml
+[dev-dependencies]
+grillon = { version = "0.1.0", features = ["diff"] }
+tokio = { version = "1", features = ["macros"] }
+```
+
+## Code
+
 ```rust
 use grillon::{
     header::{HeaderValue, CONTENT_TYPE},
-    json, Grillon, StatusCode,
+    json, Grillon, StatusCode, Error
 };
 
-#[tokio::main]
-async fn main() {
-    Grillon::new("http://jsonplaceholder.typicode.com")
-        .unwrap()
+#[tokio::test]
+async fn end_to_end_test() -> Result<(), Error> {
+    Grillon::new("http://jsonplaceholder.typicode.com")?
         .post("posts")
         .payload(json!({
             "title": "foo",
@@ -35,5 +47,7 @@ async fn main() {
         .body(json!({
             "id": 101,
         }));
+
+    Ok(())
 }
 ```
