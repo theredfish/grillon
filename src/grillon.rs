@@ -108,6 +108,10 @@ impl Grillon {
         self.request(Method::PUT, path)
     }
 
+    pub fn patch(&self, path: &str) -> Request {
+        self.request(Method::PATCH, path)
+    }
+
     pub fn delete(&self, path: &str) -> Request {
         self.request(Method::DELETE, path)
     }

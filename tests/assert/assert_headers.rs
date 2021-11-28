@@ -5,7 +5,7 @@ use grillon::{
 };
 
 #[tokio::test]
-async fn headers_existual() -> Result<(), Error> {
+async fn headers_exist() -> Result<(), Error> {
     let mock_server = HttpMockServer::new();
     let mock = mock_server.get_valid_user();
     let vec_header_map = vec![(CONTENT_TYPE, HeaderValue::from_static("application/json"))];
@@ -25,7 +25,7 @@ async fn headers_existual() -> Result<(), Error> {
 }
 
 #[tokio::test]
-async fn headers_not_equal() -> Result<(), Error> {
+async fn headers_except() -> Result<(), Error> {
     let mock_server = HttpMockServer::new();
     let mock = mock_server.get_valid_user();
     let vec_header_map = vec![(CONTENT_TYPE, HeaderValue::from_static("text/html"))];

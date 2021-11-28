@@ -8,6 +8,8 @@ use self::{
 use crate::grillon::Response;
 use http::HeaderMap;
 use hyper::StatusCode;
+#[cfg(feature = "diff")]
+use pretty_assertions::assert_eq;
 use serde_json::Value;
 
 pub struct Assert {
@@ -34,9 +36,11 @@ impl Assert {
 
     pub fn status(self, expected: StatusCode) -> Assert {
         assert_eq!(
-            self.status, expected,
+            expected,
+            self.status,
             "{} status expected, found {}",
-            expected, self.status
+            expected.as_u16(),
+            self.status.as_u16()
         );
         self
     }
@@ -45,7 +49,7 @@ impl Assert {
         assert!(
             self.status.is_success(),
             "200-299 status expected, found {}",
-            self.status
+            self.status.as_u16()
         );
         self
     }
@@ -54,7 +58,7 @@ impl Assert {
         assert!(
             self.status.is_client_error(),
             "400-499 status expected, found {}",
-            self.status
+            self.status.as_u16()
         );
         self
     }
@@ -63,19 +67,13 @@ impl Assert {
         assert!(
             self.status.is_server_error(),
             "500-599 status expected, found {}",
-            self.status
+            self.status.as_u16()
         );
         self
     }
 
     pub fn body<B: BodyMatch + std::fmt::Debug>(self, body: B) -> Assert {
-        let json = self.json.as_ref();
-        assert!(
-            body.matches(json),
-            "The json body doesn't match the expected one. Expected : {:#?}, Found = {:#?}",
-            body,
-            json,
-        );
+        body.matches(self.json.as_ref());
 
         self
     }
