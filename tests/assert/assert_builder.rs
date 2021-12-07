@@ -1,15 +1,29 @@
 use crate::HttpMockServer;
-use grillon::{header::HeaderMap, Assert, Error, Response, StatusCode};
+use grillon::Result;
 
 #[tokio::test]
-async fn custom_response_struct() -> Result<(), Error> {
+async fn custom_response_struct() -> Result<()> {
+    use futures::FutureExt;
+    use grillon::{header::HeaderMap, Assert, Response, StatusCode};
     use serde_json::Value;
     use std::{future::Future, pin::Pin};
 
-    struct MyResponse {
-        status: u16,
-        body: serde_json::Value,
-        headers: HeaderMap,
+    struct ResponseWrapper {
+        pub response: reqwest::Response,
+    }
+
+    impl Response for ResponseWrapper {
+        fn status(&self) -> StatusCode {
+            self.response.status()
+        }
+
+        fn json(self) -> Pin<Box<dyn Future<Output = Option<Value>>>> {
+            async { self.response.json::<Value>().await.ok() }.boxed_local()
+        }
+
+        fn headers(&self) -> HeaderMap {
+            self.response.headers().clone()
+        }
     }
 
     let mock_server = HttpMockServer::new();
@@ -19,35 +33,9 @@ async fn custom_response_struct() -> Result<(), Error> {
     let response = reqwest::get(mock_server.server.url("/users/1"))
         .await
         .expect("Valid reqwest::Response");
+    let response_wrapper = ResponseWrapper { response };
 
-    // Build a custom Response with reqwest response
-    let status = response.status().as_u16();
-    let headers = response.headers().clone();
-    let body: Value = response.json().await.expect("Valid json");
-
-    let response = MyResponse {
-        status,
-        headers,
-        body,
-    };
-
-    impl Response for MyResponse {
-        fn status(&self) -> StatusCode {
-            StatusCode::from_u16(self.status).expect("Valid status code from u16")
-        }
-
-        fn json(self) -> Pin<Box<dyn Future<Output = Option<Value>> + Send>> {
-            let json = async move { Some(self.body) };
-
-            Box::pin(json)
-        }
-
-        fn headers(&self) -> HeaderMap {
-            self.headers.clone()
-        }
-    }
-
-    Assert::new(response).await.status_success();
+    Assert::new(response_wrapper).await.status_success();
     mock.assert();
 
     Ok(())

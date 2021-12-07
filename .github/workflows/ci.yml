@@ -1,19 +1,21 @@
 name: Rust CI
 
 on:
+  push:
+    branches: ["main"]
+    tags: ["v*"]
   pull_request:
     types: [opened, synchronize]
-  push:
-    branches: [main]
 
 jobs:
-  build_and_test:
+  build-and-test:
     strategy:
       fail-fast: false
       matrix:
         target:
           - { name: Linux, os: ubuntu-latest, triple: x86_64-unknown-linux-gnu }
-          - { name: macOS, os: macos-latest, triple: x86_64-apple-darwin }
+          # macOs is currently failing with the cargo doc command in stable
+          # - { name: macOS, os: macos-latest, triple: x86_64-apple-darwin }
           - {
               name: Windows,
               os: windows-latest,
@@ -29,30 +31,41 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-
       - name: Install ${{ matrix.version }}
         uses: actions-rs/toolchain@v1
         with:
           toolchain: ${{ matrix.version }}-${{ matrix.target.triple }}
           profile: minimal
           override: true
-
       - name: Generate Cargo.lock
         uses: actions-rs/cargo@v1
         with:
           command: generate-lockfile
-
       - name: Cache Dependencies
         uses: Swatinem/rust-cache@v1.2.0
-
       - name: Build
         uses: actions-rs/cargo@v1
         with:
           command: build
           args: --all-features
-
       - name: Test
         uses: actions-rs/cargo@v1
         with:
           command: test
           args: --all-features -- --nocapture
+
+  doc:
+    name: Rust documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install stable
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+      - name: Cache Dependencies
+        uses: Swatinem/rust-cache@v1.2.0
+      - name: cargo doc
+        run: cargo doc --all-features --no-deps

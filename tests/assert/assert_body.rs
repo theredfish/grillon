@@ -1,11 +1,11 @@
 use crate::HttpMockServer;
 use grillon::{
     header::{HeaderValue, CONTENT_TYPE},
-    json, Error, Grillon,
+    json, Grillon, Result,
 };
 
 #[tokio::test]
-async fn json_body() -> Result<(), Error> {
+async fn json_body() -> Result<()> {
     let mock_server = HttpMockServer::new();
     let mock = mock_server.get_valid_user();
     let json_header_map = vec![(CONTENT_TYPE, HeaderValue::from_static("application/json"))];
@@ -27,7 +27,7 @@ async fn json_body() -> Result<(), Error> {
 }
 
 #[tokio::test]
-async fn raw_string_body() -> Result<(), Error> {
+async fn raw_string_body() -> Result<()> {
     let mock_server = HttpMockServer::new();
     let mock = mock_server.get_valid_user();
     let json_header_map = vec![(CONTENT_TYPE, HeaderValue::from_static("application/json"))];
@@ -53,7 +53,7 @@ async fn raw_string_body() -> Result<(), Error> {
 }
 
 #[tokio::test]
-async fn string_body() -> Result<(), Error> {
+async fn string_body() -> Result<()> {
     let mock_server = HttpMockServer::new();
     let mock = mock_server.get_valid_user();
     let json_header_map = vec![(CONTENT_TYPE, HeaderValue::from_static("application/json"))];

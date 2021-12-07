@@ -24,11 +24,11 @@ tokio = { version = "1", features = ["macros"] }
 ```rust
 use grillon::{
     header::{HeaderValue, CONTENT_TYPE},
-    json, Grillon, StatusCode, Error
+    json, Grillon, StatusCode, Result
 };
 
 #[tokio::test]
-async fn end_to_end_test() -> Result<(), Error> {
+async fn end_to_end_test() -> Result<()> {
     Grillon::new("http://jsonplaceholder.typicode.com")?
         .post("posts")
         .payload(json!({

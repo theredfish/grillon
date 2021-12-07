@@ -3,8 +3,16 @@ name = "grillon"
 version = "0.1.0"
 authors = ["theredfish <did.julian@gmail.com>"]
 description = "Grillon offers an elegant and natural way to approach end-to-end HTTP API testing in Rust."
+repository = "https://github.com/theredfish/grillon"
 keywords = ["test", "http", "e2e", "end-to-end"]
-categories = ["development-tools::testing", "web-programming::http-client"]
+categories = ["development-tools::testing"]
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+include = [
+  "/src",
+  "LICENSE*",
+  "README.md"
+]
 edition = "2021"
 
 [dependencies]

@@ -1,11 +1,11 @@
 use crate::HttpMockServer;
 use grillon::{
     header::{HeaderMap, HeaderValue, CONTENT_TYPE},
-    Error, Grillon,
+    Grillon, Result,
 };
 
 #[tokio::test]
-async fn headers_exist() -> Result<(), Error> {
+async fn headers_exist() -> Result<()> {
     let mock_server = HttpMockServer::new();
     let mock = mock_server.get_valid_user();
     let vec_header_map = vec![(CONTENT_TYPE, HeaderValue::from_static("application/json"))];
@@ -25,7 +25,7 @@ async fn headers_exist() -> Result<(), Error> {
 }
 
 #[tokio::test]
-async fn headers_except() -> Result<(), Error> {
+async fn headers_absent() -> Result<()> {
     let mock_server = HttpMockServer::new();
     let mock = mock_server.get_valid_user();
     let vec_header_map = vec![(CONTENT_TYPE, HeaderValue::from_static("text/html"))];
@@ -36,8 +36,8 @@ async fn headers_except() -> Result<(), Error> {
         .get("users/1")
         .assert()
         .await
-        .headers_except(vec_header_map)
-        .headers_except(header_map);
+        .headers_absent(vec_header_map)
+        .headers_absent(header_map);
 
     mock.assert();
 
@@ -45,16 +45,18 @@ async fn headers_except() -> Result<(), Error> {
 }
 
 #[tokio::test]
-#[should_panic]
-async fn headers_check_empty_against_not_empty() {
+async fn headers_check_empty_against_not_empty() -> Result<()> {
     let mock_server = HttpMockServer::new();
-    mock_server.get_empty_response();
+    let mock = mock_server.get_empty_response();
 
     // The MockServer always returns the content type and the date in headers
-    Grillon::new(mock_server.server.url("/").as_ref())
-        .unwrap()
+    Grillon::new(mock_server.server.url("/").as_ref())?
         .get("empty")
         .assert()
         .await
         .headers_exist(vec![]);
+
+    mock.assert();
+
+    Ok(())
 }

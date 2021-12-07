@@ -1,11 +1,11 @@
 use crate::HttpMockServer;
 use grillon::{
     header::{HeaderValue, CONTENT_LOCATION, CONTENT_TYPE},
-    json, Error, Grillon, Method, StatusCode,
+    json, Grillon, Method, Result, StatusCode,
 };
 
 #[tokio::test]
-async fn post_request() -> Result<(), Error> {
+async fn post_request() -> Result<()> {
     let mock_server = HttpMockServer::new();
     let mock = mock_server.post_valid_user();
 
@@ -33,7 +33,7 @@ async fn post_request() -> Result<(), Error> {
 }
 
 #[tokio::test]
-async fn get_request() -> Result<(), Error> {
+async fn get_request() -> Result<()> {
     let mock_server = HttpMockServer::new();
     let mock = mock_server.get_valid_user();
 
@@ -58,7 +58,7 @@ async fn get_request() -> Result<(), Error> {
 }
 
 #[tokio::test]
-async fn put_request() -> Result<(), Error> {
+async fn put_request() -> Result<()> {
     let mock_server = HttpMockServer::new();
     let mock = mock_server.put_valid_user();
 
@@ -86,7 +86,7 @@ async fn put_request() -> Result<(), Error> {
 }
 
 #[tokio::test]
-async fn delete_request() -> Result<(), Error> {
+async fn delete_request() -> Result<()> {
     let mock_server = HttpMockServer::new();
     let mock = mock_server.delete_valid_user();
 
@@ -103,7 +103,7 @@ async fn delete_request() -> Result<(), Error> {
 }
 
 #[tokio::test]
-async fn patch_request() -> Result<(), Error> {
+async fn patch_request() -> Result<()> {
     let mock_server = HttpMockServer::new();
     let mock = mock_server.patch_valid_user();
 
@@ -133,12 +133,12 @@ async fn patch_request() -> Result<(), Error> {
 }
 
 #[tokio::test]
-async fn generic_request() -> Result<(), Error> {
+async fn generic_http_request() -> Result<()> {
     let mock_server = HttpMockServer::new();
     let mock = mock_server.delete_valid_user();
 
     Grillon::new(mock_server.server.url("/").as_ref())?
-        .request(Method::DELETE, "users/1")
+        .http_request(Method::DELETE, "users/1")
         .assert()
         .await
         .status_success()
