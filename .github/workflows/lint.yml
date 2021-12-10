@@ -1,6 +1,9 @@
 name: Rust Lint
 
 on:
+  push:
+    branches: ["main"]
+    tags: ["v*"]
   pull_request:
     types: [opened, synchronize, reopened]
 
@@ -8,7 +11,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  fmt:
+  rustfmt:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

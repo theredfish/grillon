@@ -1,6 +1,6 @@
 use grillon::{
     header::{HeaderValue, CONTENT_TYPE},
-    json, Error, Grillon, StatusCode,
+    json, Grillon, Result, StatusCode,
 };
 use http_mock_server::HttpMockServer;
 
@@ -9,7 +9,7 @@ mod http;
 mod http_mock_server;
 
 #[tokio::test]
-async fn reuse_grillon_for_multiple_tests() -> Result<(), Error> {
+async fn reuse_grillon_for_multiple_tests() -> Result<()> {
     let mock_server = HttpMockServer::new();
     let mock_post = mock_server.post_valid_user();
     let mock_get = mock_server.get_valid_user();

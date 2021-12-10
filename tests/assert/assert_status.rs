@@ -1,8 +1,8 @@
 use crate::HttpMockServer;
-use grillon::{Error, Grillon, StatusCode};
+use grillon::{Grillon, Result, StatusCode};
 
 #[tokio::test]
-async fn status_success() -> Result<(), Error> {
+async fn status_success() -> Result<()> {
     let mock_server = HttpMockServer::new();
     let mock = mock_server.delete_valid_user();
 
@@ -19,7 +19,7 @@ async fn status_success() -> Result<(), Error> {
 }
 
 #[tokio::test]
-async fn status_client_error() -> Result<(), Error> {
+async fn status_client_error() -> Result<()> {
     let mock_server = HttpMockServer::new();
 
     Grillon::new(mock_server.server.url("/").as_ref())?
@@ -33,7 +33,7 @@ async fn status_client_error() -> Result<(), Error> {
 }
 
 #[tokio::test]
-async fn status_server_error() -> Result<(), Error> {
+async fn status_server_error() -> Result<()> {
     let mock_server = HttpMockServer::new();
     mock_server.server_error();
 

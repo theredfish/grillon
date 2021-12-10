@@ -1,11 +1,15 @@
 name: Security audit
+
 on:
   push:
     paths:
       - "**/Cargo.toml"
       - "**/Cargo.lock"
+  schedule:
+    - cron: "0 9 * * *"
+
 jobs:
-  security_audit:
+  audit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

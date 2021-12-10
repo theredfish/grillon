@@ -1,12 +1,22 @@
+//! A collection of body matchers to use with [`Assert::body()`].
+//!
+//! [`Assert::body()`]: crate::Assert::body
 #[cfg(feature = "diff")]
 use pretty_assertions::assert_eq;
 use serde_json::Value;
 
-pub trait BodyMatch {
+/// A generic body exact matcher.
+pub trait BodyExactMatcher {
+    /// A function to define how the json body will be evaluated
+    /// compared to the provided one.
+    ///
+    /// It is recommended to use assertions to take advantage of
+    /// the debug messages and the pretty assertions when
+    /// the `diff` feature is enabled.
     fn matches(&self, other: Option<&Value>);
 }
 
-impl BodyMatch for String {
+impl BodyExactMatcher for String {
     fn matches(&self, actual: Option<&Value>) {
         let expected: Option<Value> = serde_json::from_str(self).ok();
         assert_eq!(
@@ -19,7 +29,7 @@ impl BodyMatch for String {
     }
 }
 
-impl BodyMatch for &str {
+impl BodyExactMatcher for &str {
     fn matches(&self, actual: Option<&Value>) {
         let expected: Option<Value> = serde_json::from_str(self).ok();
         assert_eq!(
@@ -32,7 +42,7 @@ impl BodyMatch for &str {
     }
 }
 
-impl BodyMatch for Value {
+impl BodyExactMatcher for Value {
     fn matches(&self, actual: Option<&Value>) {
         let expected = Some(self);
 
