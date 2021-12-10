@@ -5,7 +5,7 @@ on:
     branches: ["main"]
     tags: ["v*"]
   pull_request:
-    types: [opened, synchronize]
+    types: [opened, synchronize, reopened]
 
 jobs:
   build-and-test:
@@ -69,3 +69,46 @@ jobs:
         uses: Swatinem/rust-cache@v1.2.0
       - name: cargo doc
         run: cargo doc --all-features --no-deps
+
+  rustfmt:
+    runs-on: ubuntu-latest
+    env:
+      CARGO_TERM_COLOR: always
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install rustfmt
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          components: rustfmt
+      - name: Check with rustfmt
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check
+
+  clippy:
+    runs-on: ubuntu-latest
+    env:
+      githCARGO_TERM_COLOR: always
+    steps:
+      - uses: actions/checkout@v2
+      - run: rustup component add clippy
+      - uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --workspace --tests --all-features -- -D warnings
+
+  deploy-crates-io:
+    name: Release on crates.io
+    needs:
+      - rustfmt
+      - clippy
+      - build-and-test
+      - doc
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Publish grillon
+        run: cargo publish -p grillon --token ${{ secrets.CRATES_IO }}
