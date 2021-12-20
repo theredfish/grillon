@@ -34,7 +34,7 @@ impl Grillon {
         })
     }
 
-    /// Creates a new [`Request`] initialized with a GET method and the given path.
+    /// Creates a new [`Request`] initialized with a `GET` method and the given path.
     ///
     /// # Example
     ///
@@ -50,7 +50,7 @@ impl Grillon {
         self.http_request(Method::GET, path)
     }
 
-    /// Creates a new [`Request`] initialized with a POST method and the given path.
+    /// Creates a new [`Request`] initialized with a `POST` method and the given path.
     ///
     /// # Example
     ///
@@ -66,7 +66,7 @@ impl Grillon {
         self.http_request(Method::POST, path)
     }
 
-    /// Creates a new [`Request`] initialized with a PUT method and the given path.
+    /// Creates a new [`Request`] initialized with a `PUT` method and the given path.
     ///
     /// # Example
     ///
@@ -82,7 +82,7 @@ impl Grillon {
         self.http_request(Method::PUT, path)
     }
 
-    /// Creates a new [`Request`] initialized with a PATCH method and the given path.
+    /// Creates a new [`Request`] initialized with a `PATCH` method and the given path.
     ///
     /// # Example
     ///
@@ -98,7 +98,7 @@ impl Grillon {
         self.http_request(Method::PATCH, path)
     }
 
-    /// Creates a new [`Request`] initialized with a DELETE method and the given path.
+    /// Creates a new [`Request`] initialized with a `DELETE` method and the given path.
     ///
     /// # Example
     ///
@@ -112,6 +112,64 @@ impl Grillon {
     /// ```
     pub fn delete(&self, path: &str) -> Request {
         self.http_request(Method::DELETE, path)
+    }
+
+    /// Creates a new [`Request`] initialized with an `OPTIONS` method and the given path.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use grillon::{Grillon, Result, header::{ACCESS_CONTROL_ALLOW_METHODS, HeaderValue}};
+    /// # async fn run() -> Result<()> {
+    /// Grillon::new("http://jsonplaceholder.typicode.com")?
+    ///     .options("")
+    ///     .assert()
+    ///     .await
+    ///     .headers_exist(vec![(
+    ///         ACCESS_CONTROL_ALLOW_METHODS,
+    ///         HeaderValue::from_static("GET,HEAD,PUT,PATCH,POST,DELETE"),
+    ///     )]);
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn options(&self, path: &str) -> Request {
+        self.http_request(Method::OPTIONS, path)
+    }
+
+    /// Creates a new [`Request`] initialized with an `HEAD` method and the given path.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use grillon::{Grillon, Result, header::{CONTENT_LENGTH, HeaderValue}};
+    /// # async fn run() -> Result<()> {
+    /// Grillon::new("http://jsonplaceholder.typicode.com")?
+    ///     .head("photos/1")
+    ///     .assert()
+    ///     .await
+    ///     .headers_exist(vec![(CONTENT_LENGTH, HeaderValue::from_static("205"))]);
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn head(&self, path: &str) -> Request {
+        self.http_request(Method::HEAD, path)
+    }
+
+    /// Creates a new [`Request`] initialized with a `CONNECT` method and the given path.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use grillon::{Grillon, Result};
+    /// # fn run() -> Result<()> {
+    /// let request = Grillon::new("http://home.netscape.com")?
+    ///     .connect("");
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn connect(&self, path: &str) -> Request {
+        println!("METHOD = {}", Method::CONNECT.as_str());
+        self.http_request(Method::CONNECT, path)
     }
 
     /// Create a new [`Request`] initialized with the given method and path.

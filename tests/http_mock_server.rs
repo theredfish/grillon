@@ -1,5 +1,8 @@
 use httpmock::prelude::*;
-use httpmock::{Method::PATCH, Mock, MockServer};
+use httpmock::{
+    Method::{CONNECT, HEAD, PATCH},
+    Mock, MockServer,
+};
 use serde_json::json;
 
 pub struct HttpMockServer {
@@ -70,6 +73,33 @@ impl HttpMockServer {
                     ]
                 ));
             then.status(204).header("content-location", "/users/1");
+        })
+    }
+
+    pub fn options(&self) -> Mock {
+        self.server.mock(|when, then| {
+            when.method(OPTIONS).path("/");
+            then.status(204).header(
+                "access-control-allow-methods",
+                "OPTIONS, GET, HEAD, POST, PUT, DELETE, PATCH",
+            );
+        })
+    }
+
+    pub fn head(&self) -> Mock {
+        self.server.mock(|when, then| {
+            when.method(HEAD).path("/movies/1");
+            then.status(204).header("content-length", "91750400");
+        })
+    }
+
+    pub fn connect(&self) -> Mock {
+        self.server.mock(|when, then| {
+            when.method(CONNECT).header(
+                "user-agent",
+                "Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko",
+            );
+            then.status(200).header("proxy-agent", "Netscape-Proxy/1.1");
         })
     }
 
