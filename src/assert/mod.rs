@@ -95,6 +95,11 @@ impl Assert {
         self
     }
 
+    /// Access json response
+    pub fn json(&self) -> &Option<Value> {
+        &self.json
+    }
+
     /// Asserts that the response status is successful (200-299).
     pub fn status_success(self) -> Assert {
         assert!(
