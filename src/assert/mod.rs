@@ -60,9 +60,9 @@ use serde_json::Value;
 /// The `Assert` uses an internal representation of the
 /// http response to assert it.
 pub struct Assert {
-    headers: HeaderMap,
-    status: StatusCode,
-    json: Option<Value>,
+    pub headers: HeaderMap,
+    pub status: StatusCode,
+    pub json: Option<Value>,
 }
 
 impl Assert {
@@ -81,6 +81,40 @@ impl Assert {
             status,
             json,
         }
+    }
+
+    /// Extends the built-in assertions with a custom assertion.
+    /// The closure gives access to the [`Assert`] instance.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use grillon::{Grillon, Result, StatusCode};
+    /// # async fn custom_assert() -> Result<()> {
+    /// Grillon::new("http://jsonplaceholder.typicode.com")?
+    ///     .get("/users")
+    ///     .assert()
+    ///     .await
+    ///     .status_success()
+    ///     .assert_fn(|assert| {
+    ///         assert!(!assert.headers.is_empty());
+    ///         assert!(assert.status == StatusCode::CREATED);
+    ///         assert!(assert.json.is_some());
+    ///
+    ///         println!("Json response : {:#?}", assert.json);
+    ///      })
+    ///      .status(StatusCode::CREATED);
+    ///
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn assert_fn<F>(self, func: F) -> Assert
+    where
+        F: for<'a> Fn(&'a Assert),
+    {
+        func(&self);
+
+        self
     }
 
     /// Asserts that the response status is equals to the given one.
