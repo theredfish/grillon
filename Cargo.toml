@@ -1,6 +1,6 @@
 [package]
 name = "grillon"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["theredfish <did.julian@gmail.com>"]
 description = "Grillon offers an elegant and natural way to approach end-to-end HTTP API testing in Rust."
 repository = "https://github.com/theredfish/grillon"
@@ -28,6 +28,7 @@ pretty_assertions = { version = "1.0.0", optional = true }
 tokio = { version = "1.12", features = ["macros"] }
 reqwest = { version = "0.11.4", features = ["json"] }
 httpmock = "0.6.5"
+async-trait = "0.1.52"
 
 [features]
 diff = ["pretty_assertions"]

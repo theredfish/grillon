@@ -3,22 +3,22 @@ use grillon::Result;
 
 #[tokio::test]
 async fn custom_response_struct() -> Result<()> {
-    use futures::FutureExt;
+    use async_trait::async_trait;
     use grillon::{header::HeaderMap, Assert, Response, StatusCode};
     use serde_json::Value;
-    use std::{future::Future, pin::Pin};
 
     struct ResponseWrapper {
         pub response: reqwest::Response,
     }
 
+    #[async_trait(?Send)]
     impl Response for ResponseWrapper {
         fn status(&self) -> StatusCode {
             self.response.status()
         }
 
-        fn json(self) -> Pin<Box<dyn Future<Output = Option<Value>>>> {
-            async { self.response.json::<Value>().await.ok() }.boxed_local()
+        async fn json(self) -> Option<Value> {
+            self.response.json::<Value>().await.ok()
         }
 
         fn headers(&self) -> HeaderMap {
@@ -35,7 +35,13 @@ async fn custom_response_struct() -> Result<()> {
         .expect("Valid reqwest::Response");
     let response_wrapper = ResponseWrapper { response };
 
-    Assert::new(response_wrapper).await.status_success();
+    Assert::new(response_wrapper)
+        .await
+        .status_success()
+        .assert_fn(|assert| {
+            assert!(assert.status == StatusCode::OK, "Bad status code");
+        });
+
     mock.assert();
 
     Ok(())

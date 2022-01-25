@@ -1,10 +1,24 @@
 # `grillon` changelog
 
+## [0.3.0] - 2022-01-25
+
+[0.3.0]: /../../tree/v0.3.0
+
+- [Diff](/../../compare/v0.2.0...v0.3.0)
+
+### Changed
+
+- `Response::json` has now a return type following the standard for `async` functions bounded by the
+  lifetime of their arguments. Now the function should also be compatible with `async_trait` without `Send` requirement.
+  ([#16])
+
+[#16]: /../../pull/16
+
 ## [0.2.0] - 2022-01-22
 
 [0.2.0]: /../../tree/v0.2.0
 
-- [Diff](/../../compare/v0.1.0...v0.2.2)
+- [Diff](/../../compare/v0.1.0...v0.2.0)
 - [Milestone](/../../milestone/1)
 
 ### Added

@@ -5,14 +5,13 @@
 //!
 //! [`Assert`]: crate::Assert
 //! [`Grillon`]: crate::Grillon
-use futures::FutureExt;
+use futures::{future::LocalBoxFuture, FutureExt};
 use hyper::{
     body::{Body, Buf},
     header::HeaderMap,
     http::{response::Response as HyperResponse, StatusCode},
 };
 use serde_json::Value;
-use std::{future::Future, pin::Pin};
 
 /// A generic http response representation with
 /// convenience methods for subsequent assertions
@@ -23,7 +22,7 @@ pub trait Response {
     /// Returns the http status code.
     fn status(&self) -> StatusCode;
     /// Returns a future with the response json body.
-    fn json(self) -> Pin<Box<dyn Future<Output = Option<Value>>>>;
+    fn json<'a>(self) -> LocalBoxFuture<'a, Option<Value>>;
     /// Returns the response headers.
     fn headers(&self) -> HeaderMap;
 }
@@ -33,7 +32,7 @@ impl Response for HyperResponse<Body> {
         self.status()
     }
 
-    fn json(self) -> Pin<Box<dyn Future<Output = Option<Value>>>> {
+    fn json<'a>(self) -> LocalBoxFuture<'a, Option<Value>> {
         let (_, body) = self.into_parts();
         let body = hyper::body::aggregate(body);
 
