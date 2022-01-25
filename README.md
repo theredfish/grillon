@@ -24,7 +24,7 @@ Add `grillon` to `Cargo.toml`
 
 ```toml
 [dev-dependencies]
-grillon = { version = "0.2.0", features = ["diff"] }
+grillon = { version = "0.3.0", features = ["diff"] }
 tokio = { version = "1", features = ["macros"] }
 ```
 
