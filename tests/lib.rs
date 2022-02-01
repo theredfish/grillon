@@ -7,6 +7,7 @@ use http_mock_server::HttpMockServer;
 mod assert;
 mod http;
 mod http_mock_server;
+mod predicate;
 
 #[tokio::test]
 async fn reuse_grillon_for_multiple_tests() -> Result<()> {

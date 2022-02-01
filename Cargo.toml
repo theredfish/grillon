@@ -29,6 +29,10 @@ tokio = { version = "1.12", features = ["macros"] }
 reqwest = { version = "0.11.4", features = ["json"] }
 httpmock = "0.6.5"
 async-trait = "0.1.52"
+regex = "1.5.4"
 
 [features]
 diff = ["pretty_assertions"]
+
+[[test]]
+name = "predicate"
