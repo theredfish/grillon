@@ -1,4 +1,5 @@
 use grillon::{
+    dsl::is,
     header::{HeaderValue, CONTENT_TYPE},
     json, Grillon, Result, StatusCode,
 };
@@ -25,7 +26,7 @@ async fn reuse_grillon_for_multiple_tests() -> Result<()> {
         .headers(headers)
         .assert()
         .await
-        .status(StatusCode::CREATED);
+        .status(is(StatusCode::CREATED));
 
     mock_post.assert();
 
@@ -33,11 +34,11 @@ async fn reuse_grillon_for_multiple_tests() -> Result<()> {
         .get("users/1")
         .assert()
         .await
-        .status(StatusCode::OK)
-        .body(json!({
+        .status(is(StatusCode::OK))
+        .json_body(is(json!({
             "id": 1,
             "name": "Isaac",
-        }));
+        })));
 
     mock_get.assert();
 

@@ -24,17 +24,15 @@ Add `grillon` to `Cargo.toml`
 
 ```toml
 [dev-dependencies]
-grillon = { version = "0.3.0", features = ["diff"] }
+grillon = { version = "0.4.0-dev", features = ["diff"] }
 tokio = { version = "1", features = ["macros"] }
 ```
 
 Then use `grillon` :
 
 ```rust
-use grillon::{
-    header::{HeaderValue, CONTENT_TYPE},
-    json, Grillon, StatusCode, Result
-};
+use grillon::{dsl::*, json, Grillon, StatusCode, Result};
+use grillon::header::{HeaderValue, CONTENT_LENGTH, CONTENT_TYPE};
 
 #[tokio::test]
 async fn end_to_end_test() -> Result<()> {
@@ -47,22 +45,27 @@ async fn end_to_end_test() -> Result<()> {
         }))
         .assert()
         .await
-        .status_success()
+        .status(is_success())
+        .status(is(201))
+        .response_time(is_less_than(500))
+        .json_body(is(json!({
+            "id": 101,
+        })))
+        .headers(contains(vec![
+        (
+            CONTENT_TYPE,
+            HeaderValue::from_static("application/json; charset=utf-8"),
+        ),
+        (
+            CONTENT_LENGTH, HeaderValue::from_static("15")
+        )]))
         .assert_fn(|assert| {
             assert!(!assert.headers.is_empty());
             assert!(assert.status == StatusCode::CREATED);
             assert!(assert.json.is_some());
 
             println!("Json response : {:#?}", assert.json);
-        })
-        .status(StatusCode::CREATED)
-        .headers_exist(vec![(
-            CONTENT_TYPE,
-            HeaderValue::from_static("application/json; charset=utf-8"),
-        )])
-        .body(json!({
-            "id": 101,
-        }));
+        });
 
     Ok(())
 }

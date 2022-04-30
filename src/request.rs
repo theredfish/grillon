@@ -2,6 +2,8 @@
 //! for endpoints under tests.
 //!
 //! Currently powered by the [`Hyper`](https://github.com/hyperium/hyper) HTTP client.
+use std::time::SystemTime;
+
 use crate::assert::Assert;
 use hyper::{
     body::Body,
@@ -56,10 +58,15 @@ impl RequestHeaders for HeaderMap {
 ///
 /// Can be executed with [`Request::assert()`].
 pub struct Request<'c> {
+    /// The http request method.
     pub method: Method,
+    /// The http request uri.
     pub uri: Uri,
+    /// The http request headers.
     pub headers: HeaderMap,
+    /// The http request payload.
     pub payload: Option<Body>,
+    /// The client used for this outgoing request.
     pub client: &'c Client<HttpConnector>,
 }
 
@@ -102,6 +109,9 @@ impl Request<'_> {
     /// # }
     /// ```
     pub fn payload(mut self, json: Value) -> Self {
+        // TODO: See to manage this as an error to collect. To avoid confusion
+        // for the user we warn him without failing since it might be intended.
+        // We can maybe find a better way to manage this case.
         if METHODS_NO_BODY.contains(&self.method) {
             println!(
                 "{} does not support HTTP body. No payload will be sent.",
@@ -138,8 +148,17 @@ impl Request<'_> {
         *req.headers_mut() = self.headers;
         *req.uri_mut() = self.uri;
 
-        let response = self.client.request(req).await.expect("valid response");
+        let now = SystemTime::now();
+        let response = self
+            .client
+            .request(req)
+            .await
+            .expect("Failed to send http request");
+        let response_time = now
+            .elapsed()
+            .expect("Failed to retrieve response time")
+            .as_millis();
 
-        Assert::new(response).await
+        Assert::new(response, response_time).await
     }
 }

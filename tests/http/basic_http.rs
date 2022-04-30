@@ -1,5 +1,6 @@
 use crate::HttpMockServer;
 use grillon::{
+    dsl::{contains, http::is_success, is},
     header::{
         HeaderName, HeaderValue, ACCESS_CONTROL_ALLOW_METHODS, CONTENT_LENGTH, CONTENT_LOCATION,
         CONTENT_TYPE, USER_AGENT,
@@ -22,13 +23,13 @@ async fn post_request() -> Result<()> {
         .headers(json_header_map.clone())
         .assert()
         .await
-        .status_success()
-        .status(StatusCode::CREATED)
-        .headers_exist(json_header_map)
-        .body(json!({
+        .status(is_success())
+        .status(is(StatusCode::CREATED))
+        .headers(contains(json_header_map))
+        .json_body(is(json!({
             "id": 1,
             "name": "Isaac"
-        }));
+        })));
 
     mock.assert();
 
@@ -47,13 +48,13 @@ async fn get_request() -> Result<()> {
         .headers(json_header_map.clone())
         .assert()
         .await
-        .status_success()
-        .status(StatusCode::OK)
-        .headers_exist(json_header_map)
-        .body(json!({
+        .status(is_success())
+        .status(is(StatusCode::OK))
+        .headers(contains(json_header_map))
+        .json_body(is(json!({
             "id": 1,
             "name": "Isaac"
-        }));
+        })));
 
     mock.assert();
 
@@ -76,12 +77,12 @@ async fn put_request() -> Result<()> {
         }))
         .assert()
         .await
-        .status_success()
-        .status(StatusCode::NO_CONTENT)
-        .headers_exist(vec![(
+        .status(is_success())
+        .status(is(StatusCode::NO_CONTENT))
+        .headers(contains(vec![(
             CONTENT_LOCATION,
             HeaderValue::from_static("/users/1"),
-        )]);
+        )]));
 
     mock.assert();
 
@@ -97,8 +98,8 @@ async fn delete_request() -> Result<()> {
         .delete("users/1")
         .assert()
         .await
-        .status_success()
-        .status(StatusCode::NO_CONTENT);
+        .status(is_success())
+        .status(is(StatusCode::NO_CONTENT));
 
     mock.assert();
 
@@ -123,12 +124,12 @@ async fn patch_request() -> Result<()> {
         )])
         .assert()
         .await
-        .status_success()
-        .status(StatusCode::NO_CONTENT)
-        .headers_exist(vec![(
+        .status(is_success())
+        .status(is(StatusCode::NO_CONTENT))
+        .headers(contains(vec![(
             CONTENT_LOCATION,
             HeaderValue::from_static("/users/1"),
-        )]);
+        )]));
 
     mock.assert();
 
@@ -144,12 +145,12 @@ async fn options_request() -> Result<()> {
         .options("")
         .assert()
         .await
-        .status_success()
-        .status(StatusCode::NO_CONTENT)
-        .headers_exist(vec![(
+        .status(is_success())
+        .status(is(StatusCode::NO_CONTENT))
+        .headers(contains(vec![(
             ACCESS_CONTROL_ALLOW_METHODS,
             HeaderValue::from_static("OPTIONS, GET, HEAD, POST, PUT, DELETE, PATCH"),
-        )]);
+        )]));
 
     mock.assert();
 
@@ -165,9 +166,12 @@ async fn head_request() -> Result<()> {
         .head("movies/1")
         .assert()
         .await
-        .status_success()
-        .status(StatusCode::NO_CONTENT)
-        .headers_exist(vec![(CONTENT_LENGTH, HeaderValue::from_static("91750400"))]);
+        .status(is_success())
+        .status(is(StatusCode::NO_CONTENT))
+        .headers(contains(vec![(
+            CONTENT_LENGTH,
+            HeaderValue::from_static("91750400"),
+        )]));
 
     mock.assert();
 
@@ -189,12 +193,12 @@ async fn connect_request() -> Result<()> {
         )])
         .assert()
         .await
-        .status_success()
-        .status(StatusCode::OK)
-        .headers_exist(vec![(
+        .status(is_success())
+        .status(is(StatusCode::OK))
+        .headers(contains(vec![(
             HeaderName::from_static("proxy-agent"),
             HeaderValue::from_static("Netscape-Proxy/1.1"),
-        )]);
+        )]));
 
     mock.assert();
 
@@ -210,8 +214,8 @@ async fn generic_http_request() -> Result<()> {
         .http_request(Method::DELETE, "users/1")
         .assert()
         .await
-        .status_success()
-        .status(StatusCode::NO_CONTENT);
+        .status(is_success())
+        .status(is(StatusCode::NO_CONTENT));
 
     mock.assert();
 

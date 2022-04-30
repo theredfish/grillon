@@ -27,7 +27,7 @@ impl_from_error!(InvalidUri, Error::UriParseError);
 impl StdError for Error {}
 
 impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         use crate::error::Error::*;
 
         match *self {

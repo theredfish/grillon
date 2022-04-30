@@ -46,7 +46,7 @@ impl Grillon {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn get(&self, path: &str) -> Request {
+    pub fn get(&self, path: &str) -> Request<'_> {
         self.http_request(Method::GET, path)
     }
 
@@ -62,7 +62,7 @@ impl Grillon {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn post(&self, path: &str) -> Request {
+    pub fn post(&self, path: &str) -> Request<'_> {
         self.http_request(Method::POST, path)
     }
 
@@ -78,7 +78,7 @@ impl Grillon {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn put(&self, path: &str) -> Request {
+    pub fn put(&self, path: &str) -> Request<'_> {
         self.http_request(Method::PUT, path)
     }
 
@@ -94,7 +94,7 @@ impl Grillon {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn patch(&self, path: &str) -> Request {
+    pub fn patch(&self, path: &str) -> Request<'_> {
         self.http_request(Method::PATCH, path)
     }
 
@@ -110,7 +110,7 @@ impl Grillon {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn delete(&self, path: &str) -> Request {
+    pub fn delete(&self, path: &str) -> Request<'_> {
         self.http_request(Method::DELETE, path)
     }
 
@@ -119,20 +119,20 @@ impl Grillon {
     /// # Example
     ///
     /// ```rust
-    /// # use grillon::{Grillon, Result, header::{ACCESS_CONTROL_ALLOW_METHODS, HeaderValue}};
+    /// # use grillon::{Grillon, Result, dsl::contains, header::{ACCESS_CONTROL_ALLOW_METHODS, HeaderValue}};
     /// # async fn run() -> Result<()> {
     /// Grillon::new("http://jsonplaceholder.typicode.com")?
     ///     .options("")
     ///     .assert()
     ///     .await
-    ///     .headers_exist(vec![(
+    ///     .headers(contains(vec![(
     ///         ACCESS_CONTROL_ALLOW_METHODS,
     ///         HeaderValue::from_static("GET,HEAD,PUT,PATCH,POST,DELETE"),
-    ///     )]);
+    ///     )]));
     /// # Ok(())
     /// # }
     /// ```
-    pub fn options(&self, path: &str) -> Request {
+    pub fn options(&self, path: &str) -> Request<'_> {
         self.http_request(Method::OPTIONS, path)
     }
 
@@ -141,17 +141,17 @@ impl Grillon {
     /// # Example
     ///
     /// ```rust
-    /// # use grillon::{Grillon, Result, header::{CONTENT_LENGTH, HeaderValue}};
+    /// # use grillon::{Grillon, Result, dsl::contains, header::{CONTENT_LENGTH, HeaderValue}};
     /// # async fn run() -> Result<()> {
     /// Grillon::new("http://jsonplaceholder.typicode.com")?
     ///     .head("photos/1")
     ///     .assert()
     ///     .await
-    ///     .headers_exist(vec![(CONTENT_LENGTH, HeaderValue::from_static("205"))]);
+    ///     .headers(contains(vec![(CONTENT_LENGTH, HeaderValue::from_static("205"))]));
     /// # Ok(())
     /// # }
     /// ```
-    pub fn head(&self, path: &str) -> Request {
+    pub fn head(&self, path: &str) -> Request<'_> {
         self.http_request(Method::HEAD, path)
     }
 
@@ -167,8 +167,7 @@ impl Grillon {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn connect(&self, path: &str) -> Request {
-        println!("METHOD = {}", Method::CONNECT.as_str());
+    pub fn connect(&self, path: &str) -> Request<'_> {
         self.http_request(Method::CONNECT, path)
     }
 
@@ -184,7 +183,7 @@ impl Grillon {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn http_request(&self, method: Method, path: &str) -> Request {
+    pub fn http_request(&self, method: Method, path: &str) -> Request<'_> {
         let uri = crate::url::concat(&self.base_url, path).unwrap_or_else(|err| panic!("{}", err));
 
         Request {
