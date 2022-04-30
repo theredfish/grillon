@@ -1,3 +1,5 @@
+use std::time::SystemTime;
+
 use crate::HttpMockServer;
 use grillon::Result;
 
@@ -30,12 +32,18 @@ async fn custom_response_struct() -> Result<()> {
     let mock = mock_server.get_valid_user();
 
     // HTTP call with a different client (grillon uses hyper by default)
+    let now = SystemTime::now();
     let response = reqwest::get(mock_server.server.url("/users/1"))
         .await
         .expect("Valid reqwest::Response");
+    let response_time = now
+        .elapsed()
+        .expect("Failed to retrieve response time")
+        .as_millis();
+
     let response_wrapper = ResponseWrapper { response };
 
-    Assert::new(response_wrapper)
+    Assert::new(response_wrapper, response_time)
         .await
         .status_success()
         .assert_fn(|assert| {

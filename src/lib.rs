@@ -1,6 +1,7 @@
 #![doc = include_str!("../README.md")]
 
 pub mod assert;
+pub mod dsl;
 mod error;
 mod grillon;
 pub mod request;

@@ -1,5 +1,8 @@
 use crate::HttpMockServer;
-use grillon::{Grillon, Result, StatusCode};
+use grillon::{
+    dsl::{is, is_not},
+    Grillon, Result, StatusCode,
+};
 
 #[tokio::test]
 async fn status_success() -> Result<()> {
@@ -11,7 +14,7 @@ async fn status_success() -> Result<()> {
         .assert()
         .await
         .status_success()
-        .status(StatusCode::NO_CONTENT);
+        .status(is(StatusCode::NO_CONTENT));
 
     mock.assert();
 
@@ -27,7 +30,7 @@ async fn status_client_error() -> Result<()> {
         .assert()
         .await
         .status_client_error()
-        .status(StatusCode::NOT_FOUND);
+        .status(is(StatusCode::NOT_FOUND));
 
     Ok(())
 }
@@ -42,7 +45,7 @@ async fn status_server_error() -> Result<()> {
         .assert()
         .await
         .status_server_error()
-        .status(StatusCode::INTERNAL_SERVER_ERROR);
+        .status(is(StatusCode::INTERNAL_SERVER_ERROR));
 
     Ok(())
 }
@@ -57,5 +60,23 @@ async fn unexpected_status() {
         .get("some/path")
         .assert()
         .await
-        .status(StatusCode::OK);
+        .status(is(StatusCode::OK));
+}
+
+#[tokio::test]
+async fn status_is_not() -> Result<()> {
+    let mock_server = HttpMockServer::new();
+    let mock = mock_server.delete_valid_user();
+
+    Grillon::new(mock_server.server.url("/").as_ref())?
+        .delete("users/1")
+        .assert()
+        .await
+        .status_success()
+        .status(is_not(500))
+        .status(is_not(StatusCode::INTERNAL_SERVER_ERROR));
+
+    mock.assert();
+
+    Ok(())
 }

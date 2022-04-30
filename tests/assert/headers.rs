@@ -1,8 +1,29 @@
 use crate::HttpMockServer;
 use grillon::{
-    header::{HeaderMap, HeaderValue, CONTENT_TYPE},
+    dsl::is,
+    header::{HeaderMap, HeaderValue, CONTENT_LENGTH, CONTENT_TYPE, DATE},
     Grillon, Result,
 };
+
+#[tokio::test]
+async fn headers_is() -> Result<()> {
+    let mock_server = HttpMockServer::new();
+    let mock = mock_server.get_valid_user();
+    let mut header_map = HeaderMap::new();
+    header_map.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
+    header_map.insert(CONTENT_LENGTH, HeaderValue::from_static("23"));
+    header_map.insert(DATE, HeaderValue::from_static("today"));
+
+    Grillon::new(mock_server.server.url("/").as_ref())?
+        .get("users/1")
+        .assert()
+        .await
+        .headers(is(header_map));
+
+    mock.assert();
+
+    Ok(())
+}
 
 #[tokio::test]
 async fn headers_exist() -> Result<()> {
