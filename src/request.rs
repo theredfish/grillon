@@ -2,6 +2,8 @@
 //! for endpoints under tests.
 //!
 //! Currently powered by the [`Hyper`](https://github.com/hyperium/hyper) HTTP client.
+use std::time::SystemTime;
+
 use crate::assert::Assert;
 use hyper::{
     body::Body,
@@ -138,8 +140,17 @@ impl Request<'_> {
         *req.headers_mut() = self.headers;
         *req.uri_mut() = self.uri;
 
-        let response = self.client.request(req).await.expect("valid response");
+        let now = SystemTime::now();
+        let response = self
+            .client
+            .request(req)
+            .await
+            .expect("Failed to send http request");
+        let response_time = now
+            .elapsed()
+            .expect("Failed to retrieve response time")
+            .as_millis();
 
-        Assert::new(response).await
+        Assert::new(response, response_time).await
     }
 }

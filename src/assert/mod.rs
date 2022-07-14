@@ -46,10 +46,8 @@
 pub mod body;
 pub mod header;
 
-use self::{
-    body::BodyExactMatcher,
-    header::{HeadersAbsentMatcher, HeadersExistMatcher},
-};
+use self::header::{HeadersAbsentMatcher, HeadersExistMatcher};
+use crate::dsl::{http::*, Expression};
 use crate::Response;
 use http::HeaderMap;
 use hyper::StatusCode;
@@ -57,29 +55,38 @@ use hyper::StatusCode;
 use pretty_assertions::assert_eq;
 use serde_json::Value;
 
+pub struct Assertion {
+    pub result: bool,
+    pub message: String,
+}
+
+impl Assertion {
+    pub fn assert(self) {
+        assert!(self.result, "{}", self.message);
+    }
+}
+
 /// The `Assert` uses an internal representation of the
 /// http response to assert it.
 pub struct Assert {
     pub headers: HeaderMap,
     pub status: StatusCode,
     pub json: Option<Value>,
+    pub response_time_ms: u128,
 }
 
 impl Assert {
     /// Creates an `Assert` instance with an internal representation
     /// of the given response to assert.
-    pub async fn new<T>(response: T) -> Self
+    pub async fn new<T>(response: T, response_time_ms: u128) -> Self
     where
         T: Response,
     {
-        let headers = response.headers().clone();
-        let status = response.status();
-        let json = response.json().await;
-
         Assert {
-            headers,
-            status,
-            json,
+            headers: response.headers().clone(),
+            status: response.status(),
+            json: response.json().await,
+            response_time_ms,
         }
     }
 
@@ -89,7 +96,7 @@ impl Assert {
     /// # Example
     ///
     /// ```rust
-    /// # use grillon::{Grillon, Result, StatusCode};
+    /// # use grillon::{Grillon, Result, StatusCode, dsl::is};
     /// # async fn custom_assert() -> Result<()> {
     /// Grillon::new("http://jsonplaceholder.typicode.com")?
     ///     .get("/users")
@@ -103,7 +110,7 @@ impl Assert {
     ///
     ///         println!("Json response : {:#?}", assert.json);
     ///      })
-    ///      .status(StatusCode::CREATED);
+    ///      .status(is(StatusCode::CREATED));
     ///
     /// # Ok(())
     /// # }
@@ -118,14 +125,12 @@ impl Assert {
     }
 
     /// Asserts that the response status is equals to the given one.
-    pub fn status(self, expected: StatusCode) -> Assert {
-        assert_eq!(
-            expected,
-            self.status,
-            "{} status expected, found {}",
-            expected.as_u16(),
-            self.status.as_u16()
-        );
+    pub fn status<T>(self, expr: Expression<T>) -> Assert
+    where
+        T: StatusCodeDsl<StatusCode>,
+    {
+        expr.value.eval(&self.status, expr.operator).assert();
+
         self
     }
 
@@ -159,9 +164,32 @@ impl Assert {
         self
     }
 
-    /// Asserts that the response body matches exactly the given one.
-    pub fn body<B: BodyExactMatcher + std::fmt::Debug>(self, body: B) -> Assert {
-        body.matches(self.json.as_ref());
+    pub fn json_body<T>(self, expr: Expression<T>) -> Assert
+    where
+        T: JsonBodyDsl<Value>,
+    {
+        let actual = self.json.as_ref().unwrap();
+        expr.value.eval(actual, expr.operator).assert();
+
+        self
+    }
+
+    pub fn response_time<T>(self, expr: Expression<T>) -> Assert
+    where
+        T: TimeDsl<u128>,
+    {
+        expr.value
+            .eval(&self.response_time_ms, expr.operator)
+            .assert();
+
+        self
+    }
+
+    pub fn headers<T>(self, expr: Expression<T>) -> Assert
+    where
+        T: HeaderDsl<HeaderMap>,
+    {
+        expr.value.eval(&self.headers, expr.operator).assert();
 
         self
     }
