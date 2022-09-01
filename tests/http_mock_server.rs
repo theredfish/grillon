@@ -27,6 +27,7 @@ impl HttpMockServer {
             when.method(GET).path("/users/1");
             then.status(200)
                 .header("content-type", "application/json")
+                .header("date", "today")
                 .json_body(json!({ "id": 1, "name": "Isaac" }));
         })
     }

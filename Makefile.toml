@@ -1,0 +1,8 @@
+[tasks.doc]
+command = "cargo"
+args = ["watch", "-x", "doc --all-features --no-deps"]
+
+[tasks.lint]
+command = "cargo"
+args = ["clippy", "--workspace", "--all-features", "--", "-D", "warnings"]
+

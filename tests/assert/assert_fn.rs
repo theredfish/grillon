@@ -1,5 +1,5 @@
 use crate::HttpMockServer;
-use grillon::{Grillon, Result, StatusCode};
+use grillon::{dsl::http::is_success, Grillon, Result, StatusCode};
 
 #[tokio::test]
 async fn custom_assert() -> Result<()> {
@@ -10,7 +10,6 @@ async fn custom_assert() -> Result<()> {
         .get("users/1")
         .assert()
         .await
-        .status_success()
         .assert_fn(|assert| {
             assert!(!assert.headers.is_empty());
             assert!(assert.status == StatusCode::OK);
@@ -18,7 +17,7 @@ async fn custom_assert() -> Result<()> {
 
             println!("Json response : {:#?}", assert.json);
         })
-        .status(StatusCode::OK);
+        .status(is_success());
 
     mock.assert();
 
