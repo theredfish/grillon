@@ -44,113 +44,15 @@
 //! ```
 
 use crate::{
-    dsl::{http::*, part::*, Expression, Predicate},
+    dsl::{http::*, Expression},
     Response,
 };
 use http::HeaderMap;
 use hyper::StatusCode;
-#[cfg(feature = "diff")]
-use pretty_assertions::assert_eq;
 use serde_json::Value;
-use std::{fmt::Debug, marker::PhantomData};
 
-/// Represents the type of assertion to run. It is used to match on Rust
-/// assertion macros. It case the `diff` feature is enabled, `Equals` will
-/// generate a diff in case of an assertion failure.
-pub enum AssertionType {
-    /// The equality type backed by the `assert_eq!` macro.
-    Equals,
-    /// The non-equality type backed by the `assert_ne!` macro.
-    NotEquals,
-    /// The test type backed by the `assert!` macro.
-    Test(bool),
-}
-
-/// Represents an assertion event that we can emit.
-pub struct Assertion<T> {
-    phantom: PhantomData<T>,
-}
-
-impl<T> Assertion<T>
-where
-    T: PartialEq + Debug,
-{
-    /// Emits an assertion by evaluating the correct assertion macro to match.
-    ///
-    /// If `actual` and `expected` are of different types, you can use
-    /// [`emit_multi_types()`].
-    ///
-    /// This function constructs an assertion message based on the [`Predicate`],
-    /// the [`Part`] under test and the [`AssertionType`], which will be used in
-    /// case the assertion fails.
-    ///
-    /// [`emit_multi_types()`]: [`Self::emit_multi_types()`]
-    pub fn emit(actual: T, expected: T, ty: AssertionType, predicate: Predicate, part: Part) {
-        let message = Self::build_message(&actual, &expected, predicate, part);
-        match ty {
-            AssertionType::Equals => Self::assert_eq(actual, expected, message),
-            AssertionType::NotEquals => Self::assert_ne(actual, expected, message),
-            AssertionType::Test(result) => Self::assert(result, message),
-        }
-    }
-
-    /// Emits an assertion by evaluating the correct assertion macro to match.
-    /// This function differs from [`emit()`] in the ability to provide different
-    /// type for `actual` and `expected`.
-    ///
-    /// This function is only compatible with an `AssertionType::Test` since
-    /// equality cannot be tested on two different types.
-    ///
-    /// This function constructs an assertion message based on the [`Predicate`],
-    /// the [`Part`] under test and the [`AssertionType`], which will be used in
-    /// case the assertion fails.
-    ///
-    /// [`emit()`]: [`Self::emit()`]
-    pub fn emit_multi_types<U: PartialEq + Debug>(
-        actual: T,
-        expected: U,
-        ty: AssertionType,
-        predicate: Predicate,
-        part: Part,
-    ) {
-        let message = Self::build_message_multi(&actual, &expected, predicate, part);
-        match ty {
-            AssertionType::Test(result) => Self::assert(result, message),
-            _ => unimplemented!(),
-        }
-    }
-
-    fn assert_eq(actual: T, expected: T, message: String) {
-        assert_eq!(actual, expected, "{}", message)
-    }
-
-    fn assert_ne(actual: T, expected: T, message: String) {
-        assert_ne!(actual, expected, "{}", message)
-    }
-
-    fn assert(result: bool, message: String) {
-        assert!(result, "{}", message)
-    }
-
-    fn build_message(actual: &T, expected: &T, predicate: Predicate, part: Part) -> String {
-        format!(
-            "{} {} {:#?}. Found {:#?}.",
-            part, predicate, expected, actual
-        )
-    }
-
-    fn build_message_multi<U: PartialEq + Debug>(
-        actual: &T,
-        expected: &U,
-        predicate: Predicate,
-        part: Part,
-    ) -> String {
-        format!(
-            "{} {} {:#?}. Found {:#?}.",
-            part, predicate, expected, actual
-        )
-    }
-}
+mod assertion;
+pub use assertion::*;
 
 /// [`Assert`] uses an internal representation of the http response to assert
 /// against.
@@ -219,7 +121,7 @@ impl Assert {
     where
         T: StatusCodeDsl<StatusCode>,
     {
-        expr.value.eval(self.status, expr.predicate);
+        expr.value.eval(self.status, expr.predicate).emit();
 
         self
     }
@@ -229,18 +131,20 @@ impl Assert {
     where
         T: JsonBodyDsl<Value>,
     {
-        let actual = self.json.as_ref().unwrap();
-        expr.value.eval(actual, expr.predicate);
+        let actual = self.json.clone().unwrap();
+        expr.value.eval(actual, expr.predicate).emit();
 
         self
     }
 
-    /// Asserts the response time (in milliseconds) of the response.
+    /// Asserts the response time (in milliseconds).
     pub fn response_time<T>(self, expr: Expression<T>) -> Assert
     where
         T: TimeDsl<u128>,
     {
-        expr.value.eval(&self.response_time_ms, expr.predicate);
+        expr.value
+            .eval(self.response_time_ms, expr.predicate)
+            .emit();
 
         self
     }
@@ -250,7 +154,7 @@ impl Assert {
     where
         T: HeadersDsl<HeaderMap>,
     {
-        expr.value.eval(&self.headers, expr.predicate);
+        expr.value.eval(self.headers.clone(), expr.predicate).emit();
 
         self
     }

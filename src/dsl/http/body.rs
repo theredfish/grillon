@@ -1,21 +1,20 @@
-use crate::assert::{
-    Assertion,
-    AssertionType::{Equals, NotEquals},
-};
-use crate::dsl::{
-    expression::Predicate::{self, Is, IsNot},
-    part::Part,
+use crate::{
+    assert::{AssertEq, AssertNe, Assertion},
+    dsl::{
+        expression::Predicate::{self, Is, IsNot},
+        part::Part,
+    },
 };
 use serde_json::Value;
 
 /// Http json body DSL to assert body of a response.
 pub trait JsonBodyDsl<T> {
     /// Asserts the json response body is strictly equals to the provided value.
-    fn is(&self, actual: &T);
+    fn is(&self, actual: T) -> Assertion;
     /// Asserts the json response body is strictly not equals to the provided value.
-    fn is_not(&self, actual: &T);
+    fn is_not(&self, actual: T) -> Assertion;
     /// Evaluates the json body assertion to run based on the [`Predicate`].
-    fn eval(&self, actual: &T, predicate: Predicate) {
+    fn eval(&self, actual: T, predicate: Predicate) -> Assertion {
         match predicate {
             Is => self.is(actual),
             IsNot => self.is_not(actual),
@@ -25,35 +24,65 @@ pub trait JsonBodyDsl<T> {
 }
 
 impl JsonBodyDsl<Value> for Value {
-    fn is(&self, actual: &Value) {
-        Assertion::emit(actual, self, Equals, Is, Part::JsonBody)
+    fn is(&self, actual: Value) -> Assertion {
+        let ty = AssertEq {
+            left: actual,
+            right: self.clone(),
+        };
+
+        Assertion::new(Box::new(ty), Is, Part::JsonBody)
     }
 
-    fn is_not(&self, actual: &Value) {
-        Assertion::emit(actual, self, NotEquals, IsNot, Part::JsonBody)
+    fn is_not(&self, actual: Value) -> Assertion {
+        let ty = AssertNe {
+            left: actual,
+            right: self.clone(),
+        };
+
+        Assertion::new(Box::new(ty), IsNot, Part::JsonBody)
     }
 }
 
 impl JsonBodyDsl<Value> for &str {
-    fn is(&self, actual: &Value) {
+    fn is(&self, actual: Value) -> Assertion {
         let expected: Value = serde_json::from_str(self).ok().unwrap();
-        Assertion::emit(actual, &expected, Equals, Is, Part::JsonBody)
+        let ty = AssertEq {
+            left: actual,
+            right: expected,
+        };
+
+        Assertion::new(Box::new(ty), Is, Part::JsonBody)
     }
 
-    fn is_not(&self, actual: &Value) {
+    fn is_not(&self, actual: Value) -> Assertion {
         let expected: Value = serde_json::from_str(self).ok().unwrap();
-        Assertion::emit(actual, &expected, NotEquals, IsNot, Part::JsonBody)
+        let ty = AssertNe {
+            left: actual,
+            right: expected,
+        };
+
+        Assertion::new(Box::new(ty), IsNot, Part::JsonBody)
     }
 }
 
 impl JsonBodyDsl<Value> for String {
-    fn is(&self, actual: &Value) {
+    fn is(&self, actual: Value) -> Assertion {
         let expected: Value = serde_json::from_str(self).ok().unwrap();
-        Assertion::emit(actual, &expected, Equals, Is, Part::JsonBody)
+        let ty = AssertEq {
+            left: actual,
+            right: expected,
+        };
+
+        Assertion::new(Box::new(ty), Is, Part::JsonBody)
     }
 
-    fn is_not(&self, actual: &Value) {
+    fn is_not(&self, actual: Value) -> Assertion {
         let expected: Value = serde_json::from_str(self).ok().unwrap();
-        Assertion::emit(actual, &expected, NotEquals, IsNot, Part::JsonBody)
+        let ty = AssertNe {
+            left: actual,
+            right: expected,
+        };
+
+        Assertion::new(Box::new(ty), IsNot, Part::JsonBody)
     }
 }

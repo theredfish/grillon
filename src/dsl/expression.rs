@@ -1,3 +1,4 @@
+use serde::Deserialize;
 use strum::Display;
 
 /// Type representing a condition for assertions.
@@ -5,34 +6,43 @@ use strum::Display;
 /// [`Predicate`]s are used in the various DSL modules to apply conditions
 /// in assertions in a declarative way. A [`Predicate`] is used via an
 /// [`Expression`].
-#[derive(Display)]
+#[derive(Display, Deserialize, Debug, PartialEq, Eq)]
 pub enum Predicate {
     /// Actual should be equals (strictly) to expected.
     #[strum(serialize = "should be")]
+    #[serde(rename = "should be")]
     Is,
     /// Actual should not be equals (strictly) to expected.
     #[strum(serialize = "should not be")]
+    #[serde(rename = "should not be")]
     IsNot,
     /// Actual should contain expected.
     #[strum(serialize = "should contain")]
+    #[serde(rename = "should contain")]
     Contains,
     /// Actual should not contain expected.
     #[strum(serialize = "should not contain")]
+    #[serde(rename = "should not contain")]
     DoesNotContain,
     /// Actual should match the regex.
     #[strum(serialize = "should match")]
+    #[serde(rename = "should match")]
     Matches,
     /// Actual should not match the regex.
     #[strum(serialize = "should not match")]
+    #[serde(rename = "should not match")]
     DoesNotMatch,
     /// Actual should be less than expected.
     #[strum(serialize = "should be less than")]
+    #[serde(rename = "should be less than")]
     LessThan,
     /// Actual should match the json path.
     #[strum(serialize = "should match json path")]
+    #[serde(rename = "should match json path")]
     JsonPath,
     /// Actual should be between the given closed interval [min, max].
     #[strum(serialize = "should be between")]
+    #[serde(rename = "should be between")]
     Between,
 }
 
@@ -40,6 +50,7 @@ pub enum Predicate {
 ///
 /// This type does not assume if it is a closed, open or half-closed/open interval.
 /// Its use will determine it.
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 pub struct Range<T> {
     /// The left value of the range.
     pub left: T,
@@ -57,6 +68,7 @@ pub struct Range<T> {
 ///
 /// [`Between`]: Predicate::Between
 /// [`StatusCode`]: crate::StatusCode
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 pub struct Expression<T> {
     /// The [`Predicate`] to apply in an assertion.
     pub predicate: Predicate,
@@ -128,3 +140,51 @@ predicate!(
     is_less_than,
     Predicate::LessThan
 );
+
+#[cfg(test)]
+pub mod tests {
+    use super::{Expression, Predicate, Range};
+    use serde_json::Value;
+    use test_case::test_case;
+
+    #[test_case(Value::String(String::from("should be")), Predicate::Is; "Failed to deserialize predicate Is")]
+    #[test_case(Value::String(String::from("should not be")), Predicate::IsNot; "Failed to deserialize predicate IsNot")]
+    #[test_case(Value::String(String::from("should contain")), Predicate::Contains; "Failed to deserialize predicate Contains")]
+    #[test_case(Value::String(String::from("should not contain")), Predicate::DoesNotContain; "Failed to deserialize predicate DoesNotContain")]
+    #[test_case(Value::String(String::from("should match")), Predicate::Matches; "Failed to deserialize predicate Matches")]
+    #[test_case(Value::String(String::from("should not match")), Predicate::DoesNotMatch; "Failed to deserialize predicate DoesNotMatch")]
+    #[test_case(Value::String(String::from("should match json path")), Predicate::JsonPath; "Failed to deserialize predicate JsonPath")]
+    #[test_case(Value::String(String::from("should be less than")), Predicate::LessThan; "Failed to deserialize predicate LessThan")]
+    #[test_case(Value::String(String::from("should be between")), Predicate::Between; "Failed to deserialize predicate Between")]
+
+    fn deser_predicates(json_predicate: Value, predicate: Predicate) {
+        assert_eq!(
+            serde_json::from_value::<Predicate>(json_predicate).unwrap(),
+            predicate
+        )
+    }
+
+    #[test]
+    fn deser_expression() {
+        let json = serde_json::json!({
+            "predicate": "should be between",
+            "value": {
+                "left": 200,
+                "right": 299
+            }
+        });
+
+        let expr: Expression<Range<u16>> = serde_json::from_value(json).unwrap();
+
+        assert_eq!(
+            expr,
+            Expression {
+                predicate: Predicate::Between,
+                value: Range {
+                    left: 200,
+                    right: 299
+                }
+            }
+        );
+    }
+}
