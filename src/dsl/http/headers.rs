@@ -1,8 +1,5 @@
 use crate::{
-    assert::{
-        Assertion,
-        AssertionType::{Equals, NotEquals, Test},
-    },
+    assert::{AssertBool, AssertEq, AssertNe, Assertion},
     dsl::expression::Predicate::{self, Is, IsNot},
     dsl::part::Part,
     header::{HeaderMap, HeaderName, HeaderValue},
@@ -13,15 +10,15 @@ type HeadersVec = Vec<(HeaderName, HeaderValue)>;
 /// Http headers DSL to assert the headers of a response.
 pub trait HeadersDsl<T> {
     /// Asserts the headers are strictly equal to the provided ones.
-    fn is(&self, actual: &T);
+    fn is(&self, actual: T) -> Assertion;
     /// Asserts the headers are strictly not equal to the provided ones.
-    fn is_not(&self, actual: &T);
+    fn is_not(&self, actual: T) -> Assertion;
     /// Asserts the headers contain a specific header by key - value.
-    fn contains(&self, actual: &T);
+    fn contains(&self, actual: T) -> Assertion;
     /// Asserts the headers does not contain a specific header by key - value.
-    fn does_not_contain(&self, actual: &T);
+    fn does_not_contain(&self, actual: T) -> Assertion;
     /// Evaluates the headers assertion to run based on the [`Predicate`].
-    fn eval(&self, actual: &T, predicate: Predicate) {
+    fn eval(&self, actual: T, predicate: Predicate) -> Assertion {
         match predicate {
             Predicate::Is => self.is(actual),
             Predicate::IsNot => self.is_not(actual),
@@ -33,70 +30,88 @@ pub trait HeadersDsl<T> {
 }
 
 impl HeadersDsl<HeaderMap> for HeaderMap {
-    fn is(&self, actual: &HeaderMap) {
-        Assertion::emit(actual, self, Equals, Is, Part::Headers)
+    fn is(&self, actual: HeaderMap) -> Assertion {
+        let ty = AssertEq {
+            left: actual,
+            right: self.clone(),
+        };
+
+        Assertion::new(Box::new(ty), Is, Part::Headers)
     }
 
-    fn is_not(&self, actual: &HeaderMap) {
-        Assertion::emit(actual, self, NotEquals, IsNot, Part::Headers)
+    fn is_not(&self, actual: HeaderMap) -> Assertion {
+        let ty = AssertNe {
+            left: actual,
+            right: self.clone(),
+        };
+
+        Assertion::new(Box::new(ty), IsNot, Part::Headers)
     }
 
-    fn contains(&self, actual: &HeaderMap) {
+    fn contains(&self, actual: HeaderMap) -> Assertion {
         let result = actual.contains_inner(self);
-        Assertion::emit(
-            actual,
-            self,
-            Test(result),
-            Predicate::Contains,
-            Part::Headers,
-        )
+        let ty = AssertBool {
+            left: actual,
+            right: self.clone(),
+            result,
+        };
+
+        Assertion::new(Box::new(ty), Predicate::Contains, Part::Headers)
     }
 
-    fn does_not_contain(&self, actual: &HeaderMap) {
+    fn does_not_contain(&self, actual: HeaderMap) -> Assertion {
         let result = actual.does_not_contain_inner(self);
-        Assertion::emit(
-            actual,
-            self,
-            Test(result),
-            Predicate::DoesNotContain,
-            Part::Headers,
-        )
+        let ty = AssertBool {
+            left: actual,
+            right: self.clone(),
+            result,
+        };
+
+        Assertion::new(Box::new(ty), Predicate::DoesNotContain, Part::Headers)
     }
 }
 
 impl HeadersDsl<HeaderMap> for HeadersVec {
-    fn is(&self, actual: &HeaderMap) {
+    fn is(&self, actual: HeaderMap) -> Assertion {
         let header_map = HeaderMap::from_iter(self.clone());
+        let ty = AssertEq {
+            left: actual,
+            right: header_map,
+        };
 
-        Assertion::emit(actual, &header_map, Equals, Is, Part::Headers)
+        Assertion::new(Box::new(ty), Is, Part::Headers)
     }
 
-    fn is_not(&self, actual: &HeaderMap) {
+    fn is_not(&self, actual: HeaderMap) -> Assertion {
         let header_map = HeaderMap::from_iter(self.clone());
+        let ty = AssertNe {
+            left: actual,
+            right: header_map,
+        };
 
-        Assertion::emit(actual, &header_map, NotEquals, IsNot, Part::Headers)
+        Assertion::new(Box::new(ty), IsNot, Part::Headers)
     }
 
-    fn contains(&self, actual: &HeaderMap) {
+    fn contains(&self, actual: HeaderMap) -> Assertion {
         let result = actual.contains_inner(self);
-        Assertion::emit_multi_types(
-            actual,
-            self,
-            Test(result),
-            Predicate::Contains,
-            Part::Headers,
-        )
+        let ty = AssertBool {
+            left: actual,
+            right: self.clone(),
+            result,
+        };
+
+        Assertion::new(Box::new(ty), Predicate::Contains, Part::Headers)
     }
 
-    fn does_not_contain(&self, actual: &HeaderMap) {
+    fn does_not_contain(&self, actual: HeaderMap) -> Assertion {
         let result = actual.does_not_contain_inner(self);
-        Assertion::emit_multi_types(
-            actual,
-            self,
-            Test(result),
-            Predicate::DoesNotContain,
-            Part::Headers,
-        )
+        let ty = AssertBool {
+            left: actual,
+            right: self.clone(),
+            result,
+        };
+
+        Assertion::new(Box::new(ty), Predicate::Contains, Part::Headers)
     }
 }
 

@@ -1,5 +1,5 @@
 use crate::{
-    assert::{Assertion, AssertionType::Test},
+    assert::{AssertBool, Assertion},
     dsl::{
         expression::Predicate::{self, LessThan},
         part::Part,
@@ -10,9 +10,9 @@ use crate::{
 pub trait TimeDsl<T> {
     /// Asserts the response time is strictly inferior to the provided time in
     /// milliseconds.
-    fn is_less_than(&self, actual: &T);
+    fn is_less_than(&self, actual: T) -> Assertion;
     /// Evaluates the time assertion to run based on the [`Predicate`]
-    fn eval(&self, actual: &T, operator: Predicate) {
+    fn eval(&self, actual: T, operator: Predicate) -> Assertion {
         match operator {
             Predicate::LessThan => self.is_less_than(actual),
             _ => unimplemented!(),
@@ -21,9 +21,17 @@ pub trait TimeDsl<T> {
 }
 
 impl TimeDsl<u128> for u128 {
-    fn is_less_than(&self, actual: &u128) {
-        let result = actual < self;
+    fn is_less_than(&self, actual: u128) -> Assertion {
+        let result = actual < *self;
 
-        Assertion::emit(actual, self, Test(result), LessThan, Part::ResponseTime)
+        // Assertion::emit(actual, self, Test(result), LessThan, Part::ResponseTime);
+
+        let ty = AssertBool {
+            left: actual,
+            right: *self,
+            result,
+        };
+
+        Assertion::new(Box::new(ty), LessThan, Part::ResponseTime)
     }
 }
