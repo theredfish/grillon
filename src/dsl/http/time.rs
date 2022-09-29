@@ -24,8 +24,6 @@ impl TimeDsl<u128> for u128 {
     fn is_less_than(&self, actual: u128) -> Assertion {
         let result = actual < *self;
 
-        // Assertion::emit(actual, self, Test(result), LessThan, Part::ResponseTime);
-
         let ty = AssertBool {
             left: actual,
             right: *self,

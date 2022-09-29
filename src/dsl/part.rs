@@ -29,6 +29,9 @@ pub enum Part {
     #[strum(serialize = "response time")]
     #[serde(rename = "response time")]
     ResponseTime,
+    /// Represents an empty information about the part.
+    /// This variant isn't used when producing assertion events.
+    Empty,
 }
 
 #[cfg(test)]

@@ -1,10 +1,10 @@
-use crate::dsl::{part::*, Predicate};
+use crate::dsl::{Part, Predicate};
 #[cfg(feature = "diff")]
 use pretty_assertions::assert_eq;
 use std::fmt::Debug;
 
 /// Defines assertion behaviors to implement for a concrete type of assertion.
-pub trait AssertType {
+pub trait AssertKind {
     /// Runs the assertion with a [`Predicate`] and a [`Part`].
     fn assert(&self, predicate: &Predicate, part: &Part);
     /// Builds the assertion message with a [`Predicate`] and a [`Part`].
@@ -21,7 +21,7 @@ pub struct AssertEq<T> {
     pub right: T,
 }
 
-impl<T> AssertType for AssertEq<T>
+impl<T> AssertKind for AssertEq<T>
 where
     T: PartialEq + Debug,
 {
@@ -45,7 +45,7 @@ pub struct AssertNe<T> {
     pub right: T,
 }
 
-impl<T> AssertType for AssertNe<T>
+impl<T> AssertKind for AssertNe<T>
 where
     T: PartialEq + Debug,
 {
@@ -71,7 +71,7 @@ pub struct AssertBool<T, U> {
     pub result: bool,
 }
 
-impl<T, U> AssertType for AssertBool<T, U>
+impl<T, U> AssertKind for AssertBool<T, U>
 where
     T: PartialEq + Debug,
     U: PartialEq + Debug,
@@ -94,14 +94,14 @@ where
 /// what kind of assertion to run, of a [`Predicate`] for the condition
 /// of the assertion and a [`Part`] under test.
 pub struct Assertion {
-    ty: Box<dyn AssertType>,
+    ty: Box<dyn AssertKind>,
     predicate: Predicate,
     part: Part,
 }
 
 impl Assertion {
     /// Creates a new [`Assertion`].
-    pub fn new(ty: Box<dyn AssertType>, predicate: Predicate, part: Part) -> Self {
+    pub fn new(ty: Box<dyn AssertKind>, predicate: Predicate, part: Part) -> Self {
         Self {
             ty,
             predicate,

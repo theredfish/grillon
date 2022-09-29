@@ -3,6 +3,7 @@
 
 mod expression;
 pub mod http;
-pub mod part;
+mod part;
 
 pub use self::expression::*;
+pub use self::part::Part;
