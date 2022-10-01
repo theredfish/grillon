@@ -119,9 +119,10 @@ impl Assert {
     /// Asserts the status of the response.
     pub fn status<T>(self, expr: Expression<T>) -> Assert
     where
-        T: StatusCodeDsl<StatusCode>,
+        T: StatusCodeDslBis<StatusCode>,
     {
-        expr.value.eval(self.status, expr.predicate).emit();
+        // TODO : add emit
+        expr.value.eval(self.status, expr.predicate);
 
         self
     }

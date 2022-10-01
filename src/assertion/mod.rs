@@ -1,5 +1,5 @@
-mod equality;
-mod range;
+mod impls;
+pub(crate) mod traits;
 
 use crate::dsl::{Part, Predicate};
 use std::fmt::Debug;

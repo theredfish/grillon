@@ -1,5 +1,8 @@
 use crate::HttpMockServer;
-use grillon::{dsl::is_less_than, Grillon, Result};
+use grillon::{
+    dsl::{is, is_less_than},
+    Grillon, Result,
+};
 
 #[tokio::test]
 async fn response_time_less_than() -> Result<()> {

@@ -31,12 +31,14 @@
 
 mod body;
 mod headers;
-mod status;
+// mod status;
+mod status_bis;
 mod time;
 
 pub use self::{
     body::JsonBodyDsl,
     headers::HeadersDsl,
-    status::{is_client_error, is_server_error, is_success, StatusCodeDsl},
+    // status::{is_client_error, is_server_error, is_success, StatusCodeDsl},
+    status_bis::*,
     time::TimeDsl,
 };
