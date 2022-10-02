@@ -1,22 +1,14 @@
 //! The `http::status` DSL provides built-in functions to perform declarative
 //! assertions against the status of an http response.
 use crate::{
-    // assert::{AssertBool, AssertEq, AssertNe, Assertion},
     assertion::{
         traits::{IsEq, IsNe, RangeInclusive},
         Assertion,
     },
-    dsl::{
-        expression::{
-            Predicate::{self, Between, Is, IsNot},
-            Range,
-        },
-        is_between,
-        part::Part,
-        Expression,
-    },
+    dsl::{is_between, Expression, Predicate, Range},
+    grillon::LogSettings,
+    StatusCode,
 };
-use http::StatusCode;
 use std::fmt::Debug;
 
 /// A short-hand function to test if the status code
@@ -59,110 +51,134 @@ pub fn is_server_error() -> Expression<Range<u16>> {
 ///
 ///    Ok(())
 /// }
+pub trait StatusCodeDsl<T> {
+    /// The assertion type resulting from the evaluation.
+    type Assertion;
 
-pub trait StatusCodeDsl<T>
-where
-    T: Debug,
-    Self: Debug + Sized,
-{
-    /// Evaluates the status assertion to run based on the [`Predicate`].
-    fn eval(self, actual: T, predicate: Predicate) -> Assertion<Self>;
-}
-
-/// Http status DSL to assert the status code of a response is in the
-/// given range.
-pub trait StatusCodeRange<T>: StatusCodeDsl<T>
-where
-    T: Debug,
-    Self: Debug + Sized,
-{
-    fn is_between(self, actual: T) -> Assertion<T>;
-}
-
-/// Http status DSL to assert the status code equality of a response.
-pub trait StatusCodeEquality<T>: StatusCodeDsl<T>
-where
-    T: Debug,
-    Self: Debug + Sized,
-{
-    fn is(self, actual: T) -> Assertion<Self>;
-    fn is_not(self, actual: T) -> Assertion<Self>;
-}
-
-impl StatusCodeDsl<StatusCode> for u16 {
-    fn eval(self, actual: StatusCode, predicate: Predicate) -> Assertion<u16> {
-        match predicate {
-            Predicate::Is => self.is(actual),
-            Predicate::IsNot => self.is_not(actual),
-            _ => unimplemented!("Invalid predicate for the status code(u16) DSL : {predicate}"),
-        }
-    }
+    /// Evaluates the status assertion to run depending on the [`Predicate`].
+    /// The test results will be produced on the given output configured via the
+    /// [`LogSettings`].
+    fn eval(self, actual: T, predicate: Predicate, log_settings: &LogSettings) -> Self::Assertion;
 }
 
 impl StatusCodeDsl<StatusCode> for StatusCode {
-    fn eval(self, actual: StatusCode, predicate: Predicate) -> Assertion<StatusCode> {
+    type Assertion = Assertion<u16>;
+
+    fn eval(
+        self,
+        actual: StatusCode,
+        predicate: Predicate,
+        log_settings: &LogSettings,
+    ) -> Assertion<u16> {
         match predicate {
-            Predicate::Is => self.is(actual),
-            Predicate::IsNot => self.is_not(actual),
-            _ => unimplemented!(
-                "Invalid predicate for the status code(StatusCode) DSL : {predicate}"
-            ),
+            Predicate::Is => self.is(actual).assert(log_settings),
+            Predicate::IsNot => self.is_not(actual).assert(log_settings),
+            _ => unimplemented!(),
         }
     }
 }
 
-impl StatusCodeDsl<StatusCode> for Range<u16> {
-    fn eval(self, actual: StatusCode, predicate: Predicate) -> Assertion<u16> {
+impl StatusCodeDsl<StatusCode> for u16 {
+    type Assertion = Assertion<u16>;
+
+    fn eval(
+        self,
+        actual: StatusCode,
+        predicate: Predicate,
+        log_settings: &LogSettings,
+    ) -> Assertion<u16> {
         match predicate {
-            Predicate::Between => self.is_between(actual),
-            _ => unimplemented!(
-                "Invalid predicate for the status code(Range<u16>) DSL : {predicate}"
-            ),
+            Predicate::Is => self.is(actual).assert(log_settings),
+            Predicate::IsNot => self.is_not(actual).assert(log_settings),
+            _ => unimplemented!(),
         }
     }
 }
 
 impl StatusCodeDsl<StatusCode> for Range<StatusCode> {
-    fn eval(self, actual: StatusCode, predicate: Predicate) -> Assertion<StatusCode> {
+    type Assertion = Assertion<u16>;
+
+    fn eval(
+        self,
+        actual: StatusCode,
+        predicate: Predicate,
+        log_settings: &LogSettings,
+    ) -> Assertion<u16> {
         match predicate {
-            Predicate::Between => self.is_between(actual),
-            _ => unimplemented!(
-                "Invalid predicate for the status code(Range<StatusCode>) DSL : {predicate}"
-            ),
+            Predicate::Between => self.is_between(actual).assert(log_settings),
+            _ => unimplemented!(),
         }
     }
 }
 
-impl StatusCodeEquality<StatusCode> for u16 {
-    fn is(self, actual: StatusCode) -> Assertion<u16> {
+impl StatusCodeDsl<StatusCode> for Range<u16> {
+    type Assertion = Assertion<u16>;
+
+    fn eval(
+        self,
+        actual: StatusCode,
+        predicate: Predicate,
+        log_settings: &LogSettings,
+    ) -> Assertion<u16> {
+        match predicate {
+            Predicate::Between => self.is_between(actual).assert(log_settings),
+            _ => unimplemented!(),
+        }
+    }
+}
+
+/// Http status DSL to assert the status code equality of a response.
+pub trait StatusCodeDslEquality<T>: StatusCodeDsl<T>
+where
+    T: Debug,
+    Self: Debug + Sized,
+{
+    /// Builds an assertion comparing the equality between two status codes.
+    fn is(self, actual: T) -> Self::Assertion;
+    /// Builds an assertion comparing the non equality between two status codes.
+    fn is_not(self, actual: T) -> Self::Assertion;
+}
+
+impl StatusCodeDslEquality<StatusCode> for StatusCode {
+    fn is(self, actual: StatusCode) -> Self::Assertion {
         actual.is_eq(self)
     }
 
-    fn is_not(self, actual: StatusCode) -> Assertion<u16> {
+    fn is_not(self, actual: StatusCode) -> Self::Assertion {
         actual.is_ne(self)
     }
 }
 
-impl StatusCodeEquality<StatusCode> for StatusCode {
-    fn is(self, actual: StatusCode) -> Assertion<StatusCode> {
+impl StatusCodeDslEquality<StatusCode> for u16 {
+    fn is(self, actual: StatusCode) -> Self::Assertion {
         actual.is_eq(self)
     }
 
-    fn is_not(self, actual: StatusCode) -> Assertion<StatusCode> {
+    fn is_not(self, actual: StatusCode) -> Self::Assertion {
         actual.is_ne(self)
     }
 }
 
-impl StatusCodeRange<StatusCode> for Range<u16> {
-    fn is_between(self, actual: StatusCode) -> Assertion<u16> {
-        let (min, max) = (self.left, self.right);
-        actual.in_range(min, max)
+/// Http status DSL to assert the status code of a response is in
+/// the given inclusive range.
+pub trait StatusCodeDslBetween<T>: StatusCodeDsl<T>
+where
+    T: Debug,
+    Self: Debug + Sized,
+{
+    /// Builds an assertion to check if a status code is within an inclusive
+    /// range.
+    fn is_between(self, actual: T) -> Self::Assertion;
+}
+
+impl StatusCodeDslBetween<StatusCode> for Range<StatusCode> {
+    fn is_between(self, actual: StatusCode) -> Self::Assertion {
+        actual.in_range(self.left, self.right)
     }
 }
 
-impl StatusCodeRange<StatusCode> for Range<StatusCode> {
-    fn is_between(self, actual: StatusCode) -> Assertion<StatusCode> {
-        let (min, max) = (self.left, self.right);
-        actual.in_range(min, max)
+impl StatusCodeDslBetween<StatusCode> for Range<u16> {
+    fn is_between(self, actual: StatusCode) -> Self::Assertion {
+        actual.in_range(self.left, self.right)
     }
 }

@@ -2,9 +2,9 @@
 //! for endpoints under tests.
 //!
 //! Currently powered by the [`Hyper`](https://github.com/hyperium/hyper) HTTP client.
-use std::time::SystemTime;
+use std::time::Instant;
 
-use crate::assert::Assert;
+use crate::{assert::Assert, grillon::LogSettings};
 use hyper::{
     body::Body,
     client::HttpConnector,
@@ -68,6 +68,9 @@ pub struct Request<'c> {
     pub payload: Option<Body>,
     /// The client used for this outgoing request.
     pub client: &'c Client<HttpConnector>,
+    /// The log settings that will be used to output test results
+    /// when asserting the http response.
+    pub log_settings: &'c LogSettings,
 }
 
 impl Request<'_> {
@@ -148,17 +151,22 @@ impl Request<'_> {
         *req.headers_mut() = self.headers;
         *req.uri_mut() = self.uri;
 
-        let now = SystemTime::now();
+        let now = Instant::now();
         let response = self
             .client
             .request(req)
             .await
+            // TODO : replace this expect by an assertion on the response itself.
             .expect("Failed to send http request");
-        let response_time = now
-            .elapsed()
-            .expect("Failed to retrieve response time")
-            .as_millis();
 
-        Assert::new(response, response_time).await
+        // Due to serde limitations with 128bits we need to cast u128 to u64
+        // with the risk to lose precision. However should be acceptable since
+        // the api of Duration::from_millis() accepts a u64 value.
+        //
+        // See https://github.com/serde-rs/serde/issues/1717
+        // See https://github.com/serde-rs/serde/issues/1183
+        let response_time_ms = now.elapsed().as_millis() as u64;
+
+        Assert::new(response, response_time_ms, self.log_settings.clone()).await
     }
 }

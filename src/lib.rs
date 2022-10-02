@@ -24,7 +24,7 @@ mod url;
 pub use self::{
     assert::Assert,
     error::{Error, Result},
-    grillon::Grillon,
+    grillon::{Grillon, LogSettings},
     request::Request,
     response::Response,
 };

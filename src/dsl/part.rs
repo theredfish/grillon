@@ -1,13 +1,13 @@
 //! Module containing all the different parts we can assert against. These parts
 //! are also used to build assertion messages in a convenient way.
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use strum::Display;
 
 /// Represents all the parts we can assert against. Provides a string
 /// representation for each variant to build assertion messages in a convenient
 /// way.
-#[derive(Display, Deserialize, PartialEq, Eq, Debug)]
+#[derive(Display, Serialize, Deserialize, PartialEq, Eq, Debug)]
 pub enum Part {
     /// The json body of an http response.
     #[strum(serialize = "json body")]

@@ -2,6 +2,7 @@
 //! types and functions for performing declarative assertions.
 
 mod expression;
+#[allow(clippy::wrong_self_convention)]
 pub mod http;
 mod part;
 

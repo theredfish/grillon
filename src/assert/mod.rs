@@ -45,14 +45,16 @@
 
 use crate::{
     dsl::{http::*, Expression},
+    grillon::LogSettings,
     Response,
 };
 use http::HeaderMap;
 use hyper::StatusCode;
 use serde_json::Value;
 
-mod assertion;
-pub use assertion::*;
+mod assertion_legacy;
+
+pub use assertion_legacy::*;
 
 /// [`Assert`] uses an internal representation of the http response to assert
 /// against.
@@ -64,13 +66,15 @@ pub struct Assert {
     /// The http response json body to assert.
     pub json: Option<Value>,
     /// The http response time (in milliseconds) to assert.
-    pub response_time_ms: u128,
+    pub response_time_ms: u64,
+    /// The test results output.
+    pub log_settings: LogSettings,
 }
 
 impl Assert {
     /// Creates an `Assert` instance with an internal representation
     /// of the given response to assert.
-    pub async fn new<T>(response: T, response_time_ms: u128) -> Self
+    pub async fn new<T>(response: T, response_time_ms: u64, log_settings: LogSettings) -> Self
     where
         T: Response,
     {
@@ -79,6 +83,7 @@ impl Assert {
             status: response.status(),
             json: response.json().await,
             response_time_ms,
+            log_settings,
         }
     }
 
@@ -119,10 +124,11 @@ impl Assert {
     /// Asserts the status of the response.
     pub fn status<T>(self, expr: Expression<T>) -> Assert
     where
-        T: StatusCodeDslBis<StatusCode>,
+        T: StatusCodeDsl<StatusCode>,
     {
-        // TODO : add emit
-        expr.value.eval(self.status, expr.predicate);
+        let _assertion = expr
+            .value
+            .eval(self.status, expr.predicate, &self.log_settings);
 
         self
     }
@@ -141,7 +147,7 @@ impl Assert {
     /// Asserts the response time (in milliseconds).
     pub fn response_time<T>(self, expr: Expression<T>) -> Assert
     where
-        T: TimeDsl<u128>,
+        T: TimeDsl<u64>,
     {
         expr.value
             .eval(self.response_time_ms, expr.predicate)

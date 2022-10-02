@@ -90,7 +90,7 @@ where
 
 /// Represents an assertion event that we can emit.
 ///
-/// An [`Assertion`] is composed of a type [`AssertType`] to determine
+/// An [`Assertion`] is composed of a type [`AssertKind`] to determine
 /// what kind of assertion to run, of a [`Predicate`] for the condition
 /// of the assertion and a [`Part`] under test.
 pub struct Assertion {
@@ -112,7 +112,7 @@ impl Assertion {
     /// Emits an assertion by evaluating the correct assertion macro to match.
     ///
     /// This function constructs an assertion message based on the [`Predicate`],
-    /// the [`Part`] under test and the [`AssertType`], which will be used in
+    /// the [`Part`] under test and the [`AssertKind`], which will be used in
     /// case the assertion fails.
     ///
     /// [`emit_multi_types()`]: [`Self::emit_multi_types()`]

@@ -4,7 +4,7 @@ use grillon::{
         http::{is_client_error, is_server_error, is_success},
         is, is_between, is_not,
     },
-    Grillon, Result, StatusCode,
+    Grillon, LogSettings, Result, StatusCode,
 };
 
 #[tokio::test]
@@ -75,6 +75,7 @@ async fn status_is_not() -> Result<()> {
     let mock = mock_server.delete_valid_user();
 
     Grillon::new(mock_server.server.url("/").as_ref())?
+        .log_settings(LogSettings::StdAssert)
         .delete("users/1")
         .assert()
         .await

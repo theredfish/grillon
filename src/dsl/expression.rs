@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use strum::Display;
 
 /// Type representing a condition for assertions.
@@ -6,7 +6,7 @@ use strum::Display;
 /// [`Predicate`]s are used in the various DSL modules to apply conditions
 /// in assertions in a declarative way. A [`Predicate`] is used via an
 /// [`Expression`].
-#[derive(Display, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Display, Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub enum Predicate {
     /// Actual should be equals (strictly) to expected.
     #[strum(serialize = "should be")]
