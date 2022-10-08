@@ -20,11 +20,9 @@ pub trait TimeDsl<T> {
     }
 }
 
-impl TimeDsl<u128> for u128 {
-    fn is_less_than(&self, actual: u128) -> Assertion {
+impl TimeDsl<u64> for u64 {
+    fn is_less_than(&self, actual: u64) -> Assertion {
         let result = actual < *self;
-
-        // Assertion::emit(actual, self, Test(result), LessThan, Part::ResponseTime);
 
         let ty = AssertBool {
             left: actual,

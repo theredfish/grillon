@@ -9,6 +9,24 @@ use hyper::{client::HttpConnector, header::HeaderMap, Client, Method, Uri};
 pub struct Grillon {
     base_url: Uri,
     client: Client<HttpConnector>,
+    log_settings: LogSettings,
+}
+
+/// The log settings to output test results.
+#[derive(Clone)]
+pub enum LogSettings {
+    /// Prints all assertion results to the standard output.
+    StdOut,
+    /// Only prints assertion failures through `std::assert` macro.
+    StdAssert,
+    /// Formats assertion results into a json output.
+    Json,
+}
+
+impl Default for LogSettings {
+    fn default() -> Self {
+        Self::StdAssert
+    }
 }
 
 impl Grillon {
@@ -31,7 +49,18 @@ impl Grillon {
         Ok(Grillon {
             base_url: api_base_url.parse::<Uri>()?,
             client: Client::builder().build_http(),
+            log_settings: LogSettings::default(),
         })
+    }
+
+    /// Configure the logs to print the test results. By default the
+    /// [`LogSettings`] are configured to output with the test library
+    /// assertions on the standard output with [`LogSettings::StdAssert`].
+    /// Only test failures will be printed.
+    pub fn log_settings(mut self, log_settings: LogSettings) -> Self {
+        self.log_settings = log_settings;
+
+        self
     }
 
     /// Creates a new [`Request`] initialized with a `GET` method and the given path.
@@ -192,6 +221,7 @@ impl Grillon {
             headers: HeaderMap::new(),
             payload: None,
             client: &self.client,
+            log_settings: &self.log_settings,
         }
     }
 }

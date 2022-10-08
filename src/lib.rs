@@ -12,6 +12,7 @@
 #![doc = include_str!("../README.md")]
 
 pub mod assert;
+mod assertion;
 pub mod dsl;
 mod error;
 mod grillon;
@@ -23,7 +24,7 @@ mod url;
 pub use self::{
     assert::Assert,
     error::{Error, Result},
-    grillon::Grillon,
+    grillon::{Grillon, LogSettings},
     request::Request,
     response::Response,
 };

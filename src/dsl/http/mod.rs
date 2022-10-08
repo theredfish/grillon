@@ -34,9 +34,4 @@ mod headers;
 mod status;
 mod time;
 
-pub use self::{
-    body::JsonBodyDsl,
-    headers::HeadersDsl,
-    status::{is_client_error, is_server_error, is_success, StatusCodeDsl},
-    time::TimeDsl,
-};
+pub use self::{body::JsonBodyDsl, headers::HeadersDsl, status::*, time::TimeDsl};
