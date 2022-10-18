@@ -1,35 +1,25 @@
 use crate::{
-    assert::{AssertBool, Assertion},
-    dsl::{
-        expression::Predicate::{self, LessThan},
-        part::Part,
-    },
+    assertion::{traits::LessThan, Assertion},
+    dsl::expression::Predicate,
+    LogSettings,
 };
 
 /// Http time DSL to assert the response time.
 pub trait TimeDsl<T> {
     /// Asserts the response time is strictly inferior to the provided time in
     /// milliseconds.
-    fn is_less_than(&self, actual: T) -> Assertion;
+    fn is_less_than(&self, actual: T) -> Assertion<u64>;
     /// Evaluates the time assertion to run based on the [`Predicate`]
-    fn eval(&self, actual: T, operator: Predicate) -> Assertion {
+    fn eval(&self, actual: T, operator: Predicate, log_settings: &LogSettings) -> Assertion<u64> {
         match operator {
-            Predicate::LessThan => self.is_less_than(actual),
+            Predicate::LessThan => self.is_less_than(actual).assert(log_settings),
             _ => unimplemented!(),
         }
     }
 }
 
 impl TimeDsl<u64> for u64 {
-    fn is_less_than(&self, actual: u64) -> Assertion {
-        let result = actual < *self;
-
-        let ty = AssertBool {
-            left: actual,
-            right: *self,
-            result,
-        };
-
-        Assertion::new(Box::new(ty), LessThan, Part::ResponseTime)
+    fn is_less_than(&self, actual: u64) -> Assertion<u64> {
+        actual.less_than(self)
     }
 }
