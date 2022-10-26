@@ -17,14 +17,13 @@ Grillon offers an elegant and natural way to approach end-to-end HTTP API testin
 
 # Getting started
 
-This example enables the optional `diff` feature and uses [Tokio](https://tokio.rs/) as asynchronous runtime.
-Generally, testing libs are used in unit or integration tests. You can declare `grillon` as a dev-dependency.
+This example uses [Tokio](https://tokio.rs/) as asynchronous runtime. Generally, testing libs are used in unit or integration tests. You can declare `grillon` as a dev-dependency.
 
 Add `grillon` to `Cargo.toml`
 
 ```toml
 [dev-dependencies]
-grillon = { version = "0.4.0-dev", features = ["diff"] }
+grillon = "0.4.0-dev"
 tokio = { version = "1", features = ["macros"] }
 ```
 

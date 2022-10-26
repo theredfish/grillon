@@ -1,5 +1,4 @@
 //! The `assert` module provides everything to assert parts of http responses with built-in matchers.
-//! The `diff` feature can be enabled to display pretty assertions.
 //!
 //! [`Assert`] can be used separately with your own [`Response`] implementation which makes it
 //! handy if you want to use your own http client to send requests and handle responses.
@@ -51,10 +50,6 @@ use crate::{
 use http::HeaderMap;
 use hyper::StatusCode;
 use serde_json::Value;
-
-mod assertion_legacy;
-
-pub use assertion_legacy::*;
 
 /// [`Assert`] uses an internal representation of the http response to assert
 /// against.
@@ -139,7 +134,7 @@ impl Assert {
         T: JsonBodyDsl<Value>,
     {
         let actual = self.json.clone().unwrap();
-        expr.value.eval(actual, expr.predicate).emit();
+        let _assertion = expr.value.eval(actual, expr.predicate, &self.log_settings);
 
         self
     }
@@ -149,9 +144,9 @@ impl Assert {
     where
         T: TimeDsl<u64>,
     {
-        expr.value
-            .eval(self.response_time_ms, expr.predicate)
-            .emit();
+        let _assertion = expr
+            .value
+            .eval(self.response_time_ms, expr.predicate, &self.log_settings);
 
         self
     }
@@ -161,7 +156,9 @@ impl Assert {
     where
         T: HeadersDsl<HeaderMap>,
     {
-        expr.value.eval(self.headers.clone(), expr.predicate).emit();
+        let _assertion = expr
+            .value
+            .eval(self.headers.clone(), expr.predicate, &self.log_settings);
 
         self
     }
