@@ -2,7 +2,8 @@
 
 [![Crates.io](https://img.shields.io/crates/v/grillon)](https://crates.io/crates/grillon)
 [![docs.rs](https://img.shields.io/docsrs/grillon)](https://docs.rs/grillon/latest/grillon)
-[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/theredfish/grillon/Rust%20CI)](https://github.com/theredfish/grillon/actions?query=workflow%3A%22Rust+CI%22+branch%3Amain)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/owlduty/grillon/ci.yml)
+
 
 Grillon offers an elegant and natural way to approach end-to-end HTTP API testing in Rust.
 
