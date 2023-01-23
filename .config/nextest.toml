@@ -1,0 +1,4 @@
+[profile.ci]
+failure-output = "immediate-final"
+# Don't fail fast in CI to run the full test suite.
+fail-fast = false

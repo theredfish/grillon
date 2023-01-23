@@ -8,107 +8,58 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
-  build-and-test:
-    strategy:
-      fail-fast: false
-      matrix:
-        target:
-          - { name: Linux, os: ubuntu-latest, triple: x86_64-unknown-linux-gnu }
-          # macOs is currently failing with the cargo doc command in stable
-          # - { name: macOS, os: macos-latest, triple: x86_64-apple-darwin }
-          - {
-              name: Windows,
-              os: windows-latest,
-              triple: x86_64-pc-windows-msvc,
-            }
-        version:
-          - stable
-          - beta
-          - nightly
-
-    name: ${{ matrix.target.name }} / ${{ matrix.version }}
-    runs-on: ${{ matrix.target.os }}
-
-    steps:
-      - uses: actions/checkout@v2
-      - name: Install ${{ matrix.version }}
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: ${{ matrix.version }}-${{ matrix.target.triple }}
-          profile: minimal
-          override: true
-      - name: Generate Cargo.lock
-        uses: actions-rs/cargo@v1
-        with:
-          command: generate-lockfile
-      - name: Cache Dependencies
-        uses: Swatinem/rust-cache@v1.2.0
-      - name: Build
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --all-features
-      - name: Test
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --all-features -- --nocapture
-
-  doc:
-    name: Rust documentation
+  rustfmt:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Install stable
-        uses: actions-rs/toolchain@v1
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
           profile: minimal
-          override: true
-      - name: Cache Dependencies
-        uses: Swatinem/rust-cache@v1.2.0
-      - name: cargo doc
-        run: cargo doc --all-features --no-deps
+          toolchain: stable
+          components: rustfmt
+      - run: cargo fmt --all -- --check
 
-  rustfmt:
+  clippy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          components: clippy
+      - run: cargo clippy --workspace --tests --all-features -- -D warnings
+
+  test:
     runs-on: ubuntu-latest
     env:
       CARGO_TERM_COLOR: always
     steps:
-      - uses: actions/checkout@v2
-      - name: Install rustfmt
-        uses: actions-rs/toolchain@v1
+      - uses: actions/checkout@v3
+      - uses: taiki-e/install-action@v2
         with:
-          toolchain: stable
-          components: rustfmt
-      - name: Check with rustfmt
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
+          tool: nextest
+      - run: cargo nextest run --all-features --profile ci
 
-  clippy:
+  doc:
     runs-on: ubuntu-latest
-    env:
-      githCARGO_TERM_COLOR: always
     steps:
-      - uses: actions/checkout@v2
-      - run: rustup component add clippy
-      - uses: actions-rs/clippy-check@v1
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: --workspace --tests --all-features -- -D warnings
+          profile: minimal
+          toolchain: stable
+      - run: cargo doc --all-features --no-deps
 
   deploy-crates-io:
     name: Release on crates.io
     needs:
       - rustfmt
       - clippy
-      - build-and-test
+      - test
       - doc
     if: ${{ startsWith(github.ref, 'refs/tags/v') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Publish grillon
-        run: cargo publish -p grillon --token ${{ secrets.CRATES_IO }}
+      - uses: actions/checkout@v3
+      - run: cargo publish -p grillon --token ${{ secrets.CRATES_IO }}
