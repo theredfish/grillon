@@ -1,0 +1,278 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Quickstart - Grillon - User Guide</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="quickstart.html" class="active"><strong aria-hidden="true">2.</strong> Quickstart</a></li><li class="chapter-item expanded "><a href="api_tests/index.html"><strong aria-hidden="true">3.</strong> API tests</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="api_tests/http.html"><strong aria-hidden="true">3.1.</strong> HTTP Tests</a></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Grillon - User Guide</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/owlduty/grillon" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="quickstart"><a class="header" href="#quickstart">Quickstart</a></h1>
+<p>Using Grillon is quite simple, we will consider you are running it as part of your testing process. But you can also use it as a regular dependency.</p>
+<h2 id="configuration"><a class="header" href="#configuration">Configuration</a></h2>
+<p>Before we begin, let's create a <code>tests/</code> directory at the root of the project. Create a file there named <code>create_posts.rs</code>.</p>
+<p>Add <code>grillon</code> to your development dependencies with <code>tokio</code>, as we need a runtime to run async functions in our test environement.</p>
+<pre><code class="language-toml">[dev-dependencies]
+grillon = &quot;0.4.0&quot;
+tokio = { version = &quot;1&quot;, features = [&quot;macros&quot;] }
+</code></pre>
+<p>Our example will test the <code>/posts</code> endpoint of <code>jsonplaceholder.typicode.com</code>. We will send a json payload and we will assert that our resource is correctly created with an acceptable response time (&lt; 500 ms). Depending on your location, feel free to tweak the response time value (in milliseconds).</p>
+<h2 id="write-the-test"><a class="header" href="#write-the-test">Write the test</a></h2>
+<p>Create a new <code>create_posts.rs</code> file in <code>tests</code> and copy/paste the following example:</p>
+<pre><code class="language-rust noplaypen">use grillon::{dsl::*, dsl::http::*, json, Grillon, StatusCode, Result};
+use grillon::header::{HeaderValue, CONTENT_LENGTH, CONTENT_TYPE};
+
+#[tokio::test]
+async fn create_posts_monitoring() -&gt; Result&lt;()&gt; {
+    Grillon::new(&quot;http://jsonplaceholder.typicode.com&quot;)?
+        .post(&quot;posts&quot;)
+        .payload(json!({
+            &quot;title&quot;: &quot;foo&quot;,
+            &quot;body&quot;: &quot;bar&quot;,
+            &quot;userId&quot;: 1
+        }))
+        .assert()
+        .await
+        .status(is_success())
+        .status(is(201))
+        .response_time(is_less_than(500))
+        .json_body(is(json!({
+            &quot;id&quot;: 101,
+        })))
+        .headers(contains(vec![
+        (
+            CONTENT_TYPE,
+            HeaderValue::from_static(&quot;application/json; charset=utf-8&quot;),
+        ),
+        (
+            CONTENT_LENGTH, HeaderValue::from_static(&quot;15&quot;)
+        )]))
+        .assert_fn(|assert| {
+            assert!(!assert.headers.is_empty());
+            assert!(assert.status == StatusCode::CREATED);
+            assert!(assert.json.is_some());
+
+            // only displayed with --nocapture option
+            println!(&quot;Json response : {:#?}&quot;, assert.json);
+        });
+
+    Ok(())
+}</code></pre>
+<h2 id="run-the-test"><a class="header" href="#run-the-test">Run the test</a></h2>
+<pre><code class="language-bash">cargo test --test create_posts -- --nocapture
+</code></pre>
+<p>You should see similar output:</p>
+<pre><code class="language-bash">cargo test --test create_posts -- --nocapture
+  Finished test [unoptimized + debuginfo] target(s) in 0.14s
+    Running tests/create_posts.rs (target/debug/deps/create_posts-26c6ab07b039dabd)
+
+running 1 test
+Json response : Some(
+    Object {
+        &quot;id&quot;: Number(101),
+    },
+)
+test create_posts_monitoring ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.38s
+</code></pre>
+<p>Well done! You've written your first HTTP API test!</p>
+<p>In this example, we performed assertions on:</p>
+<ul>
+<li>the status code</li>
+<li>the response time</li>
+<li>the headers</li>
+<li>the json body (note that partial json body isn't yet supported, see <a href="https://github.com/owlduty/grillon/issues/25">#25</a>)</li>
+</ul>
+<p>We also added custom assertions and function calls with <code>assert_fn</code>. So if you have specific needs, you can manipulate <code>assert</code> and add your own logic!</p>
+<h2 id="next-steps"><a class="header" href="#next-steps">Next steps</a></h2>
+<p>This was a basic example, this book will contain more in-depth content about Grillon such as reusing request builders, some examples on how to organize your tests as well as test guides. You will also find documentation on the different functionalities by protocol, how to configure your logs and how to integrate Grillon into your pipelines.</p>
+<p>But this book is a work in progress, so please consider it a TODO comment 😉.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="introduction.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="api_tests/index.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="introduction.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="api_tests/index.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </body>
+</html>
