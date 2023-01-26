@@ -2,16 +2,15 @@ name: Book gh-pages
 
 on:
   push:
-    branches:
-      - main
+    branches: ["main"]
+    tags: ["v*"]
   pull_request:
 
 jobs:
   deploy:
     runs-on: ubuntu-20.04
-    if: ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') }}
     env:
-      BOOK_VERSION: ${{ (github.ref == 'refs/heads/main' && 'dev') || 'current' }}
+      BOOK_VERSION: ${{ (startsWith(github.ref, 'refs/tags/v') && 'current') || 'dev' }}
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
     steps:
@@ -24,8 +23,9 @@ jobs:
 
       - run: mdbook build book -d version/$BOOK_VERSION
 
-      - name: Deploy $BOOK_VERSION book
+      - name: Deploy book
         uses: peaceiris/actions-gh-pages@v3
         with:
+          keep_files: true
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./book/version

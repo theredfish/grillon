@@ -1,5 +1,34 @@
 # `grillon` changelog
 
+## [0.4.0] - 2023-01-26
+
+[0.4.0]: /../../tree/v0.4.0
+
+- [Diff](/../../compare/v0.3.0...v0.4.0)
+
+### Changed
+
+- Complete rewrite of the assertion logic ([#22])
+- Enhancement of the http matchers as part of the DSL ([#17], [#18], [#23])
+- Simplified CI file and updated github actions ([#27])
+
+### Added
+
+- Domain specific language for matching operators ([#20])
+- Http response time matcher ([#19])
+- Dependabot to manage dependency updates ([#30])
+- Grillon book with mdbook and github actions ([#28])
+
+[#17]: /../../issues/17
+[#18]: /../../issues/18
+[#19]: /../../issues/19
+[#20]: /../../pull/20
+[#22]: /../../pull/22
+[#23]: /../../pull/23
+[#27]: /../../issues/27
+[#28]: /../../issues/28
+[#30]: /../../issues/30
+
 ## [0.3.0] - 2022-01-25
 
 [0.3.0]: /../../tree/v0.3.0
