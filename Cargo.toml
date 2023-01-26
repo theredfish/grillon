@@ -1,9 +1,9 @@
 [package]
 name = "grillon"
-version = "0.4.0-dev"
+version = "0.4.0"
 authors = ["theredfish <did.julian@gmail.com>"]
-description = "Grillon offers an elegant and natural way to approach end-to-end HTTP API testing in Rust."
-repository = "https://github.com/theredfish/grillon"
+description = "Grillon offers an elegant and natural way to approach API testing in Rust."
+repository = "https://github.com/owlduty/grillon"
 keywords = ["test", "http", "e2e", "end-to-end"]
 categories = ["development-tools::testing"]
 readme = "README.md"
@@ -16,18 +16,18 @@ include = [
 edition = "2021"
 
 [dependencies]
-hyper = { version = "0.14.7", features = ["client", "http1", "http2", "runtime"] }
-serde = { version = "1.0.137", features = ["derive"] }
-serde_json = "1.0.81"
-http = "0.2.7"
-url = "2.2.2"
-futures = "0.3.21"
-strum = { version = "0.24", features = ["derive"] }
-strum_macros = "0.24.2"
+hyper = { version = "0.14.23", features = ["client", "http1", "http2", "runtime"] }
+serde = { version = "1.0.152", features = ["derive"] }
+serde_json = "1.0.91"
+http = "0.2.8"
+url = "2.3.1"
+futures = "0.3.25"
+strum = { version = "0.24.1", features = ["derive"] }
+strum_macros = "0.24.3"
 
 [dev-dependencies]
-tokio = { version = "1.18.2", features = ["macros"] }
-reqwest = { version = "0.11.10", features = ["json"] }
-httpmock = "0.6.6"
-async-trait = "0.1.53"
-test-case = "2.2.1"
+tokio = { version = "1.24.2", features = ["macros"] }
+reqwest = { version = "0.11.14", features = ["json"] }
+httpmock = "0.6.7"
+async-trait = "0.1.63"
+test-case = "2.2.2"

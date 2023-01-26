@@ -4,8 +4,7 @@
 [![docs.rs](https://img.shields.io/docsrs/grillon)](https://docs.rs/grillon/latest/grillon)
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/owlduty/grillon/ci.yml)
 
-
-Grillon offers an elegant and natural way to approach end-to-end HTTP API testing in Rust.
+Grillon offers an elegant and natural way to approach API testing in Rust.
 
 - Elegant, intuitive and expressive API
 - Built-in testing functions
@@ -13,10 +12,13 @@ Grillon offers an elegant and natural way to approach end-to-end HTTP API testin
 
 > Please note that the API is subject to a lot of changes until the `v1.0.0`.
 
+## Documentation
+
+- Book ([current](https://owlduty.github.io/grillon/current) | [dev](https://owlduty.github.io/grillon/dev))
 - [API doc](https://docs.rs/grillon/latest/grillon)
 - [Changelog](https://github.com/theredfish/grillon/blob/main/CHANGELOG.md)
 
-# Getting started
+## Getting started
 
 This example uses [Tokio](https://tokio.rs/) as asynchronous runtime. Generally, testing libs are used in unit or integration tests. You can declare `grillon` as a dev-dependency.
 
@@ -24,14 +26,14 @@ Add `grillon` to `Cargo.toml`
 
 ```toml
 [dev-dependencies]
-grillon = "0.4.0-dev"
+grillon = "0.4.0"
 tokio = { version = "1", features = ["macros"] }
 ```
 
 Then use `grillon` :
 
 ```rust
-use grillon::{dsl::*, json, Grillon, StatusCode, Result};
+use grillon::{dsl::*, dsl::http::*, json, Grillon, StatusCode, Result};
 use grillon::header::{HeaderValue, CONTENT_LENGTH, CONTENT_TYPE};
 
 #[tokio::test]
