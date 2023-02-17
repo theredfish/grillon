@@ -6,7 +6,7 @@ use strum::Display;
 /// [`Predicate`]s are used in the various DSL modules to apply conditions
 /// in assertions in a declarative way. A [`Predicate`] is used via an
 /// [`Expression`].
-#[derive(Display, Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Display, Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub enum Predicate {
     /// Actual should be equals (strictly) to expected.
     #[strum(serialize = "should be")]
@@ -58,6 +58,12 @@ pub struct Range<T> {
     pub right: T,
 }
 
+#[derive(Deserialize, Debug, PartialEq, Eq)]
+pub struct JsonPathExpr<T> {
+    pub selector: String,
+    pub expression: Expression<T>,
+}
+
 /// Represents an expected `value` associated to a [`Predicate`] to run against
 /// another `value`.
 ///
@@ -96,6 +102,16 @@ pub fn is_between<T>(min: T, max: T) -> Expression<Range<T>> {
         value: Range {
             left: min,
             right: max,
+        },
+    }
+}
+
+pub fn json_path<T>(selector: String, expression: Expression<T>) -> Expression<JsonPathExpr<T>> {
+    Expression {
+        predicate: Predicate::JsonPath,
+        value: JsonPathExpr {
+            selector,
+            expression,
         },
     }
 }

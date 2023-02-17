@@ -1,6 +1,9 @@
 use crate::{
-    assertion::{traits::Equality, Assertion, Hand},
-    dsl::{Part, Predicate},
+    assertion::{
+        traits::{Equality, JsonPath},
+        Assertion, Hand,
+    },
+    dsl::{Expression, Part, Predicate},
 };
 use serde_json::Value;
 
@@ -89,6 +92,14 @@ impl Equality<String> for Value {
             right: Hand::Right(rhs),
             result: result.into(),
         }
+    }
+}
+
+impl JsonPath<Value> for Value {
+    type Assertion = Assertion<Value>;
+
+    fn json_path(&self, selector: String, expression: Expression<&Value>) -> Self::Assertion {
+        todo!()
     }
 }
 

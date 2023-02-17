@@ -53,6 +53,7 @@ use serde_json::Value;
 
 /// [`Assert`] uses an internal representation of the http response to assert
 /// against.
+#[derive(Clone)]
 pub struct Assert {
     /// The http response header to assert.
     pub headers: HeaderMap,

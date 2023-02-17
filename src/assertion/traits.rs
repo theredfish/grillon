@@ -1,6 +1,8 @@
 //! This module contains various traits for comparisons, range checks and inner
 //! checks.
 
+use crate::dsl::Expression;
+
 /// Trait to test the equality between two values.
 pub trait Equality<Rhs: ?Sized = Self> {
     /// The resulting assertion after applying the equality test.
@@ -42,4 +44,13 @@ pub trait Container<T: ?Sized> {
 
     /// Asserts that the container does not contain other.
     fn has_not(&self, other: &T) -> Self::Assertion;
+}
+
+/// Trait to test a value for a given json path.
+pub trait JsonPath<T: ?Sized> {
+    /// The resulting assertion after applying the json path test.
+    type Assertion;
+
+    /// Asserts the value found, at the given json path, matches the provided assertion expression.
+    fn json_path(&self, selector: String, expression: Expression<&T>) -> Self::Assertion;
 }
