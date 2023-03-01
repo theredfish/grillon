@@ -4,6 +4,7 @@
 mod expression;
 #[allow(clippy::wrong_self_convention)]
 pub mod http;
+pub mod json_path;
 mod part;
 
 pub use self::expression::*;

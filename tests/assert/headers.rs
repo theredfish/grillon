@@ -83,7 +83,7 @@ async fn headers_check_empty_against_not_empty() -> Result<()> {
     let mock = mock_server.get_empty_response();
 
     // The MockServer always returns the content type and the date in headers
-    Grillon::new(mock_server.server.url("/").as_ref())?
+    Grillon::new(&mock_server.server.url("/"))?
         .get("empty")
         .assert()
         .await

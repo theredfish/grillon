@@ -1,6 +1,6 @@
 use crate::HttpMockServer;
 use grillon::{
-    dsl::{contains, is, is_not, json_path},
+    dsl::{is, is_not},
     header::{HeaderValue, CONTENT_TYPE},
     json, Grillon, Result,
 };
@@ -11,7 +11,7 @@ async fn json_body() -> Result<()> {
     let mock = mock_server.get_valid_user();
     let json_header_map = vec![(CONTENT_TYPE, HeaderValue::from_static("application/json"))];
 
-    Grillon::new(mock_server.server.url("/").as_ref())?
+    Grillon::new(&mock_server.server.url("/"))?
         .get("users/1")
         .headers(json_header_map)
         .assert()
@@ -32,7 +32,7 @@ async fn raw_string_body() -> Result<()> {
     let mock = mock_server.get_valid_user();
     let json_header_map = vec![(CONTENT_TYPE, HeaderValue::from_static("application/json"))];
 
-    Grillon::new(mock_server.server.url("/").as_ref())?
+    Grillon::new(&mock_server.server.url("/"))?
         .get("users/1")
         .headers(json_header_map)
         .assert()
@@ -62,7 +62,7 @@ async fn string_body() -> Result<()> {
     "#
     .to_string();
 
-    Grillon::new(mock_server.server.url("/").as_ref())?
+    Grillon::new(&mock_server.server.url("/"))?
         .get("users/1")
         .headers(json_header_map)
         .assert()
@@ -79,7 +79,7 @@ async fn it_should_not_be_equals() {
     let mock_server = HttpMockServer::new();
     mock_server.get_valid_user();
 
-    Grillon::new(mock_server.server.url("/").as_ref())
+    Grillon::new(&mock_server.server.url("/"))
         .unwrap()
         .get("users/1")
         .assert()
@@ -96,7 +96,7 @@ async fn it_should_fail_to_compare_bad_body() {
     let mock_server = HttpMockServer::new();
     mock_server.get_valid_user();
 
-    Grillon::new(mock_server.server.url("/").as_ref())
+    Grillon::new(&mock_server.server.url("/"))
         .unwrap()
         .get("users/1")
         .assert()
@@ -113,7 +113,7 @@ async fn it_should_fail_to_compare_inexistant_body() {
     let mock_server = HttpMockServer::new();
     mock_server.get_empty_response();
 
-    Grillon::new(mock_server.server.url("/").as_ref())
+    Grillon::new(&mock_server.server.url("/"))
         .unwrap()
         .get("empty")
         .assert()
@@ -122,44 +122,4 @@ async fn it_should_fail_to_compare_inexistant_body() {
             "id": 1,
             "name": "Isaac",
         })));
-}
-
-#[tokio::test]
-async fn json_path_should_be_equals() {
-    let var_name = HttpMockServer::new();
-    let mock_server = var_name;
-    mock_server.get_valid_user();
-
-    Grillon::new(mock_server.server.url("/").as_ref())
-        .unwrap()
-        .get("users/1")
-        .assert()
-        .await
-        .json_body(json_path(
-            "$".to_string(),
-            is(json!([{
-                "id": 1,
-                "name": "Isaac",
-            }])),
-        ));
-}
-
-#[tokio::test]
-async fn json_path_should_not_be_equal() {
-    let var_name = HttpMockServer::new();
-    let mock_server = var_name;
-    mock_server.get_valid_user();
-
-    Grillon::new(mock_server.server.url("/").as_ref())
-        .unwrap()
-        .get("users/1")
-        .assert()
-        .await
-        .json_body(json_path(
-            "$".to_string(),
-            is_not(json!([{
-                "id": 2,
-                "name": "Max",
-            }])),
-        ));
 }

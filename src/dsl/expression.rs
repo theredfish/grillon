@@ -36,10 +36,6 @@ pub enum Predicate {
     #[strum(serialize = "should be less than")]
     #[serde(rename = "should be less than")]
     LessThan,
-    /// Actual should match the json path.
-    #[strum(serialize = "should match json path")]
-    #[serde(rename = "should match json path")]
-    JsonPath,
     /// Actual should be between the given closed interval [min, max].
     #[strum(serialize = "should be between")]
     #[serde(rename = "should be between")]
@@ -56,12 +52,6 @@ pub struct Range<T> {
     pub left: T,
     /// The right value of the range.
     pub right: T,
-}
-
-#[derive(Deserialize, Debug, PartialEq, Eq)]
-pub struct JsonPathExpr<T> {
-    pub selector: String,
-    pub expression: Expression<T>,
 }
 
 /// Represents an expected `value` associated to a [`Predicate`] to run against
@@ -106,16 +96,6 @@ pub fn is_between<T>(min: T, max: T) -> Expression<Range<T>> {
     }
 }
 
-pub fn json_path<T>(selector: String, expression: Expression<T>) -> Expression<JsonPathExpr<T>> {
-    Expression {
-        predicate: Predicate::JsonPath,
-        value: JsonPathExpr {
-            selector,
-            expression,
-        },
-    }
-}
-
 predicate!(
     /// Creates an expression to assert that the actual value is strictly equal to the expected one.
     is,
@@ -147,11 +127,6 @@ predicate!(
     Predicate::DoesNotMatch
 );
 predicate!(
-    /// Creates an expression to assert that the actual value matches the json path.
-    jsonpath,
-    Predicate::JsonPath
-);
-predicate!(
     /// Creates an expression to assert that the actual value is inferior to the provided value.
     is_less_than,
     Predicate::LessThan
@@ -169,7 +144,6 @@ pub mod tests {
     #[test_case(Value::String(String::from("should not contain")), Predicate::DoesNotContain; "Failed to deserialize predicate DoesNotContain")]
     #[test_case(Value::String(String::from("should match")), Predicate::Matches; "Failed to deserialize predicate Matches")]
     #[test_case(Value::String(String::from("should not match")), Predicate::DoesNotMatch; "Failed to deserialize predicate DoesNotMatch")]
-    #[test_case(Value::String(String::from("should match json path")), Predicate::JsonPath; "Failed to deserialize predicate JsonPath")]
     #[test_case(Value::String(String::from("should be less than")), Predicate::LessThan; "Failed to deserialize predicate LessThan")]
     #[test_case(Value::String(String::from("should be between")), Predicate::Between; "Failed to deserialize predicate Between")]
 

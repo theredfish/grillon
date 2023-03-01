@@ -13,6 +13,10 @@ pub enum Part {
     #[strum(serialize = "json body")]
     #[serde(rename = "json body")]
     JsonBody,
+    /// The json value of an http response at the given path.
+    #[strum(serialize = "json path")]
+    #[serde(rename = "json path")]
+    JsonPath,
     /// The headers in an http response.
     #[strum(serialize = "headers")]
     #[serde(rename = "headers")]
@@ -45,6 +49,7 @@ pub mod tests {
     #[test_case(Value::String(String::from("header")), Part::Header; "Failed to deserialize part Header")]
     #[test_case(Value::String(String::from("status code")), Part::StatusCode; "Failed to deserialize part StatusCode")]
     #[test_case(Value::String(String::from("response time")), Part::ResponseTime; "Failed to deserialize part ResponseTime")]
+    #[test_case(Value::String(String::from("json path")), Part::JsonPath; "Failed to deserialize part JsonPath")]
     fn deser_part(json_part: Value, part: Part) {
         assert_eq!(serde_json::from_value::<Part>(json_part).unwrap(), part)
     }

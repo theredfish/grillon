@@ -1,9 +1,6 @@
 use crate::{
-    assertion::{
-        traits::{Equality, JsonPath},
-        Assertion, Hand,
-    },
-    dsl::{Expression, Part, Predicate},
+    assertion::{traits::Equality, Assertion, Hand},
+    dsl::{Part, Predicate},
 };
 use serde_json::Value;
 
@@ -95,14 +92,6 @@ impl Equality<String> for Value {
     }
 }
 
-impl JsonPath<Value> for Value {
-    type Assertion = Assertion<Value>;
-
-    fn json_path(&self, selector: String, expression: Expression<&Value>) -> Self::Assertion {
-        todo!()
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use crate::assertion::traits::Equality;
@@ -127,7 +116,7 @@ mod tests {
     #[test]
     fn impl_is_eq_value() {
         let assertion = value_stub().is_eq(&value_stub());
-        assert!(assertion.passed(), "{}", assertion.message());
+        assert!(assertion.passed(), "{}", assertion.log());
     }
 
     #[test]
@@ -152,9 +141,9 @@ mod tests {
         let str_assertion = value_stub().is_eq(json_str);
         let string_assertion = value_stub().is_eq(&json_string);
 
-        assert!(value_assertion.passed(), "{}", value_assertion.message());
-        assert!(str_assertion.passed(), "{}", str_assertion.message());
-        assert!(string_assertion.passed(), "{}", string_assertion.message());
+        assert!(value_assertion.passed(), "{}", value_assertion.log());
+        assert!(str_assertion.passed(), "{}", str_assertion.log());
+        assert!(string_assertion.passed(), "{}", string_assertion.log());
     }
 
     #[test]
@@ -174,7 +163,7 @@ mod tests {
         }"#;
 
         let assertion = value_stub().is_eq(json_str);
-        assert!(assertion.passed(), "{}", assertion.message());
+        assert!(assertion.passed(), "{}", assertion.log());
     }
 
     #[test]
@@ -195,7 +184,7 @@ mod tests {
         .to_string();
 
         let assertion = value_stub().is_eq(&json_string);
-        assert!(assertion.passed(), "{}", assertion.message());
+        assert!(assertion.passed(), "{}", assertion.log());
     }
 
     #[test]
@@ -204,7 +193,7 @@ mod tests {
             "another_string": "john"
         });
         let assertion = value_stub().is_ne(&other_value);
-        assert!(assertion.passed(), "{}", assertion.message());
+        assert!(assertion.passed(), "{}", assertion.log());
     }
 
     #[test]
@@ -215,7 +204,7 @@ mod tests {
         }"#;
 
         let assertion = value_stub().is_ne(json_str);
-        assert!(assertion.passed(), "{}", assertion.message());
+        assert!(assertion.passed(), "{}", assertion.log());
     }
 
     #[test]
@@ -227,13 +216,13 @@ mod tests {
         .to_string();
 
         let assertion = value_stub().is_ne(&json_string);
-        assert!(assertion.passed(), "{}", assertion.message());
+        assert!(assertion.passed(), "{}", assertion.log());
     }
 
     #[test]
     fn impl_is_ne_different_type() {
         let assertion = json!({"age": "12"}).is_ne(r#"{"age": 12}"#);
-        assert!(assertion.passed(), "{}", assertion.message());
+        assert!(assertion.passed(), "{}", assertion.log());
     }
 
     mod serialization {

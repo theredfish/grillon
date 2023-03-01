@@ -6,7 +6,7 @@ async fn response_time_less_than() -> Result<()> {
     let mock_server = HttpMockServer::new();
     let mock = mock_server.delete_valid_user();
 
-    Grillon::new(mock_server.server.url("/").as_ref())?
+    Grillon::new(&mock_server.server.url("/"))?
         .delete("users/1")
         .assert()
         .await

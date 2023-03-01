@@ -23,8 +23,10 @@ use crate::{
     grillon::LogSettings,
 };
 use serde::Serialize;
-use serde_json::json;
+use serde_json::{json, Value};
+use std::any::Any;
 use std::fmt::Debug;
+use strum::Display;
 
 /// Short-hand types and aliases used for assertions.
 pub mod types {
@@ -39,7 +41,7 @@ pub mod types {
 }
 
 /// Represents left or right hands in an [`Assertion`].
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 #[serde(untagged)]
 pub enum Hand<T>
 where
@@ -49,14 +51,16 @@ where
     Left(T),
     /// The right hand of the assertion.
     Right(T),
-    /// A more complex hand made of a range that can be left or right.
-    Range(T, T),
+    /// A hand composed of two elements.
+    Compound(T, T),
+    /// An empty hand
+    Empty,
 }
 
 /// The assertion encapsulating information about the [`Part`] under
 /// test, the [`Predicate`] used, the [`AssertionResult`] and the right and left
 /// [`Hand`]s.
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct Assertion<T>
 where
     T: Debug + Serialize,
@@ -73,8 +77,47 @@ where
     pub result: AssertionResult,
 }
 
+/// Unprocessable event reason. This enum should
+/// be used when the assertion syntax is correct
+/// but the implementor is unable to process the
+/// assertion due to an unexpected event.
+///
+/// For example, when an implementation asserts
+/// that a word exists in a file but there is no
+/// read access. In this case, the assertion
+/// fails not because the word is missing, but
+/// because the file content cannot be
+/// processed.
+#[derive(Serialize, Debug)]
+#[serde(rename_all = "snake_case")]
+pub enum UnprocessableReason {
+    /// Unprocessable json path with the string representation of the path.
+    JsonPath(String),
+    /// Unprocessable json body because it's missing.
+    JsonBodyMissing,
+    /// Unprocessable entity.
+    Other(String),
+}
+
+// Strum cannot be used here since sum type fields are
+// not supported yet just like positional arguments for
+// tuple variants.
+impl std::fmt::Display for UnprocessableReason {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            UnprocessableReason::JsonPath(message) => {
+                write!(f, "Unprocessable json path: {message}")
+            }
+            UnprocessableReason::JsonBodyMissing => {
+                write!(f, "Unprocessable json body: missing")
+            }
+            UnprocessableReason::Other(message) => write!(f, "{message}"),
+        }
+    }
+}
+
 /// The assertion's result.
-#[derive(Serialize)]
+#[derive(Serialize, Display, Debug)]
 #[serde(rename_all = "snake_case")]
 pub enum AssertionResult {
     /// When the assertion passed.
@@ -83,32 +126,127 @@ pub enum AssertionResult {
     Failed,
     /// When the assertion didn't start.
     NotYetStarted,
+    /// When the assertion is correct but cannot be processed
+    /// due to an unexpected reason.
+    Unprocessable(UnprocessableReason),
+}
+
+pub struct Message(String);
+
+impl Message {
+    /// Builds the assertion message based on the [`Predicate`], the [`Part`]
+    /// and the [`AssertionResult`].
+    pub fn new<T: Any + Debug + Serialize>(assertion: &Assertion<T>) -> Self {
+        if let AssertionResult::Unprocessable(reason) = &assertion.result {
+            return Self(format!("{reason}"));
+        }
+
+        match assertion.part {
+            Part::JsonPath => Self::jsonpath_message(assertion),
+            _ => Self::message(assertion),
+        }
+    }
+
+    fn message<T: Debug + Serialize>(assertion: &Assertion<T>) -> Self {
+        let predicate = &assertion.predicate;
+        let part = &assertion.part;
+
+        let left = match &assertion.left {
+            Hand::Left(left) => format!("{left:#?}"),
+            Hand::Compound(left, right) if part == &Part::StatusCode => {
+                format!("{left:#?} and {right:#?}")
+            }
+            // Hand::Compound(left, _) if part == &Part::JsonPath => format!("'{left}'"),
+            _ => "Unexpected left hand in right hand".to_string(),
+        };
+        let right = match &assertion.right {
+            Hand::Right(right) => format!("{right:#?}"),
+            Hand::Compound(left, right) if part == &Part::StatusCode => {
+                format!("{left:#?} and {right:#?}")
+            }
+            // Hand::Compound(_, right) if part == &Part::JsonPath => format!("'{right}'"),
+            _ => "Unexpected left hand in right hand".to_string(),
+        };
+
+        // The base message is built as a passing case.
+        let base_message = match part {
+            Part::Empty => format!("{left} {predicate} {right}"),
+            _ => format!("{part} {predicate} {right}"),
+        };
+
+        let message = match &assertion.result {
+            AssertionResult::Passed => base_message,
+            AssertionResult::Failed => format!("{base_message}. Found {left}"),
+            AssertionResult::NotYetStarted => format!("Not yet started : {base_message}"),
+            AssertionResult::Unprocessable(reason) => format!("{reason}"),
+        };
+
+        Self(message)
+    }
+
+    fn jsonpath_message<T: Any + Debug + Serialize>(assertion: &Assertion<T>) -> Self {
+        let predicate = &assertion.predicate;
+        let part = &assertion.part;
+
+        let left_hand = match &assertion.left {
+            Hand::Left(left) if part == &Part::JsonPath => left,
+            _ => return Self("<unexpected left hand>".to_string()),
+        };
+        let right_hand = match &assertion.right {
+            Hand::Compound(left, right) if part == &Part::JsonPath => (left, right),
+            _ => return Self("<unexpected right hand>".to_string()),
+        };
+
+        let jsonpath = right_hand.0;
+        #[allow(trivial_casts)]
+        let jsonpath = match (jsonpath as &dyn Any).downcast_ref::<Value>() {
+            Some(Value::String(jsonpath_string)) => jsonpath_string.to_string(),
+            _ => format!("{jsonpath:?}"),
+        };
+
+        let jsonpath_value = right_hand.1;
+
+        let message = format!("condition: {part} '{jsonpath}'");
+
+        let message = match &assertion.result {
+            AssertionResult::Passed => format!(
+                "{message}
+            expected: {left_hand:?}"
+            ),
+            AssertionResult::Failed => format!(
+                "{message}
+            {predicate}: {left_hand:#?}
+            was: {jsonpath_value:#?}"
+            ),
+            AssertionResult::NotYetStarted => format!("[Not yet started] {message}"),
+            AssertionResult::Unprocessable(reason) => format!("{reason}"),
+        };
+
+        Self(message)
+    }
 }
 
 impl<T> Assertion<T>
 where
-    T: Debug + Serialize,
+    T: Debug + Serialize + 'static,
 {
     /// Returns if the assertion passed.
     pub fn passed(&self) -> bool {
-        match self.result {
-            AssertionResult::Passed => true,
-            AssertionResult::Failed | AssertionResult::NotYetStarted => false,
-        }
+        matches!(self.result, AssertionResult::Passed)
     }
 
     /// Returns if the assertion failed.
     pub fn failed(&self) -> bool {
-        match self.result {
-            AssertionResult::Failed => true,
-            AssertionResult::Passed | AssertionResult::NotYetStarted => false,
-        }
+        matches!(
+            self.result,
+            AssertionResult::Failed | AssertionResult::Unprocessable(_)
+        )
     }
 
     /// Runs the assertion and produce the the result results with the given
     /// [`LogSettings`].
     pub fn assert(self, log_settings: &LogSettings) -> Assertion<T> {
-        let message = self.message();
+        let message = self.log();
         match log_settings {
             LogSettings::StdOut => println!("{message}"),
             LogSettings::StdAssert => assert!(self.passed(), "{}", message),
@@ -122,54 +260,28 @@ where
         self
     }
 
-    /// Builds the assertion message based on the [`Predicate`], the [`Part`]
-    /// and the [`AssertionResult`].
-    fn message(&self) -> String {
-        let result = &self.result;
-
-        let predicate = &self.predicate;
-        let part = &self.part;
-        let left = match &self.left {
-            Hand::Left(left) => format!("{left:#?}"),
-            Hand::Range(min, max) => format!("{min:#?} and {max:#?}"),
-            Hand::Right(_) => "".to_string(),
-        };
-        let right = match &self.right {
-            Hand::Right(right) => format!("{right:#?}"),
-            Hand::Range(min, max) => format!("{min:#?} and {max:#?}"),
-            Hand::Left(_) => "".to_string(),
-        };
-
-        // The base message is built as a passing case.
-        let message = match part {
-            Part::Empty => format!("{left} {predicate} {right}"),
-            _ => format!("{part} {predicate} {right}"),
-        };
-
-        match result {
-            AssertionResult::Passed => message,
-            AssertionResult::Failed => format!("{message}. Found {left}"),
-            AssertionResult::NotYetStarted => format!("Not yet started : {message}"),
-        }
+    fn log(&self) -> String {
+        Message::new(self).0
     }
 }
 
 impl From<bool> for AssertionResult {
     fn from(val: bool) -> Self {
         if val {
-            AssertionResult::Passed
-        } else {
-            AssertionResult::Failed
+            return AssertionResult::Passed;
         }
+
+        AssertionResult::Failed
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{AssertionResult, Hand};
+    use super::{AssertionResult, Hand, UnprocessableReason};
     use crate::dsl::Predicate::{Between, LessThan};
     use crate::{assertion::Assertion, dsl::Part};
     use serde_json::json;
+    use test_case::test_case;
 
     #[test]
     fn it_should_serialize_status_code() {
@@ -177,7 +289,7 @@ mod tests {
             part: Part::StatusCode,
             predicate: Between,
             left: Hand::Left(200),
-            right: Hand::Range(200, 299),
+            right: Hand::Compound(200, 299),
             result: AssertionResult::Passed,
         };
 
@@ -211,5 +323,15 @@ mod tests {
         });
 
         assert_eq!(json!(assertion), expected_json);
+    }
+
+    #[test_case(UnprocessableReason::JsonPath("$.store.unknown".to_string()), "Unprocessable json path: $.store.unknown".to_string(); "Failed to display UnprocessableReason::JsonPath")]
+    #[test_case(UnprocessableReason::JsonBodyMissing, "Unprocessable json body: missing".to_string(); "Failed to display UnprocessableReason::JsonBodyMissing")]
+    #[test_case(UnprocessableReason::Other("custom unprocessable reason".to_string()), "custom unprocessable reason".to_string(); "Failed to display UnprocessableReason::Other")]
+    fn it_should_display_unprocessable_reason(
+        unprocessable_reason: UnprocessableReason,
+        expected_string: String,
+    ) {
+        assert_eq!(unprocessable_reason.to_string(), expected_string);
     }
 }
