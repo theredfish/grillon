@@ -206,7 +206,7 @@ impl Message {
 
         let jsonpath_value = right_hand.1;
 
-        let message = format!("condition: {part} '{jsonpath}'");
+        let message = format!("\ncondition: {part} '{jsonpath}'");
 
         let message = match &assertion.result {
             AssertionResult::Passed => format!(
@@ -215,8 +215,8 @@ impl Message {
             ),
             AssertionResult::Failed => format!(
                 "{message}
-            {predicate}: {left_hand:#?}
-            was: {jsonpath_value:#?}"
+{predicate}: {left_hand:#?}
+was: {jsonpath_value:#?}"
             ),
             AssertionResult::NotYetStarted => format!("[Not yet started] {message}"),
             AssertionResult::Unprocessable(reason) => format!("{reason}"),

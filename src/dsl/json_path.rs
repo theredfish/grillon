@@ -42,25 +42,14 @@ pub trait JsonPathDsl<T> {
 
 impl JsonPathDsl<Value> for Value {
     fn is(&self, jsonpath_res: JsonPathResult<'_, Value>) -> Assertion<Value> {
-        jsonpath_res.is_eq(&to_json_array(self))
+        // let to_array: Value = self.take();
+        match self {
+            Value::Array(_) => jsonpath_res.is_eq(&self),
+            _ => jsonpath_res.is_eq(&Value::Array(vec![self.clone()])),
+        }
     }
 
     fn is_not(&self, jsonpath_res: JsonPathResult<'_, Value>) -> Assertion<Value> {
-        jsonpath_res.is_ne(&to_json_array(self))
-    }
-}
-
-// TODO: move to_json_array to the caller (assert.rs)
-
-/// The value returned for a given path is always an array, even if there
-/// is only one element. This is because we can't make any assumption
-/// about the number of elements returned. However, the user will not
-/// naturally wrap their expected value to an array. If we get something
-/// else than a `Value::Array` then we wrap the expected json value in
-/// an array.
-fn to_json_array(json: &Value) -> Value {
-    match json {
-        Value::Array(_) => json.clone(),
-        _ => Value::Array(vec![json.clone()]),
+        jsonpath_res.is_ne(self)
     }
 }

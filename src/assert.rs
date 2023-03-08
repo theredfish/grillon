@@ -165,6 +165,7 @@ impl Assert {
     {
         use jsonpath_rust::JsonPathQuery;
 
+        // Check for empty json body
         let json_body = if let Some(body) = self.json.clone() {
             body
         } else {
@@ -180,8 +181,9 @@ impl Assert {
             return self;
         };
 
+        // Check for unprocessable json path
         let jsonpath_value = match json_body.path(path) {
-            Ok(result) => result,
+            Ok(json) => json,
             Err(_) => {
                 let assertion = Assertion {
                     part: Part::JsonPath,
