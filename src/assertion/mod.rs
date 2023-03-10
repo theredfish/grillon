@@ -131,9 +131,16 @@ pub enum AssertionResult {
     Unprocessable(UnprocessableReason),
 }
 
-pub struct Message(String);
+/// Represents an assertion log.
+///
+/// A log is built according to this scheme:
+///
+/// condition: <part> [compound_hand_part] <predicate>
+/// expected: <expected_value>
+/// was: <found_value>
+pub struct AssertionLog(String);
 
-impl Message {
+impl AssertionLog {
     /// Builds the assertion message based on the [`Predicate`], the [`Part`]
     /// and the [`AssertionResult`].
     pub fn new<T: Any + Debug + Serialize>(assertion: &Assertion<T>) -> Self {
@@ -142,12 +149,12 @@ impl Message {
         }
 
         match assertion.part {
-            Part::JsonPath => Self::jsonpath_message(assertion),
-            _ => Self::message(assertion),
+            Part::JsonPath => Self::jsonpath_log(assertion),
+            _ => Self::log(assertion),
         }
     }
 
-    fn message<T: Debug + Serialize>(assertion: &Assertion<T>) -> Self {
+    fn log<T: Debug + Serialize>(assertion: &Assertion<T>) -> Self {
         let predicate = &assertion.predicate;
         let part = &assertion.part;
 
@@ -184,7 +191,7 @@ impl Message {
         Self(message)
     }
 
-    fn jsonpath_message<T: Any + Debug + Serialize>(assertion: &Assertion<T>) -> Self {
+    fn jsonpath_log<T: Any + Debug + Serialize>(assertion: &Assertion<T>) -> Self {
         let predicate = &assertion.predicate;
         let part = &assertion.part;
 
@@ -261,7 +268,7 @@ where
     }
 
     fn log(&self) -> String {
-        Message::new(self).0
+        AssertionLog::new(self).0
     }
 }
 

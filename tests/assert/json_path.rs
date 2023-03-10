@@ -5,28 +5,20 @@ use grillon::{
 };
 
 #[tokio::test]
-async fn json_path_should_be_equal_with_both_json_and_array() -> Result<()> {
+async fn json_path_should_be_equal_to_json() -> Result<()> {
     let mock_server = HttpMockServer::new();
     let mock = mock_server.get_valid_user();
 
     let path = "$";
-    // This json value should automatically wrapped into an array by Grillon.
-    // This is because the jsonpath-rust lib always encapsulate result into an
-    // array since we can't know the number of items in advance.
     let expected_json = json!({
         "id": 1,
         "name": "Isaac",
     });
-    let expected_json_array = json!([{
-        "id": 1,
-        "name": "Isaac",
-    }]);
 
     Grillon::new(&mock_server.server.url("/"))?
         .get("users/1")
         .assert()
         .await
-        .json_path(path, is(expected_json_array))
         .json_path(path, is(expected_json));
 
     mock.assert();

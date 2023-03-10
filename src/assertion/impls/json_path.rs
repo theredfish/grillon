@@ -4,19 +4,18 @@ use crate::{
 };
 use serde_json::Value;
 
-// Note that lhs and rhs are inversed here because of the JsonPathResult wrapper.
-// We can't test equality in the other way since the trait Equality is
-// already implemented for json (which is a Value). Might change later.
+// Hand compound here is used to store the json path result made
+// of a path and of the value found at this given path.
 impl Equality<Value> for JsonPathResult<'_, Value> {
     type Assertion = Assertion<Value>;
 
-    fn is_eq(&self, actual: &Value) -> Self::Assertion {
-        let result = self.value == to_value_array(actual);
+    fn is_eq(&self, expected: &Value) -> Self::Assertion {
+        let result = self.value == to_value_array(expected);
 
         Assertion {
             predicate: Predicate::Is,
             part: Part::JsonPath,
-            left: Hand::Left(actual.clone()),
+            left: Hand::Left(expected.clone()),
             right: Hand::Compound(Value::String(self.path.to_string()), self.value.clone()),
             result: result.into(),
         }
@@ -48,6 +47,7 @@ fn to_value_array(value: &Value) -> Value {
 
 #[cfg(test)]
 mod tests {
+    use crate::dsl::json_path::JsonPathResult;
     use serde_json::{json, Value};
 
     fn json_stub() -> Value {
@@ -74,11 +74,23 @@ mod tests {
         })
     }
 
+    // This module test equality through different data structures to also
+    // cover the `Value::Array` wrapper.
     mod is_eq {
-        use super::json_stub;
-        use crate::{assertion::traits::Equality, dsl::json_path::JsonPathResult};
+        use super::{json_stub, JsonPathResult};
+        use crate::assertion::traits::Equality;
         use jsonpath_rust::JsonPathQuery;
         use serde_json::json;
+
+        #[test]
+        fn impl_is_eq_should_fail_with_inexistant_data() {
+            let path = "$.unknown";
+            let value = json_stub().path(path).unwrap();
+            let jsonpath_result = JsonPathResult { path, value };
+
+            let assertion = jsonpath_result.is_eq(&json_stub());
+            assert!(assertion.failed(), "{}", assertion.log());
+        }
 
         #[test]
         fn impl_is_eq_root() {
@@ -186,5 +198,142 @@ mod tests {
         }
     }
 
-    // TODO: test is_ne, de/ser, and assertion failures with invalid path
+    mod is_ne {
+        use super::{json_stub, JsonPathResult};
+        use crate::assertion::traits::Equality;
+        use jsonpath_rust::JsonPathQuery;
+        use serde_json::json;
+
+        #[test]
+        fn impl_is_ne_object_with_array_and_object() {
+            let path = "$.shop";
+            let value = json_stub().path(path).unwrap();
+            let jsonpath_result = JsonPathResult { path, value };
+            // commented element highlight what was removed from initial
+            // json data.
+            let expected_json = json!({
+                "orders": [
+                    {
+                        "id": 1,
+                        // "active": true
+                    },
+                    {
+                        "id": 2
+                    },
+                    {
+                        "id": 3
+                    },
+                    {
+                        "id": 4,
+                        "active": true
+                    }
+                ],
+                "total": 4
+            });
+
+            let assertion = jsonpath_result.is_ne(&expected_json);
+            assert!(assertion.passed(), "{}", assertion.log());
+        }
+
+        #[test]
+        fn impl_is_ne_fails() {
+            let path = "$.shop";
+            let value = json_stub().path(path).unwrap();
+            let jsonpath_result = JsonPathResult { path, value };
+            let expected_json = json!({
+                "orders": [
+                    {
+                        "id": 1,
+                        "active": true
+                    },
+                    {
+                        "id": 2
+                    },
+                    {
+                        "id": 3
+                    },
+                    {
+                        "id": 4,
+                        "active": true
+                    }
+                ],
+                "total": 4
+            });
+
+            let assertion = jsonpath_result.is_ne(&expected_json);
+            assert!(assertion.failed(), "{}", assertion.log());
+        }
+    }
+
+    mod serialization {
+        use super::{json_stub, JsonPathResult};
+        use crate::assertion::traits::Equality;
+        use jsonpath_rust::JsonPathQuery;
+        use serde_json::json;
+
+        #[test]
+        fn it_serializes_jsonpath_should_be() {
+            let path = "$.shop.orders[0]";
+            let value = json_stub().path(path).unwrap();
+            let jsonpath_result = JsonPathResult { path, value };
+            let json_path_value = json!({
+              "id": 1,
+              "active": true
+            });
+
+            let expected_serialization = json!({
+                "part": "json path",
+                "predicate": "should be",
+                "left": json_path_value,
+                "right":  json!([
+                    path,
+                    [json_path_value]
+                ]),
+                "result": "passed"
+            });
+
+            let assertion = jsonpath_result.is_eq(&json_path_value);
+
+            assert_eq!(
+                json!(assertion),
+                expected_serialization,
+                "Serialized assertion is not equals to the expected json {:#?}",
+                assertion
+            );
+        }
+
+        #[test]
+        fn it_serializes_jsonpath_should_not_be() {
+            let path = "$.shop.orders[0]";
+            let value_array = json_stub().path(path).unwrap();
+            let jsonpath_result = JsonPathResult {
+                path,
+                value: value_array.clone(),
+            };
+            let expected_not_json_path_value = json!({
+                "id": 1,
+                "active": false
+            });
+
+            let expected_serialization = json!({
+                "part": "json path",
+                "predicate": "should not be",
+                "left": expected_not_json_path_value,
+                "right":  json!([
+                    path,
+                    value_array
+                ]),
+                "result": "passed"
+            });
+
+            let assertion = jsonpath_result.is_ne(&expected_not_json_path_value);
+
+            assert_eq!(
+                json!(assertion),
+                expected_serialization,
+                "Serialized assertion is not equals to the expected json {:#?}",
+                assertion
+            );
+        }
+    }
 }

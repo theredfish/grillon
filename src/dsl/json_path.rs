@@ -1,3 +1,5 @@
+//! The json path domain-specific language.
+
 use crate::{
     assertion::traits::Equality,
     assertion::Assertion,
@@ -7,13 +9,21 @@ use crate::{
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+/// Represents the result of a json path query.
+///
+/// This structure is used to wrap the json path result
+/// and run assertions against.
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct JsonPathResult<'p, T> {
+    /// The path used to run the json path query.
     pub path: &'p str,
+    /// The resulting json value of the json path query.
     pub value: T,
 }
 
 impl<'p, T> JsonPathResult<'p, T> {
+    /// Creates a new instance of `JsonPathResult` that is
+    /// wrapping the given `path` and the given `value`.
     pub fn new(path: &'p str, value: T) -> Self {
         Self { path, value }
     }
@@ -42,11 +52,7 @@ pub trait JsonPathDsl<T> {
 
 impl JsonPathDsl<Value> for Value {
     fn is(&self, jsonpath_res: JsonPathResult<'_, Value>) -> Assertion<Value> {
-        // let to_array: Value = self.take();
-        match self {
-            Value::Array(_) => jsonpath_res.is_eq(&self),
-            _ => jsonpath_res.is_eq(&Value::Array(vec![self.clone()])),
-        }
+        jsonpath_res.is_eq(self)
     }
 
     fn is_not(&self, jsonpath_res: JsonPathResult<'_, Value>) -> Assertion<Value> {
