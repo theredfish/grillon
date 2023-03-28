@@ -134,10 +134,12 @@ pub enum AssertionResult {
 /// Represents an assertion log.
 ///
 /// A log is built according to this scheme:
+/// - part: \<part\> \[compound_hand_part]
+/// - \<predicate\>: \<expected_value\>
+/// - was: \<found_value\> (only in case of failure)
 ///
-/// condition: <part> [compound_hand_part] <predicate>
-/// expected: <expected_value>
-/// was: <found_value>
+/// The log will be displayed for both [`LogSettings::StdOut`] and
+/// [`LogSettings::StdAssert`]
 pub struct AssertionLog(String);
 
 impl AssertionLog {
@@ -163,7 +165,6 @@ impl AssertionLog {
             Hand::Compound(left, right) if part == &Part::StatusCode => {
                 format!("{left:#?} and {right:#?}")
             }
-            // Hand::Compound(left, _) if part == &Part::JsonPath => format!("'{left}'"),
             _ => "Unexpected left hand in right hand".to_string(),
         };
         let right = match &assertion.right {
@@ -171,20 +172,21 @@ impl AssertionLog {
             Hand::Compound(left, right) if part == &Part::StatusCode => {
                 format!("{left:#?} and {right:#?}")
             }
-            // Hand::Compound(_, right) if part == &Part::JsonPath => format!("'{right}'"),
             _ => "Unexpected left hand in right hand".to_string(),
         };
 
-        // The base message is built as a passing case.
-        let base_message = match part {
-            Part::Empty => format!("{left} {predicate} {right}"),
-            _ => format!("{part} {predicate} {right}"),
-        };
-
+        let message = format!("part: {part}");
         let message = match &assertion.result {
-            AssertionResult::Passed => base_message,
-            AssertionResult::Failed => format!("{base_message}. Found {left}"),
-            AssertionResult::NotYetStarted => format!("Not yet started : {base_message}"),
+            AssertionResult::Passed => format!(
+                "{message}
+{predicate}: {right:#?}"
+            ),
+            AssertionResult::Failed => format!(
+                "{message}
+{predicate}: {right:#?}
+was: {left:#?}"
+            ),
+            AssertionResult::NotYetStarted => format!("Not yet started : {message}"),
             AssertionResult::Unprocessable(reason) => format!("{reason}"),
         };
 
@@ -213,12 +215,11 @@ impl AssertionLog {
 
         let jsonpath_value = right_hand.1;
 
-        let message = format!("\ncondition: {part} '{jsonpath}'");
-
+        let message = format!("part: {part} '{jsonpath}'");
         let message = match &assertion.result {
             AssertionResult::Passed => format!(
                 "{message}
-            expected: {left_hand:?}"
+{predicate}: {left_hand:#?}"
             ),
             AssertionResult::Failed => format!(
                 "{message}
@@ -255,8 +256,8 @@ where
     pub fn assert(self, log_settings: &LogSettings) -> Assertion<T> {
         let message = self.log();
         match log_settings {
-            LogSettings::StdOut => println!("{message}"),
-            LogSettings::StdAssert => assert!(self.passed(), "{}", message),
+            LogSettings::StdOut => println!("\n{message}"),
+            LogSettings::StdAssert => assert!(self.passed(), "\n\n{message}"),
             LogSettings::Json => {
                 let json = serde_json::to_string(&json!(self))
                     .expect("Unexpected json failure: failed to serialize assertion");

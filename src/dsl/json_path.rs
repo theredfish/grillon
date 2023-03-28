@@ -45,7 +45,7 @@ pub trait JsonPathDsl<T> {
         match predicate {
             Is => self.is(jsonpath_res).assert(log_settings),
             IsNot => self.is_not(jsonpath_res).assert(log_settings),
-            _ => unimplemented!("Invalid predicate for the json body DSL : {predicate}"),
+            _ => unimplemented!("Invalid predicate for the json path DSL: {predicate}"),
         }
     }
 }

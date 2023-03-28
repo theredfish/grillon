@@ -9,17 +9,11 @@ async fn json_path_should_be_equal_to_json() -> Result<()> {
     let mock_server = HttpMockServer::new();
     let mock = mock_server.get_valid_user();
 
-    let path = "$";
-    let expected_json = json!({
-        "id": 1,
-        "name": "Isaac",
-    });
-
     Grillon::new(&mock_server.server.url("/"))?
         .get("users/1")
         .assert()
         .await
-        .json_path(path, is(expected_json));
+        .json_path("$.id", is(json!(1)));
 
     mock.assert();
 

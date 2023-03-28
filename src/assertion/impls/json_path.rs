@@ -209,7 +209,7 @@ mod tests {
             let path = "$.shop";
             let value = json_stub().path(path).unwrap();
             let jsonpath_result = JsonPathResult { path, value };
-            // commented element highlight what was removed from initial
+            // commented element highlights what was removed from initial
             // json data.
             let expected_json = json!({
                 "orders": [
@@ -261,6 +261,7 @@ mod tests {
             });
 
             let assertion = jsonpath_result.is_ne(&expected_json);
+            // Fails because asserted value is equals to the expected value.
             assert!(assertion.failed(), "{}", assertion.log());
         }
     }

@@ -158,7 +158,7 @@ impl Assert {
         self
     }
 
-    /// Asserts the json body of the response.
+    /// Asserts the value found at the given json path.
     pub fn json_path<T>(self, path: &str, expr: Expression<T>) -> Assert
     where
         T: JsonPathDsl<Value>,
