@@ -43,7 +43,12 @@
 //! ```
 
 use crate::{
-    dsl::{http::*, Expression},
+    assertion::{Assertion, AssertionResult, Hand, UnprocessableReason},
+    dsl::{
+        http::*,
+        json_path::{JsonPathDsl, JsonPathResult},
+        Expression, Part,
+    },
     grillon::LogSettings,
     Response,
 };
@@ -53,6 +58,7 @@ use serde_json::Value;
 
 /// [`Assert`] uses an internal representation of the http response to assert
 /// against.
+#[derive(Clone)]
 pub struct Assert {
     /// The http response header to assert.
     pub headers: HeaderMap,
@@ -133,8 +139,72 @@ impl Assert {
     where
         T: JsonBodyDsl<Value>,
     {
-        let actual = self.json.clone().unwrap();
+        let actual = if let Some(body) = self.json.clone() {
+            body
+        } else {
+            let assertion = Assertion {
+                part: Part::JsonPath,
+                predicate: expr.predicate,
+                left: Hand::Empty::<Value>,
+                right: Hand::Empty,
+                result: AssertionResult::Unprocessable(UnprocessableReason::JsonBodyMissing),
+            };
+            assertion.assert(&self.log_settings);
+
+            return self;
+        };
         let _assertion = expr.value.eval(actual, expr.predicate, &self.log_settings);
+
+        self
+    }
+
+    /// Asserts the value found at the given json path.
+    pub fn json_path<T>(self, path: &str, expr: Expression<T>) -> Assert
+    where
+        T: JsonPathDsl<Value>,
+    {
+        use jsonpath_rust::JsonPathQuery;
+
+        // Check for empty json body
+        let json_body = if let Some(body) = self.json.clone() {
+            body
+        } else {
+            let assertion = Assertion {
+                part: Part::JsonPath,
+                predicate: expr.predicate,
+                left: Hand::Empty::<Value>,
+                right: Hand::Empty,
+                result: AssertionResult::Unprocessable(UnprocessableReason::JsonBodyMissing),
+            };
+            assertion.assert(&self.log_settings);
+
+            return self;
+        };
+
+        // Check for unprocessable json path
+        let jsonpath_value = match json_body.path(path) {
+            Ok(json) => json,
+            Err(_) => {
+                let assertion = Assertion {
+                    part: Part::JsonPath,
+                    predicate: expr.predicate,
+                    left: Hand::Empty::<Value>,
+                    right: Hand::Empty,
+                    result: AssertionResult::Unprocessable(UnprocessableReason::JsonPath(
+                        path.to_string(),
+                    )),
+                };
+                assertion.assert(&self.log_settings);
+
+                return self;
+            }
+        };
+
+        let jsonpath_res = JsonPathResult::new(path, jsonpath_value);
+
+        let _assertion = expr
+            .value
+            .eval(jsonpath_res, expr.predicate, &self.log_settings);
 
         self
     }

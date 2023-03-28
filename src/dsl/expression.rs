@@ -6,7 +6,7 @@ use strum::Display;
 /// [`Predicate`]s are used in the various DSL modules to apply conditions
 /// in assertions in a declarative way. A [`Predicate`] is used via an
 /// [`Expression`].
-#[derive(Display, Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Display, Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub enum Predicate {
     /// Actual should be equals (strictly) to expected.
     #[strum(serialize = "should be")]
@@ -36,10 +36,6 @@ pub enum Predicate {
     #[strum(serialize = "should be less than")]
     #[serde(rename = "should be less than")]
     LessThan,
-    /// Actual should match the json path.
-    #[strum(serialize = "should match json path")]
-    #[serde(rename = "should match json path")]
-    JsonPath,
     /// Actual should be between the given closed interval [min, max].
     #[strum(serialize = "should be between")]
     #[serde(rename = "should be between")]
@@ -131,11 +127,6 @@ predicate!(
     Predicate::DoesNotMatch
 );
 predicate!(
-    /// Creates an expression to assert that the actual value matches the json path.
-    jsonpath,
-    Predicate::JsonPath
-);
-predicate!(
     /// Creates an expression to assert that the actual value is inferior to the provided value.
     is_less_than,
     Predicate::LessThan
@@ -153,7 +144,6 @@ pub mod tests {
     #[test_case(Value::String(String::from("should not contain")), Predicate::DoesNotContain; "Failed to deserialize predicate DoesNotContain")]
     #[test_case(Value::String(String::from("should match")), Predicate::Matches; "Failed to deserialize predicate Matches")]
     #[test_case(Value::String(String::from("should not match")), Predicate::DoesNotMatch; "Failed to deserialize predicate DoesNotMatch")]
-    #[test_case(Value::String(String::from("should match json path")), Predicate::JsonPath; "Failed to deserialize predicate JsonPath")]
     #[test_case(Value::String(String::from("should be less than")), Predicate::LessThan; "Failed to deserialize predicate LessThan")]
     #[test_case(Value::String(String::from("should be between")), Predicate::Between; "Failed to deserialize predicate Between")]
 

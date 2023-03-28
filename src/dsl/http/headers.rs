@@ -33,7 +33,7 @@ pub trait HeadersDsl<T> {
             Predicate::IsNot => self.is_not(actual).assert(log_settings),
             Predicate::Contains => self.contains(actual).assert(log_settings),
             Predicate::DoesNotContain => self.does_not_contain(actual).assert(log_settings),
-            _ => unimplemented!("Invalid predicate for the header DSL : {predicate}"),
+            _ => unimplemented!("Invalid predicate for the header DSL: {predicate}"),
         }
     }
 }

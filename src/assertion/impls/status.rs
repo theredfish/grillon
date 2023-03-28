@@ -67,7 +67,7 @@ impl RangeInclusive<StatusCode> for StatusCode {
             predicate: Predicate::Between,
             part: Part::StatusCode,
             left: Hand::Left(lhs),
-            right: Hand::Range(min, max),
+            right: Hand::Compound(min, max),
             result: result.into(),
         }
     }
@@ -84,7 +84,7 @@ impl RangeInclusive<u16> for StatusCode {
             predicate: Predicate::Between,
             part: Part::StatusCode,
             left: Hand::Left(lhs),
-            right: Hand::Range(*min, *max),
+            right: Hand::Compound(*min, *max),
             result: result.into(),
         }
     }
@@ -99,25 +99,25 @@ pub mod tests {
     #[test]
     fn impl_is_eq_status_code() {
         let assertion = StatusCode::FORBIDDEN.is_eq(&StatusCode::FORBIDDEN);
-        assert!(assertion.passed(), "{}", assertion.message())
+        assert!(assertion.passed(), "{}", assertion.log())
     }
 
     #[test]
     fn impl_is_eq_u16() {
         let assertion = StatusCode::FORBIDDEN.is_eq(&403);
-        assert!(assertion.passed(), "{}", assertion.message())
+        assert!(assertion.passed(), "{}", assertion.log())
     }
 
     #[test]
     fn impl_is_not_status_code() {
         let assertion = StatusCode::FORBIDDEN.is_ne(&StatusCode::OK);
-        assert!(assertion.passed(), "{}", assertion.message())
+        assert!(assertion.passed(), "{}", assertion.log())
     }
 
     #[test]
     fn impl_is_not_u16() {
         let assertion = StatusCode::FORBIDDEN.is_ne(&200);
-        assert!(assertion.passed(), "{}", assertion.message())
+        assert!(assertion.passed(), "{}", assertion.log())
     }
 
     #[test]
@@ -125,7 +125,7 @@ pub mod tests {
         let assertion =
             StatusCode::FORBIDDEN.in_range(&StatusCode::BAD_REQUEST, &StatusCode::NOT_FOUND);
 
-        assert!(assertion.passed(), "{}", assertion.message())
+        assert!(assertion.passed(), "{}", assertion.log())
     }
 
     #[test]
@@ -189,7 +189,7 @@ pub mod tests {
                 "part": "status code",
                 "predicate": "should be between",
                 "left": status.as_u16(),
-                "right": Hand::Range(400, 404),
+                "right": Hand::Compound(400, 404),
                 "result": "passed"
             });
 

@@ -353,7 +353,7 @@ mod tests {
     fn impl_is_eq_header_map() {
         let assertion = header_map_stub().is_eq(&header_map_stub());
 
-        assert!(assertion.passed(), "{}", assertion.message());
+        assert!(assertion.passed(), "{}", assertion.log());
     }
 
     #[test]
@@ -366,14 +366,14 @@ mod tests {
 
         let assertion = header_map_stub().is_ne(&header_map);
 
-        assert!(assertion.passed(), "{}", assertion.message());
+        assert!(assertion.passed(), "{}", assertion.log());
     }
 
     #[test]
     fn impl_is_eq_header_tuple_vec() {
         let assertion = header_map_stub().is_eq(&header_tuple_vec_stub());
 
-        assert!(assertion.passed(), "{}", assertion.message());
+        assert!(assertion.passed(), "{}", assertion.log());
     }
 
     #[test]
@@ -386,14 +386,14 @@ mod tests {
 
         let assertion = header_map_stub().is_ne(&header_tuple_vec);
 
-        assert!(assertion.passed(), "{}", assertion.message());
+        assert!(assertion.passed(), "{}", assertion.log());
     }
 
     #[test]
     fn impl_is_eq_headers() {
         let assertion = header_map_stub().is_eq(&headers_stub());
 
-        assert!(assertion.passed(), "{}", assertion.message());
+        assert!(assertion.passed(), "{}", assertion.log());
     }
 
     #[test]
@@ -406,7 +406,7 @@ mod tests {
 
         let assertion = header_map_stub().is_ne(&headers);
 
-        assert!(assertion.passed(), "{}", assertion.message());
+        assert!(assertion.passed(), "{}", assertion.log());
     }
 
     #[test]
@@ -418,10 +418,10 @@ mod tests {
         header_map_two_items.insert(DATE, HeaderValue::from_static("today"));
 
         let assertion = header_map_stub().has(&header_map_one_item);
-        assert!(assertion.passed(), "{}", assertion.message());
+        assert!(assertion.passed(), "{}", assertion.log());
 
         let assertion = header_map_stub().has(&header_map_two_items);
-        assert!(assertion.passed(), "{}", assertion.message());
+        assert!(assertion.passed(), "{}", assertion.log());
     }
 
     #[test]
@@ -439,10 +439,10 @@ mod tests {
         header_map_two_items.insert(DATE, HeaderValue::from_static("tomorrow"));
 
         let assertion = header_map_stub().has_not(&header_map_one_item);
-        assert!(assertion.passed(), "{}", assertion.message());
+        assert!(assertion.passed(), "{}", assertion.log());
 
         let assertion = header_map_stub().has_not(&header_map_two_items);
-        assert!(assertion.passed(), "{}", assertion.message());
+        assert!(assertion.passed(), "{}", assertion.log());
     }
 
     #[test]
@@ -456,7 +456,7 @@ mod tests {
         header_map.insert(DATE, HeaderValue::from_static("today"));
 
         let assertion = header_map_stub().has_not(&header_map);
-        assert!(assertion.failed(), "{}", assertion.message());
+        assert!(assertion.failed(), "{}", assertion.log());
     }
 
     #[test]
@@ -469,10 +469,10 @@ mod tests {
         ];
 
         let assertion = header_map_stub().has(&header_tuple_vec_one_item);
-        assert!(assertion.passed(), "{}", assertion.message());
+        assert!(assertion.passed(), "{}", assertion.log());
 
         let assertion = header_map_stub().has(&header_tuple_vec_two_items);
-        assert!(assertion.passed(), "{}", assertion.message());
+        assert!(assertion.passed(), "{}", assertion.log());
     }
 
     #[test]
@@ -490,10 +490,10 @@ mod tests {
         ];
 
         let assertion = header_map_stub().has_not(&header_tuple_vec_one_item);
-        assert!(assertion.passed(), "{}", assertion.message());
+        assert!(assertion.passed(), "{}", assertion.log());
 
         let assertion = header_map_stub().has_not(&header_tuple_vec_two_items);
-        assert!(assertion.passed(), "{}", assertion.message());
+        assert!(assertion.passed(), "{}", assertion.log());
     }
 
     #[test]
@@ -505,10 +505,10 @@ mod tests {
         ];
 
         let assertion = header_map_stub().has(&headers_one_item);
-        assert!(assertion.passed(), "{}", assertion.message());
+        assert!(assertion.passed(), "{}", assertion.log());
 
         let assertion = header_map_stub().has(&headers_two_items);
-        assert!(assertion.passed(), "{}", assertion.message());
+        assert!(assertion.passed(), "{}", assertion.log());
     }
 
     #[test]
@@ -526,10 +526,10 @@ mod tests {
         ];
 
         let assertion = header_map_stub().has_not(&headers_one_item);
-        assert!(assertion.passed(), "{}", assertion.message());
+        assert!(assertion.passed(), "{}", assertion.log());
 
         let assertion = header_map_stub().has_not(&headers_two_items);
-        assert!(assertion.passed(), "{}", assertion.message());
+        assert!(assertion.passed(), "{}", assertion.log());
     }
 
     mod serialization {

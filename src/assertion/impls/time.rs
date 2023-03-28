@@ -26,13 +26,13 @@ mod tests {
     #[test]
     fn it_should_be_less_than() {
         let assertion = 20_u64.less_than(&30);
-        assert!(assertion.passed(), "{}", assertion.message());
+        assert!(assertion.passed(), "{}", assertion.log());
     }
 
     #[test]
     fn it_should_not_be_less_than() {
         let assertion = u64::MAX.less_than(&30);
-        assert!(assertion.failed(), "{}", assertion.message());
+        assert!(assertion.failed(), "{}", assertion.log());
     }
 
     mod serialization {

@@ -67,7 +67,7 @@ impl StatusCodeDsl<StatusCode> for StatusCode {
         match predicate {
             Predicate::Is => self.is(actual).assert(log_settings),
             Predicate::IsNot => self.is_not(actual).assert(log_settings),
-            _ => unimplemented!(),
+            _ => unimplemented!("Invalid predicate for the status code DSL: {predicate}"),
         }
     }
 }
@@ -82,7 +82,7 @@ impl StatusCodeDsl<StatusCode> for u16 {
         match predicate {
             Predicate::Is => self.is(actual).assert(log_settings),
             Predicate::IsNot => self.is_not(actual).assert(log_settings),
-            _ => unimplemented!(),
+            _ => unimplemented!("Invalid predicate for the status code DSL: {predicate}"),
         }
     }
 }
@@ -96,7 +96,7 @@ impl StatusCodeDsl<StatusCode> for Range<StatusCode> {
     ) -> Assertion<u16> {
         match predicate {
             Predicate::Between => self.is_between(actual).assert(log_settings),
-            _ => unimplemented!(),
+            _ => unimplemented!("Invalid predicate for the status code DSL: {predicate}"),
         }
     }
 }
@@ -110,7 +110,7 @@ impl StatusCodeDsl<StatusCode> for Range<u16> {
     ) -> Assertion<u16> {
         match predicate {
             Predicate::Between => self.is_between(actual).assert(log_settings),
-            _ => unimplemented!(),
+            _ => unimplemented!("Invalid predicate for the status code DSL: {predicate}"),
         }
     }
 }

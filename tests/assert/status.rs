@@ -12,7 +12,7 @@ async fn status_success() -> Result<()> {
     let mock_server = HttpMockServer::new();
     let mock = mock_server.delete_valid_user();
 
-    Grillon::new(mock_server.server.url("/").as_ref())?
+    Grillon::new(&mock_server.server.url("/"))?
         .delete("users/1")
         .assert()
         .await
@@ -29,7 +29,7 @@ async fn status_success() -> Result<()> {
 async fn status_client_error() -> Result<()> {
     let mock_server = HttpMockServer::new();
 
-    Grillon::new(mock_server.server.url("/").as_ref())?
+    Grillon::new(&mock_server.server.url("/"))?
         .get("inexistant/resource")
         .assert()
         .await
@@ -45,7 +45,7 @@ async fn status_server_error() -> Result<()> {
     let mock_server = HttpMockServer::new();
     mock_server.server_error();
 
-    Grillon::new(mock_server.server.url("/").as_ref())?
+    Grillon::new(&mock_server.server.url("/"))?
         .get("server/error")
         .assert()
         .await
@@ -61,7 +61,7 @@ async fn status_server_error() -> Result<()> {
 async fn unexpected_status() {
     let mock_server = HttpMockServer::new();
 
-    Grillon::new(mock_server.server.url("/").as_ref())
+    Grillon::new(&mock_server.server.url("/"))
         .unwrap()
         .get("some/path")
         .assert()
@@ -74,7 +74,7 @@ async fn status_is_not() -> Result<()> {
     let mock_server = HttpMockServer::new();
     let mock = mock_server.delete_valid_user();
 
-    Grillon::new(mock_server.server.url("/").as_ref())?
+    Grillon::new(&mock_server.server.url("/"))?
         .log_settings(LogSettings::StdAssert)
         .delete("users/1")
         .assert()
@@ -94,7 +94,7 @@ async fn status_is_between() -> Result<()> {
     let mock_server = HttpMockServer::new();
     let mock = mock_server.delete_valid_user();
 
-    Grillon::new(mock_server.server.url("/").as_ref())?
+    Grillon::new(&mock_server.server.url("/"))?
         .delete("users/1")
         .assert()
         .await

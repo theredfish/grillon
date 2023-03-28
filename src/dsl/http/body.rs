@@ -22,7 +22,7 @@ pub trait JsonBodyDsl<T> {
         match predicate {
             Is => self.is(actual).assert(log_settings),
             IsNot => self.is_not(actual).assert(log_settings),
-            _ => unimplemented!("Invalid predicate for the json body DSL : {predicate}"),
+            _ => unimplemented!("Invalid predicate for the json body DSL: {predicate}"),
         }
     }
 }

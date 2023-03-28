@@ -10,10 +10,10 @@ pub trait TimeDsl<T> {
     /// milliseconds.
     fn is_less_than(&self, actual: T) -> Assertion<u64>;
     /// Evaluates the time assertion to run based on the [`Predicate`]
-    fn eval(&self, actual: T, operator: Predicate, log_settings: &LogSettings) -> Assertion<u64> {
-        match operator {
+    fn eval(&self, actual: T, predicate: Predicate, log_settings: &LogSettings) -> Assertion<u64> {
+        match predicate {
             Predicate::LessThan => self.is_less_than(actual).assert(log_settings),
-            _ => unimplemented!(),
+            _ => unimplemented!("Invalid predicate for the time DSL: {predicate}"),
         }
     }
 }
