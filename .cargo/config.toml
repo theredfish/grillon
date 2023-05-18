@@ -1,3 +1,4 @@
 [alias]
 docs = "make doc"
 lint = "make lint"
+book = "make book"

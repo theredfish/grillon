@@ -10,7 +10,13 @@ Check out our [Quickstart](./quickstart.md).
 
 ## Usage
 
-As the library is flexible, you can easily integrate it into your test strategy in a Rust project. You can use it for synthetic monitoring, endpoint monitoring, functional testing, integration testing, BDD testing (e.g [cucumber-rs](https://github.com/cucumber-rs/cucumber)), ... it's up to you. Grillon does not impose any test strategy or organization.
+As the library is flexible, you can easily integrate it into your testing strategy in a Rust project.
+You can use it for synthetic monitoring, endpoint monitoring, functional testing, integration
+testing, BDD testing (e.g [cucumber-rs](https://github.com/cucumber-rs/cucumber)), ... it's up to
+you. Grillon does not impose any test strategy or organization.
+
+Depending on how you configure your [logs](logs.md), the execution will fail-fast or not and can be
+formatted in a human-readable or json output.
 
 ## Next big steps
 
@@ -27,9 +33,9 @@ Here is an unordered and non-exhaustive list of what is planned for Grillon next
 
 ## Sponsors
 
-[![Owl Duty logo](./img/logo.png)](https://owlduty.com)
+[![Owl Duty logo](./img/owlduty_logo.jpg)](https://owlduty.com)
 
-[Owl Duty](https://owlduty.com) is an endpoint monitoring and security SaaS developed on top of Grillon by [@theredfish](https://github.com/theredfish). It provides a no-code platform for endpoint monitoring and security.
+[Owl Duty](https://owlduty.com) is the platform for developers and testers, providing the tools and the infrastructure to monitor and test APIs.
 
 ## You?
 

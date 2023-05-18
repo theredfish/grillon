@@ -13,6 +13,8 @@ pub struct Grillon {
 }
 
 /// The log settings to output test results.
+///
+/// The default configuration is `StdAssert`.
 #[derive(Clone)]
 pub enum LogSettings {
     /// Prints all assertion results to the standard output.
