@@ -1,12 +1,15 @@
 # Quickstart
 
-Using Grillon is quite simple, we will consider you are running it as part of your testing process. But you can also use it as a regular dependency.
+Using Grillon is pretty straightforward, we will consider you are running it as part of your testing
+process. But you can also use it as a regular dependency.
 
 ## Configuration
 
-Before we begin, let's create a `tests/` directory at the root of the project. Create a file there named `create_posts.rs`.
+Before we begin, let's create a `tests/` directory at the root of the project. Create a file there
+named `create_posts.rs`.
 
-Add `grillon` to your development dependencies with `tokio`, as we need a runtime to run async functions in our test environement.
+Add `grillon` to your development dependencies with `tokio`, as we need a runtime to run async
+functions in our test environement.
 
 ```toml
 [dev-dependencies]
@@ -14,7 +17,10 @@ grillon = "0.4.0"
 tokio = { version = "1", features = ["macros"] }
 ```
 
-Our example will test the `/posts` endpoint of `jsonplaceholder.typicode.com`. We will send a json payload and we will assert that our resource is correctly created with an acceptable response time (< 500 ms). Depending on your location, feel free to tweak the response time value (in milliseconds).
+Our example will test the `/posts` endpoint of `jsonplaceholder.typicode.com`. We will send a json
+payload and we will assert that our resource is correctly created with an acceptable response time
+(< 500 ms). Depending on your location, feel free to tweak the response time value
+(in milliseconds).
 
 ## Write the test
 
@@ -93,12 +99,14 @@ In this example, we performed assertions on:
 - the status code
 - the response time
 - the headers
-- the json body (note that partial json body isn't yet supported, see [#25](https://github.com/owlduty/grillon/issues/25))
+- the entire json body
 
-We also added custom assertions and function calls with `assert_fn`. So if you have specific needs, you can manipulate `assert` and add your own logic!
+We also added custom assertions and function calls with `assert_fn`. So if you have specific needs,
+you can manipulate `assert` and add your own logic! For more information, you can read more about
+[assertions](./writing_tests/assertions.md) in this book.
 
 ## Next steps
 
-This was a basic example, this book will contain more in-depth content about Grillon such as reusing request builders, some examples on how to organize your tests as well as test guides. You will also find documentation on the different functionalities by protocol, how to configure your logs and how to integrate Grillon into your pipelines.
-
-But this book is a work in progress, so please consider it a TODO comment 😉.
+This book contains more in-depth content about Grillon such as reusing a request builder, how to
+organize your tests, available assertions, and how to configure your log output. You can also find
+technical information in our [latest API documentation](https://docs.rs/grillon/latest/grillon/).

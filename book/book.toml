@@ -8,5 +8,8 @@ title = "Grillon - User Guide"
 [output.html]
 git-repository-url = "https://github.com/owlduty/grillon"
 
+[output.html.playground]
+runnable = false
+
 [rust]
 edition = "2021"

@@ -113,7 +113,7 @@ impl Request<'_> {
     /// ```
     pub fn payload(mut self, json: Value) -> Self {
         // TODO: See to manage this as an error to collect. To avoid confusion
-        // for the user we warn him without failing since it might be intended.
+        // for users we warn them without failing since it might be intended.
         // We can maybe find a better way to manage this case.
         if METHODS_NO_BODY.contains(&self.method) {
             println!(

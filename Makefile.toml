@@ -1,6 +1,10 @@
+[tasks.book]
+command = "mdbook"
+args = ["serve", "book", "--open"]
+
 [tasks.doc]
 command = "cargo"
-args = ["watch", "-x", "doc --all-features --no-deps"]
+args = ["watch", "-x", "doc --all-features --no-deps --open"]
 
 [tasks.lint]
 command = "cargo"
