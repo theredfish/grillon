@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Introduction - Grillon - User Guide</title>
+        <title>Logs - Grillon - User Guide</title>
 
 
         <!-- Custom HTML head -->
@@ -80,7 +80,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html" class="active"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="quickstart.html"><strong aria-hidden="true">2.</strong> Quickstart</a></li><li class="chapter-item expanded "><a href="writing_tests/index.html"><strong aria-hidden="true">3.</strong> Writing tests</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="writing_tests/client_configuration.html"><strong aria-hidden="true">3.1.</strong> Client configuration</a></li><li class="chapter-item expanded "><a href="writing_tests/requests.html"><strong aria-hidden="true">3.2.</strong> Requests</a></li><li class="chapter-item expanded "><a href="writing_tests/assertions.html"><strong aria-hidden="true">3.3.</strong> Assertions</a></li></ol></li><li class="chapter-item expanded "><a href="logs.html"><strong aria-hidden="true">4.</strong> Logs</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="quickstart.html"><strong aria-hidden="true">2.</strong> Quickstart</a></li><li class="chapter-item expanded "><a href="writing_tests/index.html"><strong aria-hidden="true">3.</strong> Writing tests</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="writing_tests/client_configuration.html"><strong aria-hidden="true">3.1.</strong> Client configuration</a></li><li class="chapter-item expanded "><a href="writing_tests/requests.html"><strong aria-hidden="true">3.2.</strong> Requests</a></li><li class="chapter-item expanded "><a href="writing_tests/assertions.html"><strong aria-hidden="true">3.3.</strong> Assertions</a></li></ol></li><li class="chapter-item expanded "><a href="logs.html" class="active"><strong aria-hidden="true">4.</strong> Logs</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -144,50 +144,79 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
-<p>Grillon is a Rust library offering an elegant and natural way to approach API testing in Rust.</p>
-<ul>
-<li>Elegant, intuitive and expressive API</li>
-<li>Built-in testing functions</li>
-<li>Extensible</li>
-</ul>
-<p>Check out our <a href="./quickstart.html">Quickstart</a>.</p>
-<h2 id="usage"><a class="header" href="#usage">Usage</a></h2>
-<p>As the library is flexible, you can easily integrate it into your testing strategy in a Rust project.
-You can use it for synthetic monitoring, endpoint monitoring, functional testing, integration
-testing, BDD testing (e.g <a href="https://github.com/cucumber-rs/cucumber">cucumber-rs</a>), ... it's up to
-you. Grillon does not impose any test strategy or organization.</p>
-<p>Depending on how you configure your <a href="logs.html">logs</a>, the execution will fail-fast or not and can be
-formatted in a human-readable or json output.</p>
-<h2 id="next-big-steps"><a class="header" href="#next-big-steps">Next big steps</a></h2>
-<p>Here is an unordered and non-exhaustive list of what is planned for Grillon next:</p>
-<ul>
-<li>Improve HTTP testing: HTTP/1.1 + HTTP/2, json path, xpath, form-data</li>
-<li>Extend testing capabilities per-protocol/framework
-<ul>
-<li>WebSocket</li>
-<li>gRPC</li>
-<li>SSL</li>
-<li>TCP, UDP, DNS, ICMP</li>
-</ul>
-</li>
-<li>Logs and metrics</li>
-<li>Support for YAML-formatted (or other formats) tests to extend the library outside of Rust projects</li>
-</ul>
-<h2 id="sponsors"><a class="header" href="#sponsors">Sponsors</a></h2>
-<p><a href="https://owlduty.com"><img src="./img/owlduty_logo.jpg" alt="Owl Duty logo" /></a></p>
-<p><a href="https://owlduty.com">Owl Duty</a> is the platform for developers and testers, providing the tools and the infrastructure to monitor and test APIs.</p>
-<h2 id="you"><a class="header" href="#you">You?</a></h2>
-<p>You can sponsor me (<a href="https://github.com/sponsors/theredfish">@theredfish</a>) with the <code>Coffee sponsor</code> tier (or higher) and I will add your handle / company name here.</p>
+                        <h1 id="logs"><a class="header" href="#logs">Logs</a></h1>
+<p>Grillon provides a <code>LogSettings</code> structure so you can easily configure how the assertion results
+should be output. The default log settings are set to <code>StdAssert</code>. Only failures will be printed
+to standard output in a human-readable format.</p>
+<p>Each assertion results in a log to standard output that you can connect with your infrastructure to
+react to specific events. We could imagine for example an integration with CloudWatch and create an
+alert as soon as the json log contains the key/value <code>&quot;result&quot;: &quot;failure&quot;</code>.</p>
+<h2 id="human-readable"><a class="header" href="#human-readable">Human readable</a></h2>
+<h3 id="failures-only"><a class="header" href="#failures-only">Failures only</a></h3>
+<p>This is the default, fail-fast, mode. As soon as you get a failure, the execution halts.</p>
+<pre><code class="language-rust">Grillon::new(&quot;http://jsonplaceholder.typicode.com&quot;)?
+    .log_settings(LogSettings::StdAssert)
+    .get(&quot;posts?id=1&quot;)
+    .assert()
+    .await
+    .status(is_client_error());</code></pre>
+<p>As the status isn't a client error but a successful code, the assertion fails. The following logs
+will be printed on the standard output:</p>
+<pre><code class="language-bash">part: status code
+should be between: &quot;400 and 499&quot;
+was: &quot;200&quot;
+</code></pre>
+<p>If you replace <code>is_client_error()</code> by <code>is_success()</code> you should now see a successful test without
+any logs.</p>
+<h3 id="failures-and-successes"><a class="header" href="#failures-and-successes">Failures and successes</a></h3>
+<p>Now, if you want to log everything, even passing test cases (when debugging for example), then you
+just need to change your log settings to <code>StdOut</code>:</p>
+<pre><code class="language-rust">Grillon::new(&quot;http://jsonplaceholder.typicode.com&quot;)?
+    .log_settings(LogSettings::StdAssert)
+    .get(&quot;posts?id=1&quot;)
+    .assert()
+    .await
+    .status(is_success());</code></pre>
+<p>Which should produce similar output:</p>
+<pre><code class="language-bash">running 1 test
+
+part: status code
+should be between: &quot;200 and 299&quot;
+test http::basic_http::test ... ok
+</code></pre>
+<h2 id="json"><a class="header" href="#json">Json</a></h2>
+<p>The json format is to be used when you want to integrate external tools: CI/CD, logging services
+such as Elasticsearch or Cloudwatch, reporting tools, etc.</p>
+<pre><code class="language-rust">Grillon::new(&quot;http://jsonplaceholder.typicode.com&quot;)?
+    .log_settings(LogSettings::Json)
+    .get(&quot;posts?id=1&quot;)
+    .assert()
+    .await
+    .status(is_client_error());</code></pre>
+<p>With the previous code block, we get an assertion failure since the status code isn't a client
+error. Here is the resulting json output (stdout) of the run:</p>
+<pre><code class="language-json">{
+   &quot;left&quot;:200,
+   &quot;part&quot;:&quot;status code&quot;,
+   &quot;predicate&quot;:&quot;should be between&quot;,
+   &quot;result&quot;:&quot;failed&quot;,
+   &quot;right&quot;:[
+      400,
+      499
+   ]
+}
+</code></pre>
+<p>Grillon doesn't provide any connectors yet, so you will need to redirect stdout logs to a driver if
+you want to ingest json logs with other services.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-
-                            <a rel="next" href="quickstart.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                                <i class="fa fa-angle-right"></i>
+                            <a rel="prev" href="writing_tests/assertions.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
                             </a>
+
 
                         <div style="clear: both"></div>
                     </nav>
@@ -195,10 +224,10 @@ formatted in a human-readable or json output.</p>
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-
-                    <a rel="next" href="quickstart.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                        <i class="fa fa-angle-right"></i>
+                    <a rel="prev" href="writing_tests/assertions.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
                     </a>
+
             </nav>
 
         </div>
