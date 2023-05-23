@@ -152,10 +152,10 @@ features to Grillon.</p>
 <h2 id="default-client-implementation"><a class="header" href="#default-client-implementation">Default client implementation</a></h2>
 <p>The default client implementation should provide you with the most common features. All you need to
 do is configure the base API URL when you create an instance of Grillon.</p>
-<pre><code class="language-rust">let grillon = Grillon::new(&quot;http://jsonplaceholder.typicode.com&quot;)?;</code></pre>
+<pre><code class="language-rust">let grillon = Grillon::new(&quot;https://jsonplaceholder.typicode.com&quot;)?;</code></pre>
 <p>This way you don't have to rewrite the base URL each time you want to send a request and perform
 assertions on the response. You can reuse the existing client and create a new request. In the
-following example we send a <code>POST</code> request to <code>http://jsonplaceholder.typicode.com/posts</code>:</p>
+following example we send a <code>POST</code> request to <code>https://jsonplaceholder.typicode.com/posts</code>:</p>
 <pre><code class="language-rust">let request = grillon
     .post(&quot;posts&quot;)
     .payload(json!({

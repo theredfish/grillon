@@ -167,7 +167,7 @@ use grillon::header::{HeaderValue, CONTENT_LENGTH, CONTENT_TYPE};
 
 #[tokio::test]
 async fn create_posts_monitoring() -&gt; Result&lt;()&gt; {
-    Grillon::new(&quot;http://jsonplaceholder.typicode.com&quot;)?
+    Grillon::new(&quot;https://jsonplaceholder.typicode.com&quot;)?
         .post(&quot;posts&quot;)
         .payload(json!({
             &quot;title&quot;: &quot;foo&quot;,

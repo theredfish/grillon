@@ -150,7 +150,7 @@
 client for a given base api URL.</p>
 <pre><code class="language-rust">#[tokio::test]
 async fn test_get_jsonplaceholder() -&gt; Result&lt;()&gt; {
-    let grillon = Grillon::new(&quot;http://jsonplaceholder.typicode.com&quot;)?;
+    let grillon = Grillon::new(&quot;https://jsonplaceholder.typicode.com&quot;)?;
 
     grillon
         .get(&quot;posts?id=1&quot;)
@@ -184,7 +184,7 @@ async fn test_get_jsonplaceholder() -&gt; Result&lt;()&gt; {
 <li><code>HeaderMap</code></li>
 <li><code>Vec&lt;(HeaderName, HeaderValue)&gt;</code></li>
 </ul>
-<pre><code class="language-rust">let grillon = Grillon::new(&quot;http://jsonplaceholder.typicode.com&quot;)?;
+<pre><code class="language-rust">let grillon = Grillon::new(&quot;https://jsonplaceholder.typicode.com&quot;)?;
 
 // Vec&lt;(HeaderName, HeaderValue)&gt;
 let request = grillon
@@ -210,7 +210,7 @@ with different content types such as <code>multipart/form-data</code>, <code>app
 <h4 id="json"><a class="header" href="#json">Json</a></h4>
 <p>Grillon re-exports <code>serde_json::Value</code> type to make it easier to add a json body. You can also use
 the <code>json!</code> macro.</p>
-<pre><code class="language-rust">Grillon::new(&quot;http://jsonplaceholder.typicode.com&quot;)?;
+<pre><code class="language-rust">Grillon::new(&quot;https://jsonplaceholder.typicode.com&quot;)?;
     .post(&quot;posts&quot;)
     .payload(json!({
         &quot;title&quot;: &quot;foo&quot;,
@@ -222,7 +222,7 @@ the <code>json!</code> macro.</p>
 <h3 id="build-a-custom-request"><a class="header" href="#build-a-custom-request">Build a custom request</a></h3>
 <p>If for some reasons you need a more programmatic way to create your http requests, you can use the
 <code>http_request</code> function:</p>
-<pre><code class="language-rust">Grillon::new(&quot;http://jsonplaceholder.typicode.com&quot;)?
+<pre><code class="language-rust">Grillon::new(&quot;https://jsonplaceholder.typicode.com&quot;)?
     .http_request(Method::POST, &quot;posts&quot;)
     .assert()
     .await

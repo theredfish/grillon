@@ -177,7 +177,7 @@ build by using the <code>json!</code> macro.</p>
 <code>$[0].id</code>.</p>
 <pre><code class="language-rust">#[tokio::test]
 async fn test_json_path() -&gt; Result&lt;()&gt; {
-    Grillon::new(&quot;http://jsonplaceholder.typicode.com&quot;)?
+    Grillon::new(&quot;https://jsonplaceholder.typicode.com&quot;)?
         .get(&quot;posts?id=1&quot;)
         .assert()
         .await
@@ -189,7 +189,7 @@ async fn test_json_path() -&gt; Result&lt;()&gt; {
 <p>You may need to create more complex assertions or have more control on what is executed as part
 of an assertion. If so, the library provides a specific function, <code>assert_fn</code>, allowing you to write
 your own logic.</p>
-<pre><code class="language-rust">Grillon::new(&quot;http://jsonplaceholder.typicode.com&quot;)?
+<pre><code class="language-rust">Grillon::new(&quot;https://jsonplaceholder.typicode.com&quot;)?
     .post(&quot;posts&quot;)
     .payload(json!({
         &quot;title&quot;: &quot;foo&quot;,

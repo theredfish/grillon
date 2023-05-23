@@ -203,7 +203,7 @@ use grillon::header::{HeaderValue, CONTENT_LENGTH, CONTENT_TYPE};
 
 #[tokio::test]
 async fn create_posts_monitoring() -&gt; Result&lt;()&gt; {
-    Grillon::new(&quot;http://jsonplaceholder.typicode.com&quot;)?
+    Grillon::new(&quot;https://jsonplaceholder.typicode.com&quot;)?
         .post(&quot;posts&quot;)
         .payload(json!({
             &quot;title&quot;: &quot;foo&quot;,
@@ -284,10 +284,10 @@ features to Grillon.</p>
 <h2 id="default-client-implementation"><a class="header" href="#default-client-implementation">Default client implementation</a></h2>
 <p>The default client implementation should provide you with the most common features. All you need to
 do is configure the base API URL when you create an instance of Grillon.</p>
-<pre><code class="language-rust">let grillon = Grillon::new(&quot;http://jsonplaceholder.typicode.com&quot;)?;</code></pre>
+<pre><code class="language-rust">let grillon = Grillon::new(&quot;https://jsonplaceholder.typicode.com&quot;)?;</code></pre>
 <p>This way you don't have to rewrite the base URL each time you want to send a request and perform
 assertions on the response. You can reuse the existing client and create a new request. In the
-following example we send a <code>POST</code> request to <code>http://jsonplaceholder.typicode.com/posts</code>:</p>
+following example we send a <code>POST</code> request to <code>https://jsonplaceholder.typicode.com/posts</code>:</p>
 <pre><code class="language-rust">let request = grillon
     .post(&quot;posts&quot;)
     .payload(json!({
@@ -356,7 +356,7 @@ let response_time = now.elapsed().as_millis() as u64;</code></pre>
 client for a given base api URL.</p>
 <pre><code class="language-rust">#[tokio::test]
 async fn test_get_jsonplaceholder() -&gt; Result&lt;()&gt; {
-    let grillon = Grillon::new(&quot;http://jsonplaceholder.typicode.com&quot;)?;
+    let grillon = Grillon::new(&quot;https://jsonplaceholder.typicode.com&quot;)?;
 
     grillon
         .get(&quot;posts?id=1&quot;)
@@ -390,7 +390,7 @@ async fn test_get_jsonplaceholder() -&gt; Result&lt;()&gt; {
 <li><code>HeaderMap</code></li>
 <li><code>Vec&lt;(HeaderName, HeaderValue)&gt;</code></li>
 </ul>
-<pre><code class="language-rust">let grillon = Grillon::new(&quot;http://jsonplaceholder.typicode.com&quot;)?;
+<pre><code class="language-rust">let grillon = Grillon::new(&quot;https://jsonplaceholder.typicode.com&quot;)?;
 
 // Vec&lt;(HeaderName, HeaderValue)&gt;
 let request = grillon
@@ -416,7 +416,7 @@ with different content types such as <code>multipart/form-data</code>, <code>app
 <h4 id="json"><a class="header" href="#json">Json</a></h4>
 <p>Grillon re-exports <code>serde_json::Value</code> type to make it easier to add a json body. You can also use
 the <code>json!</code> macro.</p>
-<pre><code class="language-rust">Grillon::new(&quot;http://jsonplaceholder.typicode.com&quot;)?;
+<pre><code class="language-rust">Grillon::new(&quot;https://jsonplaceholder.typicode.com&quot;)?;
     .post(&quot;posts&quot;)
     .payload(json!({
         &quot;title&quot;: &quot;foo&quot;,
@@ -428,7 +428,7 @@ the <code>json!</code> macro.</p>
 <h3 id="build-a-custom-request"><a class="header" href="#build-a-custom-request">Build a custom request</a></h3>
 <p>If for some reasons you need a more programmatic way to create your http requests, you can use the
 <code>http_request</code> function:</p>
-<pre><code class="language-rust">Grillon::new(&quot;http://jsonplaceholder.typicode.com&quot;)?
+<pre><code class="language-rust">Grillon::new(&quot;https://jsonplaceholder.typicode.com&quot;)?
     .http_request(Method::POST, &quot;posts&quot;)
     .assert()
     .await
@@ -466,7 +466,7 @@ build by using the <code>json!</code> macro.</p>
 <code>$[0].id</code>.</p>
 <pre><code class="language-rust">#[tokio::test]
 async fn test_json_path() -&gt; Result&lt;()&gt; {
-    Grillon::new(&quot;http://jsonplaceholder.typicode.com&quot;)?
+    Grillon::new(&quot;https://jsonplaceholder.typicode.com&quot;)?
         .get(&quot;posts?id=1&quot;)
         .assert()
         .await
@@ -478,7 +478,7 @@ async fn test_json_path() -&gt; Result&lt;()&gt; {
 <p>You may need to create more complex assertions or have more control on what is executed as part
 of an assertion. If so, the library provides a specific function, <code>assert_fn</code>, allowing you to write
 your own logic.</p>
-<pre><code class="language-rust">Grillon::new(&quot;http://jsonplaceholder.typicode.com&quot;)?
+<pre><code class="language-rust">Grillon::new(&quot;https://jsonplaceholder.typicode.com&quot;)?
     .post(&quot;posts&quot;)
     .payload(json!({
         &quot;title&quot;: &quot;foo&quot;,
@@ -509,7 +509,7 @@ alert as soon as the json log contains the key/value <code>&quot;result&quot;: &
 <h2 id="human-readable"><a class="header" href="#human-readable">Human readable</a></h2>
 <h3 id="failures-only"><a class="header" href="#failures-only">Failures only</a></h3>
 <p>This is the default, fail-fast, mode. As soon as you get a failure, the execution halts.</p>
-<pre><code class="language-rust">Grillon::new(&quot;http://jsonplaceholder.typicode.com&quot;)?
+<pre><code class="language-rust">Grillon::new(&quot;https://jsonplaceholder.typicode.com&quot;)?
     .log_settings(LogSettings::StdAssert)
     .get(&quot;posts?id=1&quot;)
     .assert()
@@ -526,7 +526,7 @@ any logs.</p>
 <h3 id="failures-and-successes"><a class="header" href="#failures-and-successes">Failures and successes</a></h3>
 <p>Now, if you want to log everything, even passing test cases (when debugging for example), then you
 just need to change your log settings to <code>StdOut</code>:</p>
-<pre><code class="language-rust">Grillon::new(&quot;http://jsonplaceholder.typicode.com&quot;)?
+<pre><code class="language-rust">Grillon::new(&quot;https://jsonplaceholder.typicode.com&quot;)?
     .log_settings(LogSettings::StdAssert)
     .get(&quot;posts?id=1&quot;)
     .assert()
@@ -542,7 +542,7 @@ test http::basic_http::test ... ok
 <h2 id="json-1"><a class="header" href="#json-1">Json</a></h2>
 <p>The json format is to be used when you want to integrate external tools: CI/CD, logging services
 such as Elasticsearch or Cloudwatch, reporting tools, etc.</p>
-<pre><code class="language-rust">Grillon::new(&quot;http://jsonplaceholder.typicode.com&quot;)?
+<pre><code class="language-rust">Grillon::new(&quot;https://jsonplaceholder.typicode.com&quot;)?
     .log_settings(LogSettings::Json)
     .get(&quot;posts?id=1&quot;)
     .assert()

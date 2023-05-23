@@ -154,7 +154,7 @@ alert as soon as the json log contains the key/value <code>&quot;result&quot;: &
 <h2 id="human-readable"><a class="header" href="#human-readable">Human readable</a></h2>
 <h3 id="failures-only"><a class="header" href="#failures-only">Failures only</a></h3>
 <p>This is the default, fail-fast, mode. As soon as you get a failure, the execution halts.</p>
-<pre><code class="language-rust">Grillon::new(&quot;http://jsonplaceholder.typicode.com&quot;)?
+<pre><code class="language-rust">Grillon::new(&quot;https://jsonplaceholder.typicode.com&quot;)?
     .log_settings(LogSettings::StdAssert)
     .get(&quot;posts?id=1&quot;)
     .assert()
@@ -171,7 +171,7 @@ any logs.</p>
 <h3 id="failures-and-successes"><a class="header" href="#failures-and-successes">Failures and successes</a></h3>
 <p>Now, if you want to log everything, even passing test cases (when debugging for example), then you
 just need to change your log settings to <code>StdOut</code>:</p>
-<pre><code class="language-rust">Grillon::new(&quot;http://jsonplaceholder.typicode.com&quot;)?
+<pre><code class="language-rust">Grillon::new(&quot;https://jsonplaceholder.typicode.com&quot;)?
     .log_settings(LogSettings::StdAssert)
     .get(&quot;posts?id=1&quot;)
     .assert()
@@ -187,7 +187,7 @@ test http::basic_http::test ... ok
 <h2 id="json"><a class="header" href="#json">Json</a></h2>
 <p>The json format is to be used when you want to integrate external tools: CI/CD, logging services
 such as Elasticsearch or Cloudwatch, reporting tools, etc.</p>
-<pre><code class="language-rust">Grillon::new(&quot;http://jsonplaceholder.typicode.com&quot;)?
+<pre><code class="language-rust">Grillon::new(&quot;https://jsonplaceholder.typicode.com&quot;)?
     .log_settings(LogSettings::Json)
     .get(&quot;posts?id=1&quot;)
     .assert()
