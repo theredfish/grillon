@@ -12,6 +12,7 @@ use hyper::{
     http::request::Request as HyperRequest,
     Client, Method, Uri,
 };
+use hyper_tls::HttpsConnector;
 use serde_json::Value;
 
 /// List of methods where there is no associated body.
@@ -67,7 +68,7 @@ pub struct Request<'c> {
     /// The http request payload.
     pub payload: Option<Body>,
     /// The client used for this outgoing request.
-    pub client: &'c Client<HttpConnector>,
+    pub client: &'c Client<HttpsConnector<HttpConnector>>,
     /// The log settings that will be used to output test results
     /// when asserting the http response.
     pub log_settings: &'c LogSettings,
@@ -81,7 +82,7 @@ impl Request<'_> {
     /// ```rust
     /// # use grillon::{Grillon, Result, header};
     /// # fn run() -> Result<()> {
-    /// Grillon::new("http://jsonplaceholder.typicode.com")?
+    /// Grillon::new("https://jsonplaceholder.typicode.com")?
     ///     .delete("users/1")
     ///     .headers(vec![(
     ///         header::CONTENT_TYPE,
@@ -103,7 +104,7 @@ impl Request<'_> {
     /// ```rust
     /// # use grillon::{Grillon, Result, header, json};
     /// # fn run() -> Result<()> {
-    /// Grillon::new("http://jsonplaceholder.typicode.com")?
+    /// Grillon::new("https://jsonplaceholder.typicode.com")?
     ///     .post("users")
     ///     .payload(json!({
     ///         "name": "Isaac",
@@ -138,7 +139,7 @@ impl Request<'_> {
     /// ```rust
     /// # use grillon::{Grillon, Result};
     /// # async fn run() -> Result<()> {
-    /// Grillon::new("http://jsonplaceholder.typicode.com")?
+    /// Grillon::new("https://jsonplaceholder.typicode.com")?
     ///     .get("users")
     ///     .assert()
     ///     .await;

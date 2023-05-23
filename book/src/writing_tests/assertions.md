@@ -41,7 +41,7 @@ Here is an example of a json path assertion, where we are testing the value unde
 ```rust
 #[tokio::test]
 async fn test_json_path() -> Result<()> {
-    Grillon::new("http://jsonplaceholder.typicode.com")?
+    Grillon::new("https://jsonplaceholder.typicode.com")?
         .get("posts?id=1")
         .assert()
         .await
@@ -58,7 +58,7 @@ of an assertion. If so, the library provides a specific function, `assert_fn`, a
 your own logic.
 
 ```rust
-Grillon::new("http://jsonplaceholder.typicode.com")?
+Grillon::new("https://jsonplaceholder.typicode.com")?
     .post("posts")
     .payload(json!({
         "title": "foo",

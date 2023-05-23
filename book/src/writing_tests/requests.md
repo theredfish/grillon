@@ -8,7 +8,7 @@ client for a given base api URL.
 ```rust
 #[tokio::test]
 async fn test_get_jsonplaceholder() -> Result<()> {
-    let grillon = Grillon::new("http://jsonplaceholder.typicode.com")?;
+    let grillon = Grillon::new("https://jsonplaceholder.typicode.com")?;
 
     grillon
         .get("posts?id=1")
@@ -47,7 +47,7 @@ Grillon supports two different types to configuring http request headers:
 - `Vec<(HeaderName, HeaderValue)>`
 
 ```rust
-let grillon = Grillon::new("http://jsonplaceholder.typicode.com")?;
+let grillon = Grillon::new("https://jsonplaceholder.typicode.com")?;
 
 // Vec<(HeaderName, HeaderValue)>
 let request = grillon
@@ -80,7 +80,7 @@ Grillon re-exports `serde_json::Value` type to make it easier to add a json body
 the `json!` macro.
 
 ```rust
-Grillon::new("http://jsonplaceholder.typicode.com")?;
+Grillon::new("https://jsonplaceholder.typicode.com")?;
     .post("posts")
     .payload(json!({
         "title": "foo",
@@ -97,7 +97,7 @@ If for some reasons you need a more programmatic way to create your http request
 `http_request` function:
 
 ```rust
-Grillon::new("http://jsonplaceholder.typicode.com")?
+Grillon::new("https://jsonplaceholder.typicode.com")?
     .http_request(Method::POST, "posts")
     .assert()
     .await

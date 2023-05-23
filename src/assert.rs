@@ -31,7 +31,7 @@
 //!         }
 //!     }
 //!
-//!     let response = reqwest::get("http://jsonplaceholder.typicode.com/users/1")
+//!     let response = reqwest::get("https://jsonplaceholder.typicode.com/users/1")
 //!         .await
 //!         .expect("Valid reqwest::Response");
 //!     let response_wrapper = ResponseWrapper { response };
@@ -96,7 +96,7 @@ impl Assert {
     /// ```rust
     /// # use grillon::{Grillon, Result, StatusCode, dsl::{is, is_between}};
     /// # async fn custom_assert() -> Result<()> {
-    /// Grillon::new("http://jsonplaceholder.typicode.com")?
+    /// Grillon::new("https://jsonplaceholder.typicode.com")?
     ///     .get("/users")
     ///     .assert()
     ///     .await
