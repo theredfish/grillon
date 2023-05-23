@@ -36,7 +36,7 @@ pub fn is_server_error() -> Expression<Range<u16>> {
 ///
 /// #[tokio::test]
 /// async fn check_status() -> Result<()> {
-///    Grillon::new("http://jsonplaceholder.typicode.com")?
+///    Grillon::new("https://jsonplaceholder.typicode.com")?
 ///        .get("users/1")
 ///        .assert()
 ///        .await

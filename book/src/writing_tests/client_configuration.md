@@ -11,12 +11,12 @@ The default client implementation should provide you with the most common featur
 do is configure the base API URL when you create an instance of Grillon.
 
 ```rust
-let grillon = Grillon::new("http://jsonplaceholder.typicode.com")?;
+let grillon = Grillon::new("https://jsonplaceholder.typicode.com")?;
 ```
 
 This way you don't have to rewrite the base URL each time you want to send a request and perform
 assertions on the response. You can reuse the existing client and create a new request. In the
-following example we send a `POST` request to `http://jsonplaceholder.typicode.com/posts`:
+following example we send a `POST` request to `https://jsonplaceholder.typicode.com/posts`:
 
 ```rust
 let request = grillon

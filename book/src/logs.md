@@ -15,7 +15,7 @@ alert as soon as the json log contains the key/value `"result": "failure"`.
 This is the default, fail-fast, mode. As soon as you get a failure, the execution halts.
 
 ```rust
-Grillon::new("http://jsonplaceholder.typicode.com")?
+Grillon::new("https://jsonplaceholder.typicode.com")?
     .log_settings(LogSettings::StdAssert)
     .get("posts?id=1")
     .assert()
@@ -41,7 +41,7 @@ Now, if you want to log everything, even passing test cases (when debugging for 
 just need to change your log settings to `StdOut`:
 
 ```rust
-Grillon::new("http://jsonplaceholder.typicode.com")?
+Grillon::new("https://jsonplaceholder.typicode.com")?
     .log_settings(LogSettings::StdAssert)
     .get("posts?id=1")
     .assert()
@@ -65,7 +65,7 @@ The json format is to be used when you want to integrate external tools: CI/CD, 
 such as Elasticsearch or Cloudwatch, reporting tools, etc.
 
 ```rust
-Grillon::new("http://jsonplaceholder.typicode.com")?
+Grillon::new("https://jsonplaceholder.typicode.com")?
     .log_settings(LogSettings::Json)
     .get("posts?id=1")
     .assert()

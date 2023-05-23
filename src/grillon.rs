@@ -1,6 +1,7 @@
 use crate::error::Result;
 use crate::Request;
 use hyper::{client::HttpConnector, header::HeaderMap, Client, Method, Uri};
+use hyper_tls::HttpsConnector;
 
 /// Top-level instance to configure a REST API http client.
 ///
@@ -8,7 +9,7 @@ use hyper::{client::HttpConnector, header::HeaderMap, Client, Method, Uri};
 /// and initiate a [`Request`].
 pub struct Grillon {
     base_url: Uri,
-    client: Client<HttpConnector>,
+    client: Client<HttpsConnector<HttpConnector>>,
     log_settings: LogSettings,
 }
 
@@ -39,7 +40,7 @@ impl Grillon {
     /// ```rust
     /// # use grillon::{Grillon, Result};
     /// # fn run() -> Result<()> {
-    /// let grillon = Grillon::new("http://jsonplaceholder.typicode.com")?;
+    /// let grillon = Grillon::new("https://jsonplaceholder.typicode.com")?;
     /// # Ok(())
     /// # }
     /// ```
@@ -48,9 +49,10 @@ impl Grillon {
     ///
     /// This function fails if the supplied base url cannot be parsed as a [`Uri`].
     pub fn new(api_base_url: &str) -> Result<Grillon> {
+        let https = HttpsConnector::new();
         Ok(Grillon {
             base_url: api_base_url.parse::<Uri>()?,
-            client: Client::builder().build_http(),
+            client: Client::builder().build::<_, hyper::Body>(https),
             log_settings: LogSettings::default(),
         })
     }
@@ -72,7 +74,7 @@ impl Grillon {
     /// ```rust
     /// # use grillon::{Grillon, Result};
     /// # fn run() -> Result<()> {
-    /// let request = Grillon::new("http://jsonplaceholder.typicode.com")?
+    /// let request = Grillon::new("https://jsonplaceholder.typicode.com")?
     ///     .get("users");
     /// # Ok(())
     /// # }
@@ -88,7 +90,7 @@ impl Grillon {
     /// ```rust
     /// # use grillon::{Grillon, Result};
     /// # fn run() -> Result<()> {
-    /// let request = Grillon::new("http://jsonplaceholder.typicode.com")?
+    /// let request = Grillon::new("https://jsonplaceholder.typicode.com")?
     ///     .post("users");
     /// # Ok(())
     /// # }
@@ -104,7 +106,7 @@ impl Grillon {
     /// ```rust
     /// # use grillon::{Grillon, Result};
     /// # fn run() -> Result<()> {
-    /// let request = Grillon::new("http://jsonplaceholder.typicode.com")?
+    /// let request = Grillon::new("https://jsonplaceholder.typicode.com")?
     ///     .put("users/1");
     /// # Ok(())
     /// # }
@@ -120,7 +122,7 @@ impl Grillon {
     /// ```rust
     /// # use grillon::{Grillon, Result};
     /// # fn run() -> Result<()> {
-    /// let request = Grillon::new("http://jsonplaceholder.typicode.com")?
+    /// let request = Grillon::new("https://jsonplaceholder.typicode.com")?
     ///     .patch("users/1");
     /// # Ok(())
     /// # }
@@ -136,7 +138,7 @@ impl Grillon {
     /// ```rust
     /// # use grillon::{Grillon, Result};
     /// # fn run() -> Result<()> {
-    /// let request = Grillon::new("http://jsonplaceholder.typicode.com")?
+    /// let request = Grillon::new("https://jsonplaceholder.typicode.com")?
     ///     .delete("users/1");
     /// # Ok(())
     /// # }
@@ -152,7 +154,7 @@ impl Grillon {
     /// ```rust
     /// # use grillon::{Grillon, Result, dsl::contains, header::{ACCESS_CONTROL_ALLOW_METHODS, HeaderValue}};
     /// # async fn run() -> Result<()> {
-    /// Grillon::new("http://jsonplaceholder.typicode.com")?
+    /// Grillon::new("https://jsonplaceholder.typicode.com")?
     ///     .options("")
     ///     .assert()
     ///     .await
@@ -174,7 +176,7 @@ impl Grillon {
     /// ```rust
     /// # use grillon::{Grillon, Result, dsl::contains, header::{CONTENT_LENGTH, HeaderValue}};
     /// # async fn run() -> Result<()> {
-    /// Grillon::new("http://jsonplaceholder.typicode.com")?
+    /// Grillon::new("https://jsonplaceholder.typicode.com")?
     ///     .head("photos/1")
     ///     .assert()
     ///     .await
@@ -209,7 +211,7 @@ impl Grillon {
     /// ```rust
     /// # use grillon::{Grillon, Method, Result};
     /// # fn run() -> Result<()> {
-    /// let request = Grillon::new("http://jsonplaceholder.typicode.com")?
+    /// let request = Grillon::new("https://jsonplaceholder.typicode.com")?
     ///     .http_request(Method::GET, "users");
     /// # Ok(())
     /// # }

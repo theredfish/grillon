@@ -39,7 +39,7 @@ use grillon::header::{HeaderValue, CONTENT_LENGTH, CONTENT_TYPE};
 
 #[tokio::test]
 async fn end_to_end_test() -> Result<()> {
-    Grillon::new("http://jsonplaceholder.typicode.com")?
+    Grillon::new("https://jsonplaceholder.typicode.com")?
         .post("posts")
         .payload(json!({
             "title": "foo",

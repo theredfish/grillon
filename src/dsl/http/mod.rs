@@ -11,7 +11,7 @@
 //!
 //! #[tokio::test]
 //! async fn check_users_endpoint() -> Result<()> {
-//!    Grillon::new("http://jsonplaceholder.typicode.com")?
+//!    Grillon::new("https://jsonplaceholder.typicode.com")?
 //!        .get("albums/1")
 //!        .assert()
 //!        .await
