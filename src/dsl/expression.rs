@@ -40,6 +40,10 @@ pub enum Predicate {
     #[strum(serialize = "should be between")]
     #[serde(rename = "should be between")]
     Between,
+    /// Actual should match the given json schema.
+    #[strum(serialize = "should match schema")]
+    #[serde(rename = "should match schema")]
+    Schema,
 }
 
 /// Represents a range starting with `left` and ending with `right`.
@@ -131,6 +135,11 @@ predicate!(
     is_less_than,
     Predicate::LessThan
 );
+predicate!(
+    /// Creates an expression to assert that the actual value matches the json schema.
+    schema,
+    Predicate::Schema
+);
 
 #[cfg(test)]
 pub mod tests {
@@ -146,6 +155,7 @@ pub mod tests {
     #[test_case(Value::String(String::from("should not match")), Predicate::DoesNotMatch; "Failed to deserialize predicate DoesNotMatch")]
     #[test_case(Value::String(String::from("should be less than")), Predicate::LessThan; "Failed to deserialize predicate LessThan")]
     #[test_case(Value::String(String::from("should be between")), Predicate::Between; "Failed to deserialize predicate Between")]
+    #[test_case(Value::String(String::from("should match schema")), Predicate::Schema; "Failed to deserialize predicate Schema")]
 
     fn deser_predicates(json_predicate: Value, predicate: Predicate) {
         assert_eq!(
