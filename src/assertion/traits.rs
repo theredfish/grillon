@@ -43,3 +43,12 @@ pub trait Container<T: ?Sized> {
     /// Asserts that the container does not contain other.
     fn has_not(&self, other: &T) -> Self::Assertion;
 }
+
+/// Trait to test if a json value matches the json schema.
+pub trait JsonSchema<T: ?Sized> {
+    /// The resulting assertion after applying the json schema test.
+    type Assertion;
+
+    /// Asserts that the json value matches the given schema.
+    fn matches_schema(&self, other: &T) -> Self::Assertion;
+}

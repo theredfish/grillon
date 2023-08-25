@@ -1,7 +1,11 @@
 use crate::{
-    assertion::{traits::Equality, Assertion, Hand},
+    assertion::{
+        traits::{Equality, JsonSchema},
+        Assertion, AssertionResult, Hand, UnprocessableReason,
+    },
     dsl::{Part, Predicate},
 };
+use jsonschema::{output::BasicOutput, JSONSchema};
 use serde_json::Value;
 
 impl Equality<Value> for Value {
@@ -87,6 +91,186 @@ impl Equality<String> for Value {
             part: Part::JsonBody,
             left: Hand::Left(self.clone()),
             right: Hand::Right(rhs),
+            result: result.into(),
+        }
+    }
+}
+
+impl JsonSchema<Value> for Value {
+    type Assertion = Assertion<Value>;
+
+    fn matches_schema(&self, schema: &Value) -> Self::Assertion {
+        let schema = match JSONSchema::compile(schema) {
+            Ok(schema) => schema,
+            Err(err) => {
+                return Assertion {
+                    predicate: Predicate::Schema,
+                    part: Part::JsonBody,
+                    left: Hand::Left(self.clone()),
+                    right: Hand::Empty,
+                    result: AssertionResult::Unprocessable(UnprocessableReason::InvalidJsonSchema(
+                        err.schema_path,
+                        err.instance_path,
+                    )),
+                }
+            }
+        };
+
+        // Get the boolean result of the validation
+        let result = schema.is_valid(self);
+
+        // Generate a json output of the json schema result
+        let output: BasicOutput<'_> = schema.apply(self).basic();
+        let output = match serde_json::to_value(output) {
+            Ok(json_output) => json_output,
+            Err(_) => {
+                return Assertion {
+                    predicate: Predicate::Schema,
+                    part: Part::JsonBody,
+                    left: Hand::Empty,
+                    right: Hand::Empty,
+                    result: AssertionResult::Unprocessable(UnprocessableReason::Other(
+                        "Failed to serialize json schema error".to_string(),
+                    )),
+                }
+            }
+        };
+
+        Assertion {
+            predicate: Predicate::Schema,
+            part: Part::JsonBody,
+            left: Hand::Left(self.clone()),
+            right: Hand::Right(output),
+            result: result.into(),
+        }
+    }
+}
+
+impl JsonSchema<str> for Value {
+    type Assertion = Assertion<Value>;
+
+    fn matches_schema(&self, schema: &str) -> Self::Assertion {
+        let schema = match serde_json::from_str(schema) {
+            Ok(schema) => schema,
+            Err(err) => {
+                return Assertion {
+                    predicate: Predicate::Schema,
+                    part: Part::JsonBody,
+                    left: Hand::Empty,
+                    right: Hand::Empty,
+                    result: AssertionResult::Unprocessable(
+                        UnprocessableReason::SerializationFailure(err.to_string()),
+                    ),
+                }
+            }
+        };
+
+        let schema = match JSONSchema::compile(&schema) {
+            Ok(schema) => schema,
+            Err(err) => {
+                return Assertion {
+                    predicate: Predicate::Schema,
+                    part: Part::JsonBody,
+                    left: Hand::Left(self.clone()),
+                    right: Hand::Empty,
+                    result: AssertionResult::Unprocessable(UnprocessableReason::InvalidJsonSchema(
+                        err.schema_path,
+                        err.instance_path,
+                    )),
+                }
+            }
+        };
+
+        // Get the boolean result of the validation
+        let result = schema.is_valid(self);
+
+        // Generate a json output of the json schema result
+        let output: BasicOutput<'_> = schema.apply(self).basic();
+        let output = match serde_json::to_value(output) {
+            Ok(json_output) => json_output,
+            Err(_) => {
+                return Assertion {
+                    predicate: Predicate::Schema,
+                    part: Part::JsonBody,
+                    left: Hand::Empty,
+                    right: Hand::Empty,
+                    result: AssertionResult::Unprocessable(UnprocessableReason::Other(
+                        "Failed to serialize json schema error".to_string(),
+                    )),
+                }
+            }
+        };
+
+        Assertion {
+            predicate: Predicate::Schema,
+            part: Part::JsonBody,
+            left: Hand::Left(self.clone()),
+            right: Hand::Right(output),
+            result: result.into(),
+        }
+    }
+}
+
+impl JsonSchema<String> for Value {
+    type Assertion = Assertion<Value>;
+
+    fn matches_schema(&self, schema: &String) -> Self::Assertion {
+        let schema = match serde_json::from_str(schema) {
+            Ok(schema) => schema,
+            Err(_) => {
+                return Assertion {
+                    predicate: Predicate::Schema,
+                    part: Part::JsonBody,
+                    left: Hand::Empty,
+                    right: Hand::Empty,
+                    result: AssertionResult::Unprocessable(UnprocessableReason::Other(
+                        "Failed to serialize json schema".to_string(),
+                    )),
+                }
+            }
+        };
+
+        let schema = match JSONSchema::compile(&schema) {
+            Ok(schema) => schema,
+            Err(err) => {
+                return Assertion {
+                    predicate: Predicate::Schema,
+                    part: Part::JsonBody,
+                    left: Hand::Left(self.clone()),
+                    right: Hand::Empty,
+                    result: AssertionResult::Unprocessable(UnprocessableReason::InvalidJsonSchema(
+                        err.schema_path,
+                        err.instance_path,
+                    )),
+                }
+            }
+        };
+
+        // Get the boolean result of the validation
+        let result = schema.is_valid(self);
+
+        // Generate a json output of the json schema result
+        let output: BasicOutput<'_> = schema.apply(self).basic();
+        let output = match serde_json::to_value(output) {
+            Ok(json_output) => json_output,
+            Err(_) => {
+                return Assertion {
+                    predicate: Predicate::Schema,
+                    part: Part::JsonBody,
+                    left: Hand::Empty,
+                    right: Hand::Empty,
+                    result: AssertionResult::Unprocessable(UnprocessableReason::Other(
+                        "Failed to serialize json schema error".to_string(),
+                    )),
+                }
+            }
+        };
+
+        Assertion {
+            predicate: Predicate::Schema,
+            part: Part::JsonBody,
+            left: Hand::Left(self.clone()),
+            right: Hand::Right(output),
             result: result.into(),
         }
     }
@@ -275,6 +459,116 @@ mod tests {
                 expected_json,
                 "Serialized assertion is not equals to the expected json",
             );
+        }
+    }
+
+    mod schema {
+        use crate::assertion::traits::JsonSchema;
+        use serde_json::json;
+
+        #[test]
+        fn impl_json_schema_is_valid() {
+            let schema = json!({
+              "$schema": "http://json-schema.org/draft-04/schema#",
+              "title": "Age validation schema",
+              "type": "object",
+              "properties": {
+                "age": {
+                  "description": "Age in years",
+                  "type": "string",
+                  "minimum": 0
+                }
+              },
+              "required": ["age"]
+            });
+
+            let assertion = json!({"age": "12"}).matches_schema(&schema);
+            assert!(assertion.passed(), "{}", assertion.log());
+        }
+
+        #[test]
+        fn impl_str_schema_is_valid() {
+            let schema = r#"{
+              "$schema": "http://json-schema.org/draft-04/schema#",
+              "title": "Age validation schema",
+              "type": "object",
+              "properties": {
+                "age": {
+                  "description": "Age in years",
+                  "type": "string",
+                  "minimum": 0
+                }
+              },
+              "required": ["age"]
+            }"#;
+
+            let assertion = json!({"age": "12"}).matches_schema(schema);
+            assert!(assertion.passed(), "{}", assertion.log());
+        }
+
+        #[test]
+        fn impl_string_schema_is_valid() {
+            let schema = r#"{
+              "$schema": "http://json-schema.org/draft-04/schema#",
+              "title": "Age validation schema",
+              "type": "object",
+              "properties": {
+                "age": {
+                  "description": "Age in years",
+                  "type": "string",
+                  "minimum": 0
+                }
+              },
+              "required": ["age"]
+            }"#
+            .to_string();
+
+            let assertion = json!({"age": "12"}).matches_schema(&schema);
+            assert!(assertion.passed(), "{}", assertion.log());
+        }
+
+        #[test]
+        fn impl_schema_is_invalid() {
+            let schema: serde_json::Value = json!({
+              "$schema": "http://json-schema.org/draft-04/schema#",
+              "title": "Age validation schema",
+              "type": "object",
+              "properties": {
+                "age": {
+                  "description": "Age in years",
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "required": ["age"]
+            });
+
+            // providing a string instead of a number should fail
+            let assertion = json!({"age": "12"}).matches_schema(&schema);
+            assert!(assertion.failed(), "{}", assertion.log());
+        }
+
+        #[test]
+        fn impl_schema_compile_error() {
+            let schema: serde_json::Value = json!({
+              "$schema": "http://json-schema.org/draft-04/schema#",
+              "title": "Bad json schema",
+              "type": "object",
+              "properties": {
+                "age": {
+                  "description": "Age in years",
+                  "type": "string",
+                  "minimum": 0,
+                  "required": true // Invalid JSON Schema additional property
+                }
+              },
+              "required": ["age"]
+            });
+
+            let assertion = json!({"age": 12}).matches_schema(&schema);
+            let log = assertion.log();
+            assert!(assertion.failed(), "{log}");
+            assert_eq!(log, "Invalid json schema: /properties/properties/additionalProperties/properties/required/type => /properties/age/required");
         }
     }
 }

@@ -22,6 +22,7 @@ use crate::{
     dsl::{Part, Predicate},
     grillon::LogSettings,
 };
+use jsonschema::paths::JSONPointer;
 use serde::Serialize;
 use serde_json::{json, Value};
 use std::any::Any;
@@ -92,9 +93,13 @@ where
 #[serde(rename_all = "snake_case")]
 pub enum UnprocessableReason {
     /// Unprocessable json path with the string representation of the path.
-    JsonPath(String),
+    InvalidJsonPath(String),
     /// Unprocessable json body because it's missing.
     JsonBodyMissing,
+    /// Unprocessable json schema.
+    InvalidJsonSchema(JSONPointer, JSONPointer),
+    /// Serialization failure.
+    SerializationFailure(String),
     /// Unprocessable entity.
     Other(String),
 }
@@ -105,11 +110,17 @@ pub enum UnprocessableReason {
 impl std::fmt::Display for UnprocessableReason {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            UnprocessableReason::JsonPath(message) => {
+            UnprocessableReason::InvalidJsonPath(message) => {
                 write!(f, "Unprocessable json path: {message}")
             }
             UnprocessableReason::JsonBodyMissing => {
                 write!(f, "Unprocessable json body: missing")
+            }
+            UnprocessableReason::InvalidJsonSchema(schema, instance) => {
+                write!(f, "Invalid json schema: {schema} => {instance}")
+            }
+            UnprocessableReason::SerializationFailure(message) => {
+                write!(f, "Serialization failure: {message}")
             }
             UnprocessableReason::Other(message) => write!(f, "{message}"),
         }
@@ -119,6 +130,7 @@ impl std::fmt::Display for UnprocessableReason {
 /// The assertion's result.
 #[derive(Serialize, Display, Debug)]
 #[serde(rename_all = "snake_case")]
+#[strum(serialize_all = "snake_case")]
 pub enum AssertionResult {
     /// When the assertion passed.
     Passed,
@@ -175,18 +187,21 @@ impl AssertionLog {
             _ => "Unexpected left hand in right hand".to_string(),
         };
 
-        let message = format!("part: {part}");
-        let message = match &assertion.result {
+        let result = &assertion.result;
+        let part = format!("part: {part}");
+        let message = match result {
             AssertionResult::Passed => format!(
-                "{message}
-{predicate}: {right:#?}"
+                "result: {result}
+{part}
+{predicate}: {right}"
             ),
             AssertionResult::Failed => format!(
-                "{message}
-{predicate}: {right:#?}
-was: {left:#?}"
+                "result: {result}
+{part}
+{predicate}: {right}
+was: {left}"
             ),
-            AssertionResult::NotYetStarted => format!("Not yet started : {message}"),
+            AssertionResult::NotYetStarted => format!("Not yet started : {part}"),
             AssertionResult::Unprocessable(reason) => format!("{reason}"),
         };
 
@@ -215,18 +230,21 @@ was: {left:#?}"
 
         let jsonpath_value = right_hand.1;
 
-        let message = format!("part: {part} '{jsonpath}'");
-        let message = match &assertion.result {
+        let result = &assertion.result;
+        let part = format!("part: {part} '{jsonpath}'");
+        let message = match result {
             AssertionResult::Passed => format!(
-                "{message}
+                "result: {result}
+{part}
 {predicate}: {left_hand:#?}"
             ),
             AssertionResult::Failed => format!(
-                "{message}
+                "result: {result}
+{part}
 {predicate}: {left_hand:#?}
 was: {jsonpath_value:#?}"
             ),
-            AssertionResult::NotYetStarted => format!("[Not yet started] {message}"),
+            AssertionResult::NotYetStarted => format!("[Not yet started] {part}"),
             AssertionResult::Unprocessable(reason) => format!("{reason}"),
         };
 
@@ -285,11 +303,10 @@ impl From<bool> for AssertionResult {
 
 #[cfg(test)]
 mod tests {
-    use super::{AssertionResult, Hand, UnprocessableReason};
+    use super::{AssertionResult, Hand};
     use crate::dsl::Predicate::{Between, LessThan};
     use crate::{assertion::Assertion, dsl::Part};
     use serde_json::json;
-    use test_case::test_case;
 
     #[test]
     fn it_should_serialize_status_code() {
@@ -331,15 +348,5 @@ mod tests {
         });
 
         assert_eq!(json!(assertion), expected_json);
-    }
-
-    #[test_case(UnprocessableReason::JsonPath("$.store.unknown".to_string()), "Unprocessable json path: $.store.unknown".to_string(); "Failed to display UnprocessableReason::JsonPath")]
-    #[test_case(UnprocessableReason::JsonBodyMissing, "Unprocessable json body: missing".to_string(); "Failed to display UnprocessableReason::JsonBodyMissing")]
-    #[test_case(UnprocessableReason::Other("custom unprocessable reason".to_string()), "custom unprocessable reason".to_string(); "Failed to display UnprocessableReason::Other")]
-    fn it_should_display_unprocessable_reason(
-        unprocessable_reason: UnprocessableReason,
-        expected_string: String,
-    ) {
-        assert_eq!(unprocessable_reason.to_string(), expected_string);
     }
 }

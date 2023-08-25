@@ -50,18 +50,23 @@ async fn end_to_end_test() -> Result<()> {
         .await
         .status(is_success())
         .status(is(201))
-        .response_time(is_less_than(500))
+        .response_time(is_less_than(700))
         .json_body(is(json!({
             "id": 101,
         })))
+        .json_body(schema(json!({
+            "properties": {
+                "id": { "type": "number" }
+            }
+        })))
+        .json_path("$.id", is(json!(101)))
         .headers(contains(vec![
-        (
-            CONTENT_TYPE,
-            HeaderValue::from_static("application/json; charset=utf-8"),
-        ),
-        (
-            CONTENT_LENGTH, HeaderValue::from_static("15")
-        )]))
+            (
+                CONTENT_TYPE,
+                HeaderValue::from_static("application/json; charset=utf-8"),
+            ),
+            (CONTENT_LENGTH, HeaderValue::from_static("15")),
+        ]))
         .assert_fn(|assert| {
             assert!(!assert.headers.is_empty());
             assert!(assert.status == StatusCode::CREATED);

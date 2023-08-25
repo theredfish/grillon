@@ -190,7 +190,7 @@ impl Assert {
                     predicate: expr.predicate,
                     left: Hand::Empty::<Value>,
                     right: Hand::Empty,
-                    result: AssertionResult::Unprocessable(UnprocessableReason::JsonPath(
+                    result: AssertionResult::Unprocessable(UnprocessableReason::InvalidJsonPath(
                         path.to_string(),
                     )),
                 };
