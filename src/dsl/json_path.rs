@@ -1,9 +1,9 @@
 //! The json path domain-specific language.
 
 use crate::{
-    assertion::traits::Equality,
+    assertion::traits::{Equality, JsonSchema},
     assertion::Assertion,
-    dsl::expression::Predicate::{self, Is, IsNot},
+    dsl::expression::Predicate::{self, Is, IsNot, Schema},
     LogSettings,
 };
 use serde::{Deserialize, Serialize};
@@ -31,10 +31,12 @@ impl<'p, T> JsonPathResult<'p, T> {
 
 /// Http json body DSL to assert body of a response.
 pub trait JsonPathDsl<T> {
-    /// Asserts the json response body is strictly equals to the provided value.
+    /// Asserts that the json response body is strictly equals to the provided value.
     fn is(&self, jsonpath_res: JsonPathResult<'_, T>) -> Assertion<Value>;
-    /// Asserts the json response body is strictly not equals to the provided value.
+    /// Asserts that the json response body is strictly not equals to the provided value.
     fn is_not(&self, jsonpath_res: JsonPathResult<'_, T>) -> Assertion<Value>;
+    /// Asserts that the value of the json path matches the json schema.
+    fn schema(&self, jsonpath_res: JsonPathResult<'_, T>) -> Assertion<Value>;
     /// Evaluates the json body assertion to run based on the [`Predicate`].
     fn eval(
         &self,
@@ -45,6 +47,7 @@ pub trait JsonPathDsl<T> {
         match predicate {
             Is => self.is(jsonpath_res).assert(log_settings),
             IsNot => self.is_not(jsonpath_res).assert(log_settings),
+            Schema => self.schema(jsonpath_res).assert(log_settings),
             _ => unimplemented!("Invalid predicate for the json path DSL: {predicate}"),
         }
     }
@@ -57,5 +60,9 @@ impl JsonPathDsl<Value> for Value {
 
     fn is_not(&self, jsonpath_res: JsonPathResult<'_, Value>) -> Assertion<Value> {
         jsonpath_res.is_ne(self)
+    }
+
+    fn schema(&self, jsonpath_res: JsonPathResult<'_, Value>) -> Assertion<Value> {
+        jsonpath_res.value.matches_schema(self)
     }
 }

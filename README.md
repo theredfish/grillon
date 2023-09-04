@@ -21,13 +21,14 @@ Grillon offers an elegant and natural way to approach API testing in Rust.
 
 ## Getting started
 
-This example uses [Tokio](https://tokio.rs/) as asynchronous runtime. Generally, testing libs are used in unit or integration tests. You can declare `grillon` as a dev-dependency.
+This example uses [Tokio](https://tokio.rs/) as asynchronous runtime. Generally, testing libs are
+used in unit or integration tests. You can declare `grillon` as a dev-dependency.
 
 Add `grillon` to `Cargo.toml`
 
 ```toml
 [dev-dependencies]
-grillon = "0.4.0"
+grillon = "0.5.0-alpha.1"
 tokio = { version = "1", features = ["macros"] }
 ```
 
