@@ -81,7 +81,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="quickstart.html"><strong aria-hidden="true">2.</strong> Quickstart</a></li><li class="chapter-item expanded "><a href="api_tests/index.html"><strong aria-hidden="true">3.</strong> API tests</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="api_tests/http.html"><strong aria-hidden="true">3.1.</strong> HTTP Tests</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="quickstart.html"><strong aria-hidden="true">2.</strong> Quickstart</a></li><li class="chapter-item expanded "><a href="writing_tests/index.html"><strong aria-hidden="true">3.</strong> Writing tests</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="writing_tests/client_configuration.html"><strong aria-hidden="true">3.1.</strong> Client configuration</a></li><li class="chapter-item expanded "><a href="writing_tests/requests.html"><strong aria-hidden="true">3.2.</strong> Requests</a></li><li class="chapter-item expanded "><a href="writing_tests/assertions.html"><strong aria-hidden="true">3.3.</strong> Assertions</a></li></ol></li><li class="chapter-item expanded "><a href="logs.html"><strong aria-hidden="true">4.</strong> Logs</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -154,7 +154,12 @@
 </ul>
 <p>Check out our <a href="./quickstart.html">Quickstart</a>.</p>
 <h2 id="usage"><a class="header" href="#usage">Usage</a></h2>
-<p>As the library is flexible, you can easily integrate it into your test strategy in a Rust project. You can use it for synthetic monitoring, endpoint monitoring, functional testing, integration testing, BDD testing (e.g <a href="https://github.com/cucumber-rs/cucumber">cucumber-rs</a>), ... it's up to you. Grillon does not impose any test strategy or organization.</p>
+<p>As the library is flexible, you can easily integrate it into your testing strategy in a Rust project.
+You can use it for synthetic monitoring, endpoint monitoring, functional testing, integration
+testing, BDD testing (e.g <a href="https://github.com/cucumber-rs/cucumber">cucumber-rs</a>), ... it's up to
+you. Grillon does not impose any test strategy or organization.</p>
+<p>Depending on how you configure your <a href="logs.html">logs</a>, the execution will fail-fast or not and can be
+formatted in a human-readable or json output.</p>
 <h2 id="next-big-steps"><a class="header" href="#next-big-steps">Next big steps</a></h2>
 <p>Here is an unordered and non-exhaustive list of what is planned for Grillon next:</p>
 <ul>
@@ -171,20 +176,26 @@
 <li>Support for YAML-formatted (or other formats) tests to extend the library outside of Rust projects</li>
 </ul>
 <h2 id="sponsors"><a class="header" href="#sponsors">Sponsors</a></h2>
-<p><a href="https://owlduty.com"><img src="./img/logo.png" alt="Owl Duty logo" /></a></p>
-<p><a href="https://owlduty.com">Owl Duty</a> is an endpoint monitoring and security SaaS developed on top of Grillon by <a href="https://github.com/theredfish">@theredfish</a>. It provides a no-code platform for endpoint monitoring and security.</p>
+<p><a href="https://owlduty.com"><img src="./img/owlduty_logo.jpg" alt="Owl Duty logo" /></a></p>
+<p><a href="https://owlduty.com">Owl Duty</a> is the platform for developers and testers, providing the tools and the infrastructure to monitor and test APIs.</p>
 <h2 id="you"><a class="header" href="#you">You?</a></h2>
 <p>You can sponsor me (<a href="https://github.com/sponsors/theredfish">@theredfish</a>) with the <code>Coffee sponsor</code> tier (or higher) and I will add your handle / company name here.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="quickstart"><a class="header" href="#quickstart">Quickstart</a></h1>
-<p>Using Grillon is quite simple, we will consider you are running it as part of your testing process. But you can also use it as a regular dependency.</p>
+<p>Using Grillon is pretty straightforward, we will consider you are running it as part of your testing
+process. But you can also use it as a regular dependency.</p>
 <h2 id="configuration"><a class="header" href="#configuration">Configuration</a></h2>
-<p>Before we begin, let's create a <code>tests/</code> directory at the root of the project. Create a file there named <code>create_posts.rs</code>.</p>
-<p>Add <code>grillon</code> to your development dependencies with <code>tokio</code>, as we need a runtime to run async functions in our test environement.</p>
+<p>Before we begin, let's create a <code>tests/</code> directory at the root of the project. Create a file there
+named <code>create_posts.rs</code>.</p>
+<p>Add <code>grillon</code> to your development dependencies with <code>tokio</code>, as we need a runtime to run async
+functions in our test environement.</p>
 <pre><code class="language-toml">[dev-dependencies]
-grillon = &quot;0.4.0&quot;
+grillon = &quot;0.5.0-alpha.1&quot;
 tokio = { version = &quot;1&quot;, features = [&quot;macros&quot;] }
 </code></pre>
-<p>Our example will test the <code>/posts</code> endpoint of <code>jsonplaceholder.typicode.com</code>. We will send a json payload and we will assert that our resource is correctly created with an acceptable response time (&lt; 500 ms). Depending on your location, feel free to tweak the response time value (in milliseconds).</p>
+<p>Our example will test the <code>/posts</code> endpoint of <code>jsonplaceholder.typicode.com</code>. We will send a json
+payload and we will assert that our resource is correctly created with an acceptable response time
+(&lt; 500 ms). Depending on your location, feel free to tweak the response time value
+(in milliseconds).</p>
 <h2 id="write-the-test"><a class="header" href="#write-the-test">Write the test</a></h2>
 <p>Create a new <code>create_posts.rs</code> file in <code>tests</code> and copy/paste the following example:</p>
 <pre><code class="language-rust noplaypen">use grillon::{dsl::*, dsl::http::*, json, Grillon, StatusCode, Result};
@@ -192,7 +203,7 @@ use grillon::header::{HeaderValue, CONTENT_LENGTH, CONTENT_TYPE};
 
 #[tokio::test]
 async fn create_posts_monitoring() -&gt; Result&lt;()&gt; {
-    Grillon::new(&quot;http://jsonplaceholder.typicode.com&quot;)?
+    Grillon::new(&quot;https://jsonplaceholder.typicode.com&quot;)?
         .post(&quot;posts&quot;)
         .payload(json!({
             &quot;title&quot;: &quot;foo&quot;,
@@ -250,18 +261,317 @@ test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
 <li>the status code</li>
 <li>the response time</li>
 <li>the headers</li>
-<li>the json body (note that partial json body isn't yet supported, see <a href="https://github.com/owlduty/grillon/issues/25">#25</a>)</li>
+<li>the entire json body</li>
 </ul>
-<p>We also added custom assertions and function calls with <code>assert_fn</code>. So if you have specific needs, you can manipulate <code>assert</code> and add your own logic!</p>
+<p>We also added custom assertions and function calls with <code>assert_fn</code>. So if you have specific needs,
+you can manipulate <code>assert</code> and add your own logic! For more information, you can read more about
+<a href="./writing_tests/assertions.html">assertions</a> in this book.</p>
 <h2 id="next-steps"><a class="header" href="#next-steps">Next steps</a></h2>
-<p>This was a basic example, this book will contain more in-depth content about Grillon such as reusing request builders, some examples on how to organize your tests as well as test guides. You will also find documentation on the different functionalities by protocol, how to configure your logs and how to integrate Grillon into your pipelines.</p>
-<p>But this book is a work in progress, so please consider it a TODO comment 😉.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="api-tests"><a class="header" href="#api-tests">API tests</a></h1>
+<p>This book contains more in-depth content about Grillon such as reusing a request builder, how to
+organize your tests, available assertions, and how to configure your log output. You can also find
+technical information in our <a href="https://docs.rs/grillon/latest/grillon/">latest API documentation</a>.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="writing-tests"><a class="header" href="#writing-tests">Writing tests</a></h1>
 <ul>
-<li><a href="api_tests/./http.html">HTTP Tests</a></li>
+<li><a href="writing_tests/./client_configuration.html">Client configuration</a></li>
+<li><a href="writing_tests/./requests.html">Requests</a></li>
+<li><a href="writing_tests/./assertions.html">Assertions</a></li>
 </ul>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="http-tests"><a class="header" href="#http-tests">HTTP Tests</a></h1>
-<p>TODO (™)</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="client-configuration"><a class="header" href="#client-configuration">Client configuration</a></h1>
+<p>Grillon can be configured in different ways. We use <a href="https://github.com/hyperium/hyper">Hyper</a> as
+the default HTTP client and provide you with a default configuration. By using Hyper, we can
+leverage on the low-level API to inspect HTTP requests and responses and provide interesting
+features to Grillon.</p>
+<h2 id="default-client-implementation"><a class="header" href="#default-client-implementation">Default client implementation</a></h2>
+<p>The default client implementation should provide you with the most common features. All you need to
+do is configure the base API URL when you create an instance of Grillon.</p>
+<pre><code class="language-rust">let grillon = Grillon::new(&quot;https://jsonplaceholder.typicode.com&quot;)?;</code></pre>
+<p>This way you don't have to rewrite the base URL each time you want to send a request and perform
+assertions on the response. You can reuse the existing client and create a new request. In the
+following example we send a <code>POST</code> request to <code>https://jsonplaceholder.typicode.com/posts</code>:</p>
+<pre><code class="language-rust">let request = grillon
+    .post(&quot;posts&quot;)
+    .payload(json!({
+        &quot;title&quot;: &quot;foo&quot;,
+        &quot;body&quot;: &quot;bar&quot;,
+        &quot;userId&quot;: 1
+    }))
+    .assert()
+    .await;</code></pre>
+<p>The <code>assert</code> function consumes the
+<a href="https://docs.rs/grillon/latest/grillon/struct.Request.html"><code>grillon::Request</code></a> and prevents
+further changes to the structure of the request when users want to run assertions on the response.</p>
+<p>Refer to the <a href="writing_tests/./requests.html">Requests</a> chapter for more information about how to configure your
+requests. Note that at the moment Grillon only supports HTTP(s), but later we will extend the use
+for different protocols and frameworks such as gRPC or SSL.</p>
+<h2 id="use-a-different-client"><a class="header" href="#use-a-different-client">Use a different client</a></h2>
+<p>When you want to use a different client to send your requests and handle the responses, you should
+use the internal http response representation to assert. For that you need to use the
+<a href="https://docs.rs/grillon/latest/grillon/struct.Assert.html"><code>Assert</code></a> structure.</p>
+<p>For example, suppose you want to use <code>reqwest</code> to perform an http <code>GET</code> request and you want to
+assert that the <code>response time</code> is <code>less than</code> 400ms. First you need to create your own structure
+that will handle a <code>reqwest::Response</code>.</p>
+<pre><code class="language-rust">struct MyResponse {
+    pub response: reqwest::Response,
+}</code></pre>
+<p>Next, you need to implement the
+<a href="https://docs.rs/grillon/latest/grillon/trait.Response.html"><code>grillon::Response</code></a> trait to describe
+how you handle the various pieces of information that Grillon needs to perform assertions:</p>
+<pre><code class="language-rust">#[async_trait(?Send)]
+impl Response for MyResponse {
+    fn status(&amp;self) -&gt; StatusCode {
+        self.response.status()
+    }
+
+    async fn json(self) -&gt; Option&lt;Value&gt; {
+        self.response.json::&lt;Value&gt;().await.ok()
+    }
+
+    fn headers(&amp;self) -&gt; HeaderMap {
+        self.response.headers().clone()
+    }
+}</code></pre>
+<p>The next step is to create a new <code>Assert</code> instance which requires:</p>
+<ul>
+<li>An implementation of a <code>grillon::Response</code>,</li>
+<li>the response time in milliseconds,</li>
+<li>and the <a href="https://docs.rs/grillon/latest/grillon/enum.LogSettings.html"><code>LogSettings</code></a> for the
+assertion results.</li>
+</ul>
+<p>Let's first run the request and get the execution time:</p>
+<pre><code class="language-rust">let now = Instant::now();
+let response = reqwest::get(mock_server.server.url(&quot;/users/1&quot;))
+    .await
+    .expect(&quot;Failed to send the http request&quot;);
+let response_time = now.elapsed().as_millis() as u64;</code></pre>
+<p>Now let's pass the response to your own response structure:</p>
+<pre><code class="language-rust">let my_response = MyResponse { response };</code></pre>
+<p>You are now ready to assert against a <code>reqwest::Response</code> wrapped by your own implementation of a
+<code>grillon::Response</code>:</p>
+<pre><code class="language-rust">Assert::new(my_response, response_time, LogSettings::default())
+    .await
+    .response_time(is_less_than(400));</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="requests"><a class="header" href="#requests">Requests</a></h1>
+<h2 id="http"><a class="header" href="#http">HTTP</a></h2>
+<p>With Grillon, you can easily chain calls to configure and send HTTP requests and reuse the same
+client for a given base api URL.</p>
+<pre><code class="language-rust">#[tokio::test]
+async fn test_get_jsonplaceholder() -&gt; Result&lt;()&gt; {
+    let grillon = Grillon::new(&quot;https://jsonplaceholder.typicode.com&quot;)?;
+
+    grillon
+        .get(&quot;posts?id=1&quot;)
+        .assert()
+        .await
+        .json_path(&quot;$[0].id&quot;, is(json!(1)));
+
+    grillon
+        .get(&quot;posts?id=2&quot;)
+        .assert()
+        .await
+        .json_path(&quot;$[0].id&quot;, is(json!(2)));
+
+    Ok(())
+}</code></pre>
+<h3 id="methods"><a class="header" href="#methods">Methods</a></h3>
+<p>Each method in this list has its corresponding <code>lowercase</code> function:</p>
+<ul>
+<li>GET</li>
+<li>POST</li>
+<li>PUT</li>
+<li>PATCH</li>
+<li>DELETE</li>
+<li>OPTIONS</li>
+<li>CONNECT</li>
+<li>HEAD</li>
+</ul>
+<h3 id="headers"><a class="header" href="#headers">Headers</a></h3>
+<p>Grillon supports two different types to configuring http request headers:</p>
+<ul>
+<li><code>HeaderMap</code></li>
+<li><code>Vec&lt;(HeaderName, HeaderValue)&gt;</code></li>
+</ul>
+<pre><code class="language-rust">let grillon = Grillon::new(&quot;https://jsonplaceholder.typicode.com&quot;)?;
+
+// Vec&lt;(HeaderName, HeaderValue)&gt;
+let request = grillon
+    .post(&quot;posts&quot;)
+    .payload(json!({
+        &quot;title&quot;: &quot;foo&quot;,
+        &quot;body&quot;: &quot;bar&quot;,
+        &quot;userId&quot;: 1
+    }))
+    .headers(vec![(
+        CONTENT_TYPE,
+        HeaderValue::from_static(&quot;application/json&quot;),
+    )]);
+
+// Override with HeaderMap
+let mut header_map = HeaderMap::new();
+header_map.insert(CONTENT_TYPE, HeaderValue::from_static(&quot;application/json&quot;));
+let request = request.headers(header_map);</code></pre>
+<h3 id="payload"><a class="header" href="#payload">Payload</a></h3>
+<p>At the moment, Grillon only supports the <code>application/json</code> content type. It will then be extended
+with different content types such as <code>multipart/form-data</code>, <code>application/x-www-form-urlencoded</code>,
+<code>text/plain</code> or <code>text/html</code>.</p>
+<h4 id="json"><a class="header" href="#json">Json</a></h4>
+<p>Grillon re-exports <code>serde_json::Value</code> type to make it easier to add a json body. You can also use
+the <code>json!</code> macro.</p>
+<pre><code class="language-rust">Grillon::new(&quot;https://jsonplaceholder.typicode.com&quot;)?;
+    .post(&quot;posts&quot;)
+    .payload(json!({
+        &quot;title&quot;: &quot;foo&quot;,
+        &quot;body&quot;: &quot;bar&quot;,
+        &quot;userId&quot;: 1
+    }))
+    .assert()
+    .await;</code></pre>
+<h3 id="build-a-custom-request"><a class="header" href="#build-a-custom-request">Build a custom request</a></h3>
+<p>If for some reasons you need a more programmatic way to create your http requests, you can use the
+<code>http_request</code> function:</p>
+<pre><code class="language-rust">Grillon::new(&quot;https://jsonplaceholder.typicode.com&quot;)?
+    .http_request(Method::POST, &quot;posts&quot;)
+    .assert()
+    .await
+    .status(is_success());</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="assertions"><a class="header" href="#assertions">Assertions</a></h1>
+<p>Grillon provides domain-specific language per protocol and framework to make it natural to write
+assertions.</p>
+<p>An assertion is made up of:</p>
+<ul>
+<li>A part under test like <code>status</code>,</li>
+<li>a predicate such as <code>is</code>, <code>is_not</code>,</li>
+<li>and an expected value, for example <code>200</code>.</li>
+</ul>
+<p>The predicates of a specific part can handle different type parameters. For example if you want to
+assert that a status code is 200, you can pass a <code>u16</code> or a <code>StatusCode</code>. This information is
+described below in the types column.</p>
+<h2 id="execution-order"><a class="header" href="#execution-order">Execution order</a></h2>
+<p>Your assertions are executed sequentially and in a blocking fashion. Asynchronous executions are not
+supported yet. With sequential runs, order matters, so if you want to fail early under specific
+conditions, it's possible. Each assertion produces <a href="writing_tests/../logs.html">logs</a>.</p>
+<h2 id="http-assertion-table"><a class="header" href="#http-assertion-table">HTTP assertion table</a></h2>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">part</th><th style="text-align: left">predicates</th><th style="text-align: left">types</th></tr></thead><tbody>
+<tr><td style="text-align: left">headers</td><td style="text-align: left">is, is_not, contains, does_not_contain</td><td style="text-align: left">Vec&lt;(HeaderName, HeaderValue)&gt;, HeaderMap</td></tr>
+<tr><td style="text-align: left">status</td><td style="text-align: left">is, is_not, is_between</td><td style="text-align: left">u16, StatusCode</td></tr>
+<tr><td style="text-align: left">json_body</td><td style="text-align: left">is, is_not, schema</td><td style="text-align: left">String, &amp;str, Value, <code>json!</code></td></tr>
+<tr><td style="text-align: left">json_path</td><td style="text-align: left">is, is_not, schema</td><td style="text-align: left">Value, <code>json!</code></td></tr>
+<tr><td style="text-align: left">response_time</td><td style="text-align: left">is_less_than</td><td style="text-align: left">u64</td></tr>
+</tbody></table>
+</div>
+<h3 id="note-about-json_path"><a class="header" href="#note-about-json_path">Note about <code>json_path</code></a></h3>
+<p>Json path requires one more argument than other predicates because you have to provide a path. The
+expected value should always be a json document. To enforce this, we require a <code>Value</code> that you can
+build by using the <code>json!</code> macro.</p>
+<p>Here is an example of a json path assertion, where we are testing the value under the path
+<code>$[0].id</code>.</p>
+<pre><code class="language-rust">#[tokio::test]
+async fn test_json_path() -&gt; Result&lt;()&gt; {
+    Grillon::new(&quot;https://jsonplaceholder.typicode.com&quot;)?
+        .get(&quot;posts?id=1&quot;)
+        .assert()
+        .await
+        .json_path(&quot;$[0].id&quot;, is(json!(1)));
+
+    Ok(())
+}</code></pre>
+<h3 id="note-about-schema"><a class="header" href="#note-about-schema">Note about <code>schema</code></a></h3>
+<p>The <code>schema</code> predicate can be used with both <code>json_body</code> and <code>json_path</code> parts. Although the
+available types differ between them, the <code>schema</code> predicate signature is independent and can be used
+with the following types:</p>
+<ul>
+<li>&amp;str</li>
+<li>String</li>
+<li>Value (you can also use the <code>json!</code> macro)</li>
+</ul>
+<h2 id="custom-assertions"><a class="header" href="#custom-assertions">Custom assertions</a></h2>
+<p>You may need to create more complex assertions or have more control on what is executed as part
+of an assertion. If so, the library provides a specific function, <code>assert_fn</code>, allowing you to write
+your own logic.</p>
+<pre><code class="language-rust">Grillon::new(&quot;https://jsonplaceholder.typicode.com&quot;)?
+    .post(&quot;posts&quot;)
+    .payload(json!({
+        &quot;title&quot;: &quot;foo&quot;,
+        &quot;body&quot;: &quot;bar&quot;,
+        &quot;userId&quot;: 1
+    }))
+    .assert()
+    .await
+    .status(is_success())
+    .assert_fn(|assert| {
+        assert!(!assert.headers.is_empty());
+        assert!(assert.status == StatusCode::CREATED);
+        assert!(assert.json.is_some());
+
+        println!(&quot;Json response : {:#?}&quot;, assert.json);
+    });</code></pre>
+<p>With this function you can access the <code>Assert</code> structure which is the internal representation of an
+http response under test. You should have access to all parts that Grillon supports (headers, status, json, etc.). It's also
+possible to add your own stdout logs if you want more control over the results or need to debug
+what you receive.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="logs"><a class="header" href="#logs">Logs</a></h1>
+<p>Grillon provides a <code>LogSettings</code> structure so you can easily configure how the assertion results
+should be output. The default log settings are set to <code>StdAssert</code>. Only failures will be printed
+to standard output in a human-readable format.</p>
+<p>Each assertion results in a log to standard output that you can connect with your infrastructure to
+react to specific events. We could imagine for example an integration with CloudWatch and create an
+alert as soon as the json log contains the key/value <code>&quot;result&quot;: &quot;failure&quot;</code>.</p>
+<h2 id="human-readable"><a class="header" href="#human-readable">Human readable</a></h2>
+<h3 id="failures-only"><a class="header" href="#failures-only">Failures only</a></h3>
+<p>This is the default, fail-fast, mode. As soon as you get a failure, the execution halts.</p>
+<pre><code class="language-rust">Grillon::new(&quot;https://jsonplaceholder.typicode.com&quot;)?
+    .log_settings(LogSettings::StdAssert)
+    .get(&quot;posts?id=1&quot;)
+    .assert()
+    .await
+    .status(is_client_error());</code></pre>
+<p>As the status isn't a client error but a successful code, the assertion fails. The following logs
+will be printed on the standard output:</p>
+<pre><code class="language-bash">part: status code
+should be between: &quot;400 and 499&quot;
+was: &quot;200&quot;
+</code></pre>
+<p>If you replace <code>is_client_error()</code> by <code>is_success()</code> you should now see a successful test without
+any logs.</p>
+<h3 id="failures-and-successes"><a class="header" href="#failures-and-successes">Failures and successes</a></h3>
+<p>Now, if you want to log everything, even passing test cases (when debugging for example), then you
+just need to change your log settings to <code>StdOut</code>:</p>
+<pre><code class="language-rust">Grillon::new(&quot;https://jsonplaceholder.typicode.com&quot;)?
+    .log_settings(LogSettings::StdAssert)
+    .get(&quot;posts?id=1&quot;)
+    .assert()
+    .await
+    .status(is_success());</code></pre>
+<p>Which should produce similar output:</p>
+<pre><code class="language-bash">running 1 test
+
+part: status code
+should be between: &quot;200 and 299&quot;
+test http::basic_http::test ... ok
+</code></pre>
+<h2 id="json-1"><a class="header" href="#json-1">Json</a></h2>
+<p>The json format is to be used when you want to integrate external tools: CI/CD, logging services
+such as Elasticsearch or Cloudwatch, reporting tools, etc.</p>
+<pre><code class="language-rust">Grillon::new(&quot;https://jsonplaceholder.typicode.com&quot;)?
+    .log_settings(LogSettings::Json)
+    .get(&quot;posts?id=1&quot;)
+    .assert()
+    .await
+    .status(is_client_error());</code></pre>
+<p>With the previous code block, we get an assertion failure since the status code isn't a client
+error. Here is the resulting json output (stdout) of the run:</p>
+<pre><code class="language-json">{
+   &quot;left&quot;:200,
+   &quot;part&quot;:&quot;status code&quot;,
+   &quot;predicate&quot;:&quot;should be between&quot;,
+   &quot;result&quot;:&quot;failed&quot;,
+   &quot;right&quot;:[
+      400,
+      499
+   ]
+}
+</code></pre>
+<p>Grillon doesn't provide any connectors yet, so you will need to redirect stdout logs to a driver if
+you want to ingest json logs with other services.</p>
 
                     </main>
 
