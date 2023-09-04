@@ -26,10 +26,10 @@ conditions, it's possible. Each assertion produces [logs](../logs.md).
 |headers      |is, is_not, contains, does_not_contain|Vec<(HeaderName, HeaderValue)>, HeaderMap|
 |status       |is, is_not, is_between                |u16, StatusCode                          |
 |json_body    |is, is_not, schema                    |String, &str, Value, `json!`             |
-|json_path    |is, is_not                            |Value, `json!`                           |
+|json_path    |is, is_not, schema                    |Value, `json!`                           |
 |response_time|is_less_than                          |u64                                      |
 
-### Note about json path
+### Note about `json_path`
 
 Json path requires one more argument than other predicates because you have to provide a path. The
 expected value should always be a json document. To enforce this, we require a `Value` that you can
@@ -50,6 +50,16 @@ async fn test_json_path() -> Result<()> {
     Ok(())
 }
 ```
+
+### Note about `schema`
+
+The `schema` predicate can be used with both `json_body` and `json_path` parts. Although the
+available types differ between them, the `schema` predicate signature is independent and can be used
+with the following types:
+
+- &str
+- String
+- Value (you can also use the `json!` macro)
 
 ## Custom assertions
 
