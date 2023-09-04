@@ -13,7 +13,7 @@ functions in our test environement.
 
 ```toml
 [dev-dependencies]
-grillon = "0.4.0"
+grillon = "0.5.0-alpha.1"
 tokio = { version = "1", features = ["macros"] }
 ```
 

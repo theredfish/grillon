@@ -1,5 +1,28 @@
 # `grillon` changelog
 
+## [v0.5.0-alpha.1] - 2023
+
+- [Diff](/../../compare/v0.4.0...v0.5.0-alpha.1)
+- [Milestone](https://github.com/owlduty/grillon/milestone/3)
+
+[v0.5.0-alpha.1]: /../../tree/v0.5.0-alpha.1
+
+### Changed
+
+- Expansion of the book documentation ([#42])
+
+### Added
+
+- TLS support by default with Hyper ([#45])
+- Built-in json path assertions ([#34])
+- Built-in json schema assertion ([#48], [#50])
+
+[#34]: /../../issues/34
+[#42]: /../../issues/42
+[#45]: /../../issues/45
+[#48]: /../../issues/48
+[#50]: /../../issues/50
+
 ## [0.4.0] - 2023-01-26
 
 [0.4.0]: /../../tree/v0.4.0
