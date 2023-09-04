@@ -165,11 +165,11 @@ conditions, it's possible. Each assertion produces <a href="../logs.html">logs</
 <tr><td style="text-align: left">headers</td><td style="text-align: left">is, is_not, contains, does_not_contain</td><td style="text-align: left">Vec&lt;(HeaderName, HeaderValue)&gt;, HeaderMap</td></tr>
 <tr><td style="text-align: left">status</td><td style="text-align: left">is, is_not, is_between</td><td style="text-align: left">u16, StatusCode</td></tr>
 <tr><td style="text-align: left">json_body</td><td style="text-align: left">is, is_not, schema</td><td style="text-align: left">String, &amp;str, Value, <code>json!</code></td></tr>
-<tr><td style="text-align: left">json_path</td><td style="text-align: left">is, is_not</td><td style="text-align: left">Value, <code>json!</code></td></tr>
+<tr><td style="text-align: left">json_path</td><td style="text-align: left">is, is_not, schema</td><td style="text-align: left">Value, <code>json!</code></td></tr>
 <tr><td style="text-align: left">response_time</td><td style="text-align: left">is_less_than</td><td style="text-align: left">u64</td></tr>
 </tbody></table>
 </div>
-<h3 id="note-about-json-path"><a class="header" href="#note-about-json-path">Note about json path</a></h3>
+<h3 id="note-about-json_path"><a class="header" href="#note-about-json_path">Note about <code>json_path</code></a></h3>
 <p>Json path requires one more argument than other predicates because you have to provide a path. The
 expected value should always be a json document. To enforce this, we require a <code>Value</code> that you can
 build by using the <code>json!</code> macro.</p>
@@ -185,6 +185,15 @@ async fn test_json_path() -&gt; Result&lt;()&gt; {
 
     Ok(())
 }</code></pre>
+<h3 id="note-about-schema"><a class="header" href="#note-about-schema">Note about <code>schema</code></a></h3>
+<p>The <code>schema</code> predicate can be used with both <code>json_body</code> and <code>json_path</code> parts. Although the
+available types differ between them, the <code>schema</code> predicate signature is independent and can be used
+with the following types:</p>
+<ul>
+<li>&amp;str</li>
+<li>String</li>
+<li>Value (you can also use the <code>json!</code> macro)</li>
+</ul>
 <h2 id="custom-assertions"><a class="header" href="#custom-assertions">Custom assertions</a></h2>
 <p>You may need to create more complex assertions or have more control on what is executed as part
 of an assertion. If so, the library provides a specific function, <code>assert_fn</code>, allowing you to write
