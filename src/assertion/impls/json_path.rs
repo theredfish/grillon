@@ -10,25 +10,27 @@ impl Equality<Value> for JsonPathResult<'_, Value> {
     type Assertion = Assertion<Value>;
 
     fn is_eq(&self, expected: &Value) -> Self::Assertion {
-        let result = self.value == to_value_array(expected);
+        let expected = to_value_array(expected);
+        let result = self.value == expected;
 
         Assertion {
             predicate: Predicate::Is,
             part: Part::JsonPath,
-            left: Hand::Left(expected.clone()),
-            right: Hand::Compound(Value::String(self.path.to_string()), self.value.clone()),
+            left: Hand::Compound(Value::String(self.path.to_string()), self.value.clone()),
+            right: Hand::Right(expected),
             result: result.into(),
         }
     }
 
-    fn is_ne(&self, actual: &Value) -> Self::Assertion {
-        let result = self.value != to_value_array(actual);
+    fn is_ne(&self, expected: &Value) -> Self::Assertion {
+        let expected = to_value_array(expected);
+        let result = self.value != expected;
 
         Assertion {
             predicate: Predicate::IsNot,
             part: Part::JsonPath,
-            left: Hand::Left(actual.clone()),
-            right: Hand::Compound(Value::String(self.path.to_string()), self.value.clone()),
+            left: Hand::Compound(Value::String(self.path.to_string()), self.value.clone()),
+            right: Hand::Right(expected),
             result: result.into(),
         }
     }
@@ -285,11 +287,11 @@ mod tests {
             let expected_serialization = json!({
                 "part": "json path",
                 "predicate": "should be",
-                "left": json_path_value,
-                "right":  json!([
+                "left":  json!([
                     path,
                     [json_path_value]
-                ]),
+                    ]),
+                "right": [json_path_value],
                 "result": "passed"
             });
 
@@ -319,11 +321,11 @@ mod tests {
             let expected_serialization = json!({
                 "part": "json path",
                 "predicate": "should not be",
-                "left": expected_not_json_path_value,
-                "right":  json!([
+                "left":  json!([
                     path,
                     value_array
-                ]),
+                    ]),
+                "right": [expected_not_json_path_value],
                 "result": "passed"
             });
 

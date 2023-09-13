@@ -1,3 +1,5 @@
+use std::{fs, path::Path};
+
 use crate::{
     assertion::{
         traits::{Equality, JsonSchema},
@@ -40,29 +42,15 @@ impl Equality<str> for Value {
     type Assertion = Assertion<Value>;
 
     fn is_eq(&self, rhs: &str) -> Self::Assertion {
-        let rhs = serde_json::from_str(rhs).unwrap();
-        let result = self == &rhs;
-
-        Assertion {
-            predicate: Predicate::Is,
-            part: Part::JsonBody,
-            left: Hand::Left(self.clone()),
-            right: Hand::Right(rhs),
-            result: result.into(),
-        }
+        // TODO: handle unprocessable
+        let rhs: Value = serde_json::from_str(rhs).unwrap();
+        self.is_eq(&rhs)
     }
 
     fn is_ne(&self, rhs: &str) -> Self::Assertion {
-        let rhs = serde_json::from_str(rhs).unwrap();
-        let result = self != &rhs;
-
-        Assertion {
-            predicate: Predicate::IsNot,
-            part: Part::JsonBody,
-            left: Hand::Left(self.clone()),
-            right: Hand::Right(rhs),
-            result: result.into(),
-        }
+        // TODO: handle unprocessable
+        let rhs: Value = serde_json::from_str(rhs).unwrap();
+        self.is_ne(&rhs)
     }
 }
 
@@ -70,29 +58,15 @@ impl Equality<String> for Value {
     type Assertion = Assertion<Value>;
 
     fn is_eq(&self, rhs: &String) -> Self::Assertion {
-        let rhs = serde_json::from_str(rhs).unwrap();
-        let result = self == &rhs;
-
-        Assertion {
-            predicate: Predicate::Is,
-            part: Part::JsonBody,
-            left: Hand::Left(self.clone()),
-            right: Hand::Right(rhs),
-            result: result.into(),
-        }
+        // TODO: handle unprocessable
+        let rhs: Value = serde_json::from_str(rhs).unwrap();
+        self.is_eq(&rhs)
     }
 
     fn is_ne(&self, rhs: &String) -> Self::Assertion {
-        let rhs = serde_json::from_str(rhs).unwrap();
-        let result = self != &rhs;
-
-        Assertion {
-            predicate: Predicate::IsNot,
-            part: Part::JsonBody,
-            left: Hand::Left(self.clone()),
-            right: Hand::Right(rhs),
-            result: result.into(),
-        }
+        // TODO: handle unprocessable
+        let rhs: Value = serde_json::from_str(rhs).unwrap();
+        self.is_ne(&rhs)
     }
 }
 
@@ -150,7 +124,7 @@ impl JsonSchema<str> for Value {
     type Assertion = Assertion<Value>;
 
     fn matches_schema(&self, schema: &str) -> Self::Assertion {
-        let schema = match serde_json::from_str(schema) {
+        let schema: Value = match serde_json::from_str(schema) {
             Ok(schema) => schema,
             Err(err) => {
                 return Assertion {
@@ -165,49 +139,7 @@ impl JsonSchema<str> for Value {
             }
         };
 
-        let schema = match JSONSchema::compile(&schema) {
-            Ok(schema) => schema,
-            Err(err) => {
-                return Assertion {
-                    predicate: Predicate::Schema,
-                    part: Part::JsonBody,
-                    left: Hand::Left(self.clone()),
-                    right: Hand::Empty,
-                    result: AssertionResult::Unprocessable(UnprocessableReason::InvalidJsonSchema(
-                        err.schema_path,
-                        err.instance_path,
-                    )),
-                }
-            }
-        };
-
-        // Get the boolean result of the validation
-        let result = schema.is_valid(self);
-
-        // Generate a json output of the json schema result
-        let output: BasicOutput<'_> = schema.apply(self).basic();
-        let output = match serde_json::to_value(output) {
-            Ok(json_output) => json_output,
-            Err(_) => {
-                return Assertion {
-                    predicate: Predicate::Schema,
-                    part: Part::JsonBody,
-                    left: Hand::Empty,
-                    right: Hand::Empty,
-                    result: AssertionResult::Unprocessable(UnprocessableReason::Other(
-                        "Failed to serialize json schema error".to_string(),
-                    )),
-                }
-            }
-        };
-
-        Assertion {
-            predicate: Predicate::Schema,
-            part: Part::JsonBody,
-            left: Hand::Left(self.clone()),
-            right: Hand::Right(output),
-            result: result.into(),
-        }
+        self.matches_schema(&schema)
     }
 }
 
@@ -215,7 +147,7 @@ impl JsonSchema<String> for Value {
     type Assertion = Assertion<Value>;
 
     fn matches_schema(&self, schema: &String) -> Self::Assertion {
-        let schema = match serde_json::from_str(schema) {
+        let schema: Value = match serde_json::from_str(schema) {
             Ok(schema) => schema,
             Err(_) => {
                 return Assertion {
@@ -230,29 +162,32 @@ impl JsonSchema<String> for Value {
             }
         };
 
-        let schema = match JSONSchema::compile(&schema) {
-            Ok(schema) => schema,
-            Err(err) => {
+        self.matches_schema(&schema)
+    }
+}
+
+impl JsonSchema<Path> for Value {
+    type Assertion = Assertion<Value>;
+
+    fn matches_schema(&self, schema_file: &Path) -> Self::Assertion {
+        let schema_file_content = match fs::read_to_string(schema_file) {
+            Ok(content) => content,
+            Err(_) => {
                 return Assertion {
                     predicate: Predicate::Schema,
                     part: Part::JsonBody,
-                    left: Hand::Left(self.clone()),
+                    left: Hand::Empty,
                     right: Hand::Empty,
-                    result: AssertionResult::Unprocessable(UnprocessableReason::InvalidJsonSchema(
-                        err.schema_path,
-                        err.instance_path,
-                    )),
+                    result: AssertionResult::Unprocessable(UnprocessableReason::Other(format!(
+                        "Failed to read json schema file located at {}",
+                        schema_file.display()
+                    ))),
                 }
             }
         };
 
-        // Get the boolean result of the validation
-        let result = schema.is_valid(self);
-
-        // Generate a json output of the json schema result
-        let output: BasicOutput<'_> = schema.apply(self).basic();
-        let output = match serde_json::to_value(output) {
-            Ok(json_output) => json_output,
+        let schema: Value = match serde_json::from_str(&schema_file_content) {
+            Ok(schema) => schema,
             Err(_) => {
                 return Assertion {
                     predicate: Predicate::Schema,
@@ -260,19 +195,13 @@ impl JsonSchema<String> for Value {
                     left: Hand::Empty,
                     right: Hand::Empty,
                     result: AssertionResult::Unprocessable(UnprocessableReason::Other(
-                        "Failed to serialize json schema error".to_string(),
+                        "Failed to serialize json schema".to_string(),
                     )),
                 }
             }
         };
 
-        Assertion {
-            predicate: Predicate::Schema,
-            part: Part::JsonBody,
-            left: Hand::Left(self.clone()),
-            right: Hand::Right(output),
-            result: result.into(),
-        }
+        self.matches_schema(&schema)
     }
 }
 
