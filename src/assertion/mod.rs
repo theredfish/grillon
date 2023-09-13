@@ -213,22 +213,22 @@ was: {left}"
         let part = &assertion.part;
 
         let left_hand = match &assertion.left {
-            Hand::Left(left) if part == &Part::JsonPath => left,
+            Hand::Compound(left, right) if part == &Part::JsonPath => (left, right),
             _ => return Self("<unexpected left hand>".to_string()),
         };
         let right_hand = match &assertion.right {
-            Hand::Compound(left, right) if part == &Part::JsonPath => (left, right),
+            Hand::Right(right) if part == &Part::JsonPath => right,
             _ => return Self("<unexpected right hand>".to_string()),
         };
 
-        let jsonpath = right_hand.0;
+        let jsonpath = left_hand.0;
         #[allow(trivial_casts)]
         let jsonpath = match (jsonpath as &dyn Any).downcast_ref::<Value>() {
             Some(Value::String(jsonpath_string)) => jsonpath_string.to_string(),
             _ => format!("{jsonpath:?}"),
         };
 
-        let jsonpath_value = right_hand.1;
+        let jsonpath_value = left_hand.1;
 
         let result = &assertion.result;
         let part = format!("part: {part} '{jsonpath}'");
@@ -236,12 +236,12 @@ was: {left}"
             AssertionResult::Passed => format!(
                 "result: {result}
 {part}
-{predicate}: {left_hand:#?}"
+{predicate}: {right_hand:#?}"
             ),
             AssertionResult::Failed => format!(
                 "result: {result}
 {part}
-{predicate}: {left_hand:#?}
+{predicate}: {right_hand:#?}
 was: {jsonpath_value:#?}"
             ),
             AssertionResult::NotYetStarted => format!("[Not yet started] {part}"),
@@ -274,9 +274,9 @@ where
     pub fn assert(self, log_settings: &LogSettings) -> Assertion<T> {
         let message = self.log();
         match log_settings {
-            LogSettings::StdOut => println!("\n{message}"),
+            LogSettings::StdOutput => println!("\n{message}"),
             LogSettings::StdAssert => assert!(self.passed(), "\n\n{message}"),
-            LogSettings::Json => {
+            LogSettings::JsonOutput => {
                 let json = serde_json::to_string(&json!(self))
                     .expect("Unexpected json failure: failed to serialize assertion");
                 println!("{json}");

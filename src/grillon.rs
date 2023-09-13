@@ -18,12 +18,12 @@ pub struct Grillon {
 /// The default configuration is `StdAssert`.
 #[derive(Clone)]
 pub enum LogSettings {
-    /// Prints all assertion results to the standard output.
-    StdOut,
     /// Only prints assertion failures through `std::assert` macro.
     StdAssert,
+    /// Prints all assertion results to the standard output.
+    StdOutput,
     /// Formats assertion results into a json output.
-    Json,
+    JsonOutput,
 }
 
 impl Default for LogSettings {
