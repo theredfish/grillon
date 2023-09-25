@@ -1,0 +1,8 @@
+{
+    "type": "array",
+    "maxItems": 1,
+    "items": {
+        "type": "number"
+    },
+    "description": "the user ID from the json path"
+}

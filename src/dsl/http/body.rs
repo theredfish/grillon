@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use crate::{
     assertion::traits::{Equality, JsonSchema},
     assertion::Assertion,
@@ -59,6 +61,20 @@ impl JsonBodyDsl<Value> for &str {
 }
 
 impl JsonBodyDsl<Value> for String {
+    fn is(&self, actual: Value) -> Assertion<Value> {
+        actual.is_eq(self)
+    }
+
+    fn is_not(&self, actual: Value) -> Assertion<Value> {
+        actual.is_ne(self)
+    }
+
+    fn schema(&self, actual: Value) -> Assertion<Value> {
+        actual.matches_schema(self)
+    }
+}
+
+impl JsonBodyDsl<Value> for PathBuf {
     fn is(&self, actual: Value) -> Assertion<Value> {
         actual.is_eq(self)
     }

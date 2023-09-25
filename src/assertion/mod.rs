@@ -150,7 +150,7 @@ pub enum AssertionResult {
 /// - \<predicate\>: \<expected_value\>
 /// - was: \<found_value\> (only in case of failure)
 ///
-/// The log will be displayed for both [`LogSettings::StdOut`] and
+/// The log will be displayed for both [`LogSettings::StdOutput`] and
 /// [`LogSettings::StdAssert`]
 pub struct AssertionLog(String);
 

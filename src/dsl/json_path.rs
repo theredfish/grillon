@@ -8,6 +8,7 @@ use crate::{
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::path::PathBuf;
 
 /// Represents the result of a json path query.
 ///
@@ -63,6 +64,48 @@ impl JsonPathDsl<Value> for Value {
     }
 
     fn schema(&self, jsonpath_res: JsonPathResult<'_, Value>) -> Assertion<Value> {
-        jsonpath_res.value.matches_schema(self)
+        jsonpath_res.matches_schema(self)
+    }
+}
+
+impl JsonPathDsl<Value> for String {
+    fn is(&self, jsonpath_res: JsonPathResult<'_, Value>) -> Assertion<Value> {
+        jsonpath_res.is_eq(self)
+    }
+
+    fn is_not(&self, jsonpath_res: JsonPathResult<'_, Value>) -> Assertion<Value> {
+        jsonpath_res.is_ne(self)
+    }
+
+    fn schema(&self, jsonpath_res: JsonPathResult<'_, Value>) -> Assertion<Value> {
+        jsonpath_res.matches_schema(self)
+    }
+}
+
+impl JsonPathDsl<Value> for &str {
+    fn is(&self, jsonpath_res: JsonPathResult<'_, Value>) -> Assertion<Value> {
+        jsonpath_res.is_eq(*self)
+    }
+
+    fn is_not(&self, jsonpath_res: JsonPathResult<'_, Value>) -> Assertion<Value> {
+        jsonpath_res.is_ne(*self)
+    }
+
+    fn schema(&self, jsonpath_res: JsonPathResult<'_, Value>) -> Assertion<Value> {
+        jsonpath_res.matches_schema(*self)
+    }
+}
+
+impl JsonPathDsl<Value> for PathBuf {
+    fn is(&self, jsonpath_res: JsonPathResult<'_, Value>) -> Assertion<Value> {
+        jsonpath_res.is_eq(self)
+    }
+
+    fn is_not(&self, jsonpath_res: JsonPathResult<'_, Value>) -> Assertion<Value> {
+        jsonpath_res.is_ne(self)
+    }
+
+    fn schema(&self, jsonpath_res: JsonPathResult<'_, Value>) -> Assertion<Value> {
+        jsonpath_res.matches_schema(self)
     }
 }
