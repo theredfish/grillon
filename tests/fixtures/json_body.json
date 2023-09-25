@@ -1,0 +1,13 @@
+{
+    "a_string": "john",
+    "a_number": 12,
+    "a_string_number": "12",
+    "a_vec": [
+        {
+            "entry1": "entry1"
+        },
+        {
+            "entry2": "entry2"
+        }
+    ]
+}

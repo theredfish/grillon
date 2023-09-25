@@ -18,7 +18,8 @@ async fn status_success() -> Result<()> {
         .await
         .status(is_between(200, 299))
         .status(is_success())
-        .status(is(StatusCode::NO_CONTENT));
+        .status(is(StatusCode::NO_CONTENT))
+        .status(is(204));
 
     mock.assert();
 

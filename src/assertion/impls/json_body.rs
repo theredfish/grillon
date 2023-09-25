@@ -1,5 +1,3 @@
-use std::{fs, path::Path};
-
 use crate::{
     assertion::{
         traits::{Equality, JsonSchema},
@@ -9,6 +7,7 @@ use crate::{
 };
 use jsonschema::{output::BasicOutput, JSONSchema};
 use serde_json::Value;
+use std::{fs, path::PathBuf};
 
 impl Equality<Value> for Value {
     type Assertion = Assertion<Value>;
@@ -42,14 +41,38 @@ impl Equality<str> for Value {
     type Assertion = Assertion<Value>;
 
     fn is_eq(&self, rhs: &str) -> Self::Assertion {
-        // TODO: handle unprocessable
-        let rhs: Value = serde_json::from_str(rhs).unwrap();
+        let rhs: Value = match serde_json::from_str(rhs) {
+            Ok(value) => value,
+            Err(err) => {
+                return Assertion {
+                    predicate: Predicate::Is,
+                    part: Part::JsonBody,
+                    left: Hand::Empty,
+                    right: Hand::Empty,
+                    result: AssertionResult::Unprocessable(
+                        UnprocessableReason::SerializationFailure(err.to_string()),
+                    ),
+                }
+            }
+        };
         self.is_eq(&rhs)
     }
 
     fn is_ne(&self, rhs: &str) -> Self::Assertion {
-        // TODO: handle unprocessable
-        let rhs: Value = serde_json::from_str(rhs).unwrap();
+        let rhs: Value = match serde_json::from_str(rhs) {
+            Ok(value) => value,
+            Err(err) => {
+                return Assertion {
+                    predicate: Predicate::IsNot,
+                    part: Part::JsonBody,
+                    left: Hand::Empty,
+                    right: Hand::Empty,
+                    result: AssertionResult::Unprocessable(
+                        UnprocessableReason::SerializationFailure(err.to_string()),
+                    ),
+                }
+            }
+        };
         self.is_ne(&rhs)
     }
 }
@@ -58,15 +81,117 @@ impl Equality<String> for Value {
     type Assertion = Assertion<Value>;
 
     fn is_eq(&self, rhs: &String) -> Self::Assertion {
-        // TODO: handle unprocessable
-        let rhs: Value = serde_json::from_str(rhs).unwrap();
+        let rhs: Value = match serde_json::from_str(rhs) {
+            Ok(value) => value,
+            Err(err) => {
+                return Assertion {
+                    predicate: Predicate::Is,
+                    part: Part::JsonBody,
+                    left: Hand::Empty,
+                    right: Hand::Empty,
+                    result: AssertionResult::Unprocessable(
+                        UnprocessableReason::SerializationFailure(err.to_string()),
+                    ),
+                }
+            }
+        };
         self.is_eq(&rhs)
     }
 
     fn is_ne(&self, rhs: &String) -> Self::Assertion {
-        // TODO: handle unprocessable
-        let rhs: Value = serde_json::from_str(rhs).unwrap();
+        let rhs: Value = match serde_json::from_str(rhs) {
+            Ok(value) => value,
+            Err(err) => {
+                return Assertion {
+                    predicate: Predicate::IsNot,
+                    part: Part::JsonBody,
+                    left: Hand::Empty,
+                    right: Hand::Empty,
+                    result: AssertionResult::Unprocessable(
+                        UnprocessableReason::SerializationFailure(err.to_string()),
+                    ),
+                }
+            }
+        };
         self.is_ne(&rhs)
+    }
+}
+
+impl Equality<PathBuf> for Value {
+    type Assertion = Assertion<Value>;
+
+    fn is_eq(&self, json_file: &PathBuf) -> Self::Assertion {
+        let json_file = match fs::read_to_string(json_file) {
+            Ok(content) => content,
+            Err(_) => {
+                return Assertion {
+                    predicate: Predicate::Is,
+                    part: Part::JsonBody,
+                    left: Hand::Empty,
+                    right: Hand::Empty,
+                    result: AssertionResult::Unprocessable(UnprocessableReason::Other(format!(
+                        "Failed to read json file located at {}",
+                        json_file.display()
+                    ))),
+                }
+            }
+        };
+
+        let expected_json: Value = match serde_json::from_str(&json_file) {
+            Ok(json) => json,
+            Err(_) => {
+                return Assertion {
+                    predicate: Predicate::Is,
+                    part: Part::JsonBody,
+                    left: Hand::Empty,
+                    right: Hand::Empty,
+                    result: AssertionResult::Unprocessable(
+                        UnprocessableReason::SerializationFailure(
+                            "Failed to serialize file content".to_string(),
+                        ),
+                    ),
+                }
+            }
+        };
+
+        self.is_eq(&expected_json)
+    }
+
+    fn is_ne(&self, json_file: &PathBuf) -> Self::Assertion {
+        let json_file = match fs::read_to_string(json_file) {
+            Ok(content) => content,
+            Err(_) => {
+                return Assertion {
+                    predicate: Predicate::IsNot,
+                    part: Part::JsonBody,
+                    left: Hand::Empty,
+                    right: Hand::Empty,
+                    result: AssertionResult::Unprocessable(UnprocessableReason::Other(format!(
+                        "Failed to read json file located at {}",
+                        json_file.display()
+                    ))),
+                }
+            }
+        };
+
+        let expected_json: Value = match serde_json::from_str(&json_file) {
+            Ok(json) => json,
+            Err(_) => {
+                return Assertion {
+                    predicate: Predicate::IsNot,
+                    part: Part::JsonBody,
+                    left: Hand::Empty,
+                    right: Hand::Empty,
+                    result: AssertionResult::Unprocessable(
+                        UnprocessableReason::SerializationFailure(
+                            "Failed to serialize file content".to_string(),
+                        ),
+                    ),
+                }
+            }
+        };
+
+        self.is_ne(&expected_json)
     }
 }
 
@@ -166,10 +291,10 @@ impl JsonSchema<String> for Value {
     }
 }
 
-impl JsonSchema<Path> for Value {
+impl JsonSchema<PathBuf> for Value {
     type Assertion = Assertion<Value>;
 
-    fn matches_schema(&self, schema_file: &Path) -> Self::Assertion {
+    fn matches_schema(&self, schema_file: &PathBuf) -> Self::Assertion {
         let schema_file_content = match fs::read_to_string(schema_file) {
             Ok(content) => content,
             Err(_) => {
@@ -209,6 +334,7 @@ impl JsonSchema<Path> for Value {
 mod tests {
     use crate::assertion::traits::Equality;
     use serde_json::{json, Value};
+    use std::path::PathBuf;
 
     fn value_stub() -> Value {
         json!({
@@ -301,6 +427,32 @@ mod tests {
     }
 
     #[test]
+    fn impl_is_eq_json_file() {
+        let value = value_stub();
+        let json_file =
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/json_body.json");
+
+        let assertion = value.is_eq(&json_file);
+        assert!(assertion.passed(), "{}", assertion.log());
+    }
+
+    #[test]
+    fn impl_is_eq_inexistant_json_file() {
+        let value = value_stub();
+        let json_file =
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/inexistant.json");
+
+        let assertion = value.is_eq(&json_file);
+        assert!(assertion.failed(), "{}", assertion.log());
+        let expected_error_msg_part = "Failed to read json file located at";
+
+        assert!(
+            assertion.log().contains(expected_error_msg_part),
+            "The error message doesn't contain this: {expected_error_msg_part}"
+        );
+    }
+
+    #[test]
     fn impl_is_ne_value() {
         let other_value = json!({
             "another_string": "john"
@@ -335,6 +487,16 @@ mod tests {
     #[test]
     fn impl_is_ne_different_type() {
         let assertion = json!({"age": "12"}).is_ne(r#"{"age": 12}"#);
+        assert!(assertion.passed(), "{}", assertion.log());
+    }
+
+    #[test]
+    fn impl_is_ne_json_file() {
+        let value = json!({"not_the_same": "content"});
+        let json_file =
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/json_body.json");
+
+        let assertion = value.is_ne(&json_file);
         assert!(assertion.passed(), "{}", assertion.log());
     }
 
