@@ -12,7 +12,7 @@ include = ["/src", "LICENSE*", "README.md"]
 edition = "2021"
 
 [dependencies]
-hyper = { version = "0.14.27", features = [
+hyper = { version = "1.0.1", features = [
   "client",
   "http1",
   "http2",
