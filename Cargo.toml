@@ -3,7 +3,7 @@ name = "grillon"
 version = "0.5.0-alpha.1"
 authors = ["theredfish <did.julian@gmail.com>"]
 description = "Grillon offers an elegant and natural way to approach API testing in Rust."
-repository = "https://github.com/owlduty/grillon"
+repository = "https://github.com/theredfish/grillon"
 keywords = ["test", "http", "api", "e2e"]
 categories = ["development-tools::testing"]
 readme = "README.md"
@@ -13,10 +13,10 @@ edition = "2021"
 
 [dependencies]
 hyper = { version = "0.14.27", features = [
-  "client",
-  "http1",
-  "http2",
-  "runtime",
+    "client",
+    "http1",
+    "http2",
+    "runtime",
 ] }
 hyper-tls = "0.5.0"
 serde = { version = "1.0.189", features = ["derive"] }

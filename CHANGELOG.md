@@ -3,7 +3,7 @@
 ## [v0.5.0-alpha.1] - 2023
 
 - [Diff](/../../compare/v0.4.0...v0.5.0-alpha.1)
-- [Milestone](https://github.com/owlduty/grillon/milestone/3)
+- [Milestone](https://github.com/theredfish/grillon/milestone/3)
 
 [v0.5.0-alpha.1]: /../../tree/v0.5.0-alpha.1
 

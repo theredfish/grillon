@@ -6,7 +6,7 @@ src = "src"
 title = "Grillon - User Guide"
 
 [output.html]
-git-repository-url = "https://github.com/owlduty/grillon"
+git-repository-url = "https://github.com/theredfish/grillon"
 
 [output.html.playground]
 runnable = false

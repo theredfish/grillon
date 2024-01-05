@@ -1,6 +1,7 @@
 name: Book gh-pages
 
 on:
+  workflow_dispatch:
   push:
     branches: ["main"]
     tags: ["v*"]

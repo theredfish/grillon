@@ -2,8 +2,8 @@
 
 [![Crates.io](https://img.shields.io/crates/v/grillon)](https://crates.io/crates/grillon)
 [![docs.rs](https://img.shields.io/docsrs/grillon)](https://docs.rs/grillon/latest/grillon)
-![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/owlduty/grillon/ci.yml)
-[![Check Links](https://github.com/owlduty/grillon/actions/workflows/links.yml/badge.svg)](https://github.com/owlduty/grillon/actions/workflows/links.yml)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/theredfish/grillon/ci.yml)
+[![Check Links](https://github.com/theredfish/grillon/actions/workflows/links.yml/badge.svg)](https://github.com/theredfish/grillon/actions/workflows/links.yml)
 
 Grillon offers an elegant and natural way to approach API testing in Rust.
 
@@ -15,9 +15,9 @@ Grillon offers an elegant and natural way to approach API testing in Rust.
 
 ## Documentation
 
-- Book ([current](https://owlduty.github.io/grillon/current) | [dev](https://owlduty.github.io/grillon/dev))
+- Book ([current](https://theredfish.github.io/grillon/current) | [dev](https://theredfish.github.io/grillon/dev))
 - [API doc](https://docs.rs/grillon/latest/grillon)
-- [Changelog](https://github.com/owlduty/grillon/blob/main/CHANGELOG.md)
+- [Changelog](https://github.com/theredfish/grillon/blob/main/CHANGELOG.md)
 
 ## Getting started
 
