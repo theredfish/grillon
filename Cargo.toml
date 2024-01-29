@@ -24,7 +24,7 @@ serde_json = "1.0.107"
 http = "0.2.9"
 url = "2.4.1"
 futures = "0.3.28"
-strum = { version = "0.25.0", features = ["derive"] }
+strum = { version = "0.26.1", features = ["derive"] }
 strum_macros = "0.25.3"
 jsonpath-rust = "0.4.0"
 jsonschema = "0.17.1"
