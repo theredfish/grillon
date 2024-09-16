@@ -29,5 +29,5 @@ pub use self::{
     response::Response,
 };
 
-pub use hyper::{header, Method, StatusCode};
+pub use http::{header, Method, StatusCode};
 pub use serde_json::{json, Value};

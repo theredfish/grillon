@@ -1,19 +1,14 @@
 //! The `request` module provides everything to build http requests
 //! for endpoints under tests.
 //!
-//! Currently powered by the [`Hyper`](https://github.com/hyperium/hyper) HTTP client.
+//! Currently powered by the [`Reqwest`](https://github.com/seanmonstar/reqwest) HTTP client.
 use std::time::Instant;
 
 use crate::{assert::Assert, grillon::LogSettings};
-use hyper::{
-    body::Body,
-    client::HttpConnector,
-    header::{HeaderMap, HeaderName, HeaderValue},
-    http::request::Request as HyperRequest,
-    Client, Method, Uri,
-};
-use hyper_tls::HttpsConnector;
+use http::{HeaderMap, HeaderName, HeaderValue, Method};
+use reqwest::{Body, Client};
 use serde_json::Value;
+use url::Url;
 
 /// List of methods where there is no associated body.
 const METHODS_NO_BODY: &[Method] = &[
@@ -61,14 +56,14 @@ impl RequestHeaders for HeaderMap {
 pub struct Request<'c> {
     /// The http request method.
     pub method: Method,
-    /// The http request uri.
-    pub uri: Uri,
+    /// The http request url.
+    pub url: Url,
     /// The http request headers.
     pub headers: HeaderMap,
     /// The http request payload.
     pub payload: Option<Body>,
     /// The client used for this outgoing request.
-    pub client: &'c Client<HttpsConnector<HttpConnector>>,
+    pub client: &'c Client,
     /// The log settings that will be used to output test results
     /// when asserting the http response.
     pub log_settings: &'c LogSettings,
@@ -147,18 +142,15 @@ impl Request<'_> {
     /// # }
     /// ```
     pub async fn assert(self) -> Assert {
-        let mut req = HyperRequest::new(self.payload.unwrap_or_else(Body::empty));
-        *req.method_mut() = self.method;
-        *req.headers_mut() = self.headers;
-        *req.uri_mut() = self.uri;
+        let req = self
+            .client
+            .request(self.method, self.url)
+            .body(self.payload.unwrap_or_default())
+            .headers(self.headers);
 
         let now = Instant::now();
-        let response = self
-            .client
-            .request(req)
-            .await
-            // TODO : replace this expect by an assertion on the response itself.
-            .expect("Failed to send http request");
+        // TODO : replace this expect by an assertion on the response itself.
+        let response = req.send().await.expect("Failed to send http request");
 
         // Due to serde limitations with 128bits we need to cast u128 to u64
         // with the risk to lose precision. However should be acceptable since
