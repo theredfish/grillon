@@ -1,15 +1,16 @@
 use crate::error::Result;
 use crate::Request;
-use hyper::{client::HttpConnector, header::HeaderMap, Client, Method, Uri};
-use hyper_tls::HttpsConnector;
+use http::{HeaderMap, Method};
+use reqwest::Client;
+use url::Url;
 
 /// Top-level instance to configure a REST API http client.
 ///
 /// [`Grillon`] provides everything to configure a REST API http client,
 /// and initiate a [`Request`].
 pub struct Grillon {
-    base_url: Uri,
-    client: Client<HttpsConnector<HttpConnector>>,
+    base_url: Url,
+    client: Client,
     log_settings: LogSettings,
 }
 
@@ -47,12 +48,11 @@ impl Grillon {
     ///
     /// # Errors
     ///
-    /// This function fails if the supplied base url cannot be parsed as a [`Uri`].
-    pub fn new(api_base_url: &str) -> Result<Grillon> {
-        let https = HttpsConnector::new();
+    /// This function fails if the supplied base url cannot be parsed as a [`Url`].
+    pub fn new(base_url: &str) -> Result<Grillon> {
         Ok(Grillon {
-            base_url: api_base_url.parse::<Uri>()?,
-            client: Client::builder().build::<_, hyper::Body>(https),
+            base_url: base_url.parse::<Url>()?,
+            client: reqwest::Client::new(),
             log_settings: LogSettings::default(),
         })
     }
@@ -217,11 +217,11 @@ impl Grillon {
     /// # }
     /// ```
     pub fn http_request(&self, method: Method, path: &str) -> Request<'_> {
-        let uri = crate::url::concat(&self.base_url, path).unwrap_or_else(|err| panic!("{}", err));
+        let url = crate::url::concat(&self.base_url, path).unwrap_or_else(|err| panic!("{}", err));
 
         Request {
             method,
-            uri,
+            url,
             headers: HeaderMap::new(),
             payload: None,
             client: &self.client,

@@ -52,8 +52,7 @@ use crate::{
     grillon::LogSettings,
     Response,
 };
-use http::HeaderMap;
-use hyper::StatusCode;
+use http::{HeaderMap, StatusCode};
 use serde_json::Value;
 
 /// [`Assert`] uses an internal representation of the http response to assert

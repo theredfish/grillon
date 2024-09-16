@@ -6,11 +6,8 @@
 //! [`Assert`]: crate::Assert
 //! [`Grillon`]: crate::Grillon
 use futures::{future::LocalBoxFuture, FutureExt};
-use hyper::{
-    body::{Body, Buf},
-    header::HeaderMap,
-    http::{response::Response as HyperResponse, StatusCode},
-};
+use http::{HeaderMap, StatusCode};
+use reqwest::Response as ReqwestResponse;
 use serde_json::Value;
 
 /// A generic http response representation with
@@ -27,25 +24,23 @@ pub trait Response {
     fn headers(&self) -> HeaderMap;
 }
 
-impl Response for HyperResponse<Body> {
+impl Response for ReqwestResponse {
     fn status(&self) -> StatusCode {
         self.status()
     }
 
     fn json<'a>(self) -> LocalBoxFuture<'a, Option<Value>> {
-        let (_, body) = self.into_parts();
-        let body = hyper::body::aggregate(body);
+        async move {
+            if let Ok(bytes) = self.bytes().await {
+                if bytes.is_empty() {
+                    return None;
+                }
+                let json: Value = serde_json::from_slice(&bytes).expect("Failed to decode json");
 
-        async {
-            let body = body.await.expect("Valid buffer");
-            if !body.has_remaining() {
-                return None;
+                Some(json)
+            } else {
+                None
             }
-
-            let json: Value =
-                serde_json::from_reader(body.reader()).expect("Failed to decode json");
-
-            Some(json)
         }
         .boxed_local()
     }

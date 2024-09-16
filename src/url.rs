@@ -1,8 +1,8 @@
 use crate::error::Result;
-use http::uri::Uri;
+use url::Url;
 
-pub(crate) fn concat(base: &Uri, path: &str) -> Result<Uri> {
+pub(crate) fn concat(base: &Url, path: &str) -> Result<Url> {
     format!("{}{}", base, path)
-        .parse::<Uri>()
+        .parse::<Url>()
         .map_err(|err| err.into())
 }
