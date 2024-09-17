@@ -165,23 +165,23 @@ conditions, it's possible. Each assertion produces <a href="../logs.html">logs</
 <tr><td style="text-align: left">headers</td><td style="text-align: left">is, is_not, contains, does_not_contain</td><td style="text-align: left">Vec&lt;(HeaderName, HeaderValue)&gt;, HeaderMap</td></tr>
 <tr><td style="text-align: left">status</td><td style="text-align: left">is, is_not, is_between</td><td style="text-align: left">u16, StatusCode</td></tr>
 <tr><td style="text-align: left">json_body</td><td style="text-align: left">is, is_not, schema</td><td style="text-align: left">String, &amp;str, Value, <code>json!</code>, PathBuf</td></tr>
-<tr><td style="text-align: left">json_path</td><td style="text-align: left">is, is_not, schema</td><td style="text-align: left">String, &amp;str, Value, <code>json!</code>, PathBuf</td></tr>
+<tr><td style="text-align: left">json_path</td><td style="text-align: left">is, is_not, schema, contains, does_not_contain</td><td style="text-align: left">String, &amp;str, Value, <code>json!</code>, PathBuf</td></tr>
 <tr><td style="text-align: left">response_time</td><td style="text-align: left">is_less_than</td><td style="text-align: left">u64</td></tr>
 </tbody></table>
 </div>
 <h3 id="note-about-json_path"><a class="header" href="#note-about-json_path">Note about <code>json_path</code></a></h3>
 <p>Json path requires one more argument than other predicates because you have to provide a path. The
-expected value should always be a json document. To enforce this, we require a <code>Value</code> that you can
-build by using the <code>json!</code> macro.</p>
-<p>Here is an example of a json path assertion, where we are testing the value under the path
-<code>$[0].id</code>.</p>
+expected value should always be a valid json representation. To enforce this the provided value is always converted to
+a <code>Value</code>.</p>
+<p>Here is an example of a json path assertion, where we are testing the value under the path <code>$[0].id</code>.</p>
 <pre><code class="language-rust">#[tokio::test]
 async fn test_json_path() -&gt; Result&lt;()&gt; {
     Grillon::new(&quot;https://jsonplaceholder.typicode.com&quot;)?
         .get(&quot;posts?id=1&quot;)
         .assert()
         .await
-        .json_path(&quot;$[0].id&quot;, is(json!(1)));
+        .json_path(&quot;$[0].id&quot;, is(json!(1)))
+        .json_path(&quot;$[0].id&quot;, is(&quot;1&quot;));
 
     Ok(())
 }</code></pre>
