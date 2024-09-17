@@ -21,22 +21,21 @@ conditions, it's possible. Each assertion produces [logs](../logs.md).
 
 ## HTTP assertion table
 
-| part        | predicates                           | types                                   |
-|:------------|:-------------------------------------|:----------------------------------------|
-|headers      |is, is_not, contains, does_not_contain|Vec<(HeaderName, HeaderValue)>, HeaderMap|
-|status       |is, is_not, is_between                |u16, StatusCode                          |
-|json_body    |is, is_not, schema                    |String, &str, Value, `json!`, PathBuf    |
-|json_path    |is, is_not, schema                    |String, &str, Value, `json!`, PathBuf    |
-|response_time|is_less_than                          |u64                                      |
+| part        | predicates                                   | types                                   |
+|:------------|:---------------------------------------------|:----------------------------------------|
+|headers      |is, is_not, contains, does_not_contain        |Vec<(HeaderName, HeaderValue)>, HeaderMap|
+|status       |is, is_not, is_between                        |u16, StatusCode                          |
+|json_body    |is, is_not, schema                            |String, &str, Value, `json!`, PathBuf    |
+|json_path    |is, is_not, schema, contains, does_not_contain|String, &str, Value, `json!`, PathBuf    |
+|response_time|is_less_than                                  |u64                                      |
 
 ### Note about `json_path`
 
 Json path requires one more argument than other predicates because you have to provide a path. The
-expected value should always be a json document. To enforce this, we require a `Value` that you can
-build by using the `json!` macro.
+expected value should always be a valid json representation. To enforce this the provided value is always converted to
+a `Value`.
 
-Here is an example of a json path assertion, where we are testing the value under the path
-`$[0].id`.
+Here is an example of a json path assertion, where we are testing the value under the path `$[0].id`.
 
 ```rust
 #[tokio::test]
@@ -45,7 +44,8 @@ async fn test_json_path() -> Result<()> {
         .get("posts?id=1")
         .assert()
         .await
-        .json_path("$[0].id", is(json!(1)));
+        .json_path("$[0].id", is(json!(1)))
+        .json_path("$[0].id", is("1"));
 
     Ok(())
 }

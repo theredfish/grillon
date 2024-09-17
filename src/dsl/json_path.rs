@@ -1,9 +1,11 @@
 //! The json path domain-specific language.
 
 use crate::{
-    assertion::traits::{Equality, JsonSchema},
-    assertion::Assertion,
-    dsl::expression::Predicate::{self, Is, IsNot, Schema},
+    assertion::{
+        traits::{Container, Equality, JsonSchema},
+        Assertion,
+    },
+    dsl::expression::Predicate::{self, Contains, DoesNotContain, Is, IsNot, Schema},
     LogSettings,
 };
 use serde::{Deserialize, Serialize};
@@ -38,6 +40,10 @@ pub trait JsonPathDsl<T> {
     fn is_not(&self, jsonpath_res: JsonPathResult<'_, T>) -> Assertion<Value>;
     /// Asserts that the value of the json path matches the json schema.
     fn schema(&self, jsonpath_res: JsonPathResult<'_, T>) -> Assertion<Value>;
+    /// Asserts that the json path value contains the provided value.
+    fn contains(&self, jsonpath_res: JsonPathResult<'_, T>) -> Assertion<Value>;
+    /// Asserts that the json path value does not contain the provided value.
+    fn does_not_contain(&self, jsonpath_res: JsonPathResult<'_, T>) -> Assertion<Value>;
     /// Evaluates the json body assertion to run based on the [`Predicate`].
     fn eval(
         &self,
@@ -49,6 +55,8 @@ pub trait JsonPathDsl<T> {
             Is => self.is(jsonpath_res).assert(log_settings),
             IsNot => self.is_not(jsonpath_res).assert(log_settings),
             Schema => self.schema(jsonpath_res).assert(log_settings),
+            Contains => self.contains(jsonpath_res).assert(log_settings),
+            DoesNotContain => self.does_not_contain(jsonpath_res).assert(log_settings),
             _ => unimplemented!("Invalid predicate for the json path DSL: {predicate}"),
         }
     }
@@ -66,6 +74,14 @@ impl JsonPathDsl<Value> for Value {
     fn schema(&self, jsonpath_res: JsonPathResult<'_, Value>) -> Assertion<Value> {
         jsonpath_res.matches_schema(self)
     }
+
+    fn contains(&self, jsonpath_res: JsonPathResult<'_, Value>) -> Assertion<Value> {
+        jsonpath_res.has(self)
+    }
+
+    fn does_not_contain(&self, jsonpath_res: JsonPathResult<'_, Value>) -> Assertion<Value> {
+        jsonpath_res.has_not(self)
+    }
 }
 
 impl JsonPathDsl<Value> for String {
@@ -79,6 +95,14 @@ impl JsonPathDsl<Value> for String {
 
     fn schema(&self, jsonpath_res: JsonPathResult<'_, Value>) -> Assertion<Value> {
         jsonpath_res.matches_schema(self)
+    }
+
+    fn contains(&self, jsonpath_res: JsonPathResult<'_, Value>) -> Assertion<Value> {
+        jsonpath_res.has(self)
+    }
+
+    fn does_not_contain(&self, jsonpath_res: JsonPathResult<'_, Value>) -> Assertion<Value> {
+        jsonpath_res.has_not(self)
     }
 }
 
@@ -94,6 +118,14 @@ impl JsonPathDsl<Value> for &str {
     fn schema(&self, jsonpath_res: JsonPathResult<'_, Value>) -> Assertion<Value> {
         jsonpath_res.matches_schema(*self)
     }
+
+    fn contains(&self, jsonpath_res: JsonPathResult<'_, Value>) -> Assertion<Value> {
+        jsonpath_res.has(*self)
+    }
+
+    fn does_not_contain(&self, jsonpath_res: JsonPathResult<'_, Value>) -> Assertion<Value> {
+        jsonpath_res.has_not(*self)
+    }
 }
 
 impl JsonPathDsl<Value> for PathBuf {
@@ -107,5 +139,13 @@ impl JsonPathDsl<Value> for PathBuf {
 
     fn schema(&self, jsonpath_res: JsonPathResult<'_, Value>) -> Assertion<Value> {
         jsonpath_res.matches_schema(self)
+    }
+
+    fn contains(&self, jsonpath_res: JsonPathResult<'_, Value>) -> Assertion<Value> {
+        jsonpath_res.has(self)
+    }
+
+    fn does_not_contain(&self, jsonpath_res: JsonPathResult<'_, Value>) -> Assertion<Value> {
+        jsonpath_res.has_not(self)
     }
 }
