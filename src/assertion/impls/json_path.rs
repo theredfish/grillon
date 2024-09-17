@@ -1,6 +1,6 @@
 use crate::{
     assertion::{
-        traits::{Equality, JsonSchema},
+        traits::{Container, Equality, JsonSchema},
         Assertion, AssertionResult, Hand, UnprocessableReason,
     },
     dsl::{json_path::JsonPathResult, Part, Predicate},
@@ -148,7 +148,7 @@ impl Equality<PathBuf> for JsonPathResult<'_, Value> {
                     right: Hand::Empty,
                     result: AssertionResult::Unprocessable(
                         UnprocessableReason::SerializationFailure(
-                            "Failed to serialize file content".to_string(),
+                            "Failed to serialize json file content".to_string(),
                         ),
                     ),
                 }
@@ -185,7 +185,7 @@ impl Equality<PathBuf> for JsonPathResult<'_, Value> {
                     right: Hand::Empty,
                     result: AssertionResult::Unprocessable(
                         UnprocessableReason::SerializationFailure(
-                            "Failed to serialize file content".to_string(),
+                            "Failed to serialize json file content".to_string(),
                         ),
                     ),
                 }
@@ -322,7 +322,7 @@ impl JsonSchema<PathBuf> for JsonPathResult<'_, Value> {
                     right: Hand::Empty,
                     result: AssertionResult::Unprocessable(
                         UnprocessableReason::SerializationFailure(
-                            "Failed to serialize json schema".to_string(),
+                            "Failed to serialize json schema file content".to_string(),
                         ),
                     ),
                 }
@@ -330,6 +330,194 @@ impl JsonSchema<PathBuf> for JsonPathResult<'_, Value> {
         };
 
         self.matches_schema(&schema)
+    }
+}
+
+impl Container<Value> for JsonPathResult<'_, Value> {
+    type Assertion = Assertion<Value>;
+
+    fn has(&self, data: &Value) -> Self::Assertion {
+        let result = self.value.to_string().contains(&data.to_string());
+        Assertion {
+            predicate: Predicate::Contains,
+            part: Part::JsonPath,
+            left: Hand::Compound(Value::String(self.path.to_string()), self.value.clone()),
+            right: Hand::Right(data.clone()),
+            result: result.into(),
+        }
+    }
+
+    fn has_not(&self, data: &Value) -> Self::Assertion {
+        let result = !self.value.to_string().contains(&data.to_string());
+        Assertion {
+            predicate: Predicate::DoesNotContain,
+            part: Part::JsonPath,
+            left: Hand::Compound(Value::String(self.path.to_string()), self.value.clone()),
+            right: Hand::Right(data.clone()),
+            result: result.into(),
+        }
+    }
+}
+
+impl Container<String> for JsonPathResult<'_, Value> {
+    type Assertion = Assertion<Value>;
+
+    fn has(&self, data: &String) -> Self::Assertion {
+        let expected: Value = match serde_json::from_str(data) {
+            Ok(value) => value,
+            Err(err) => {
+                return Assertion {
+                    predicate: Predicate::Contains,
+                    part: Part::JsonPath,
+                    left: Hand::Empty,
+                    right: Hand::Empty,
+                    result: AssertionResult::Unprocessable(
+                        UnprocessableReason::SerializationFailure(err.to_string()),
+                    ),
+                }
+            }
+        };
+
+        self.has(&expected)
+    }
+
+    fn has_not(&self, data: &String) -> Self::Assertion {
+        let expected: Value = match serde_json::from_str(data) {
+            Ok(value) => value,
+            Err(err) => {
+                return Assertion {
+                    predicate: Predicate::DoesNotContain,
+                    part: Part::JsonPath,
+                    left: Hand::Empty,
+                    right: Hand::Empty,
+                    result: AssertionResult::Unprocessable(
+                        UnprocessableReason::SerializationFailure(err.to_string()),
+                    ),
+                }
+            }
+        };
+
+        self.has_not(&expected)
+    }
+}
+
+impl Container<str> for JsonPathResult<'_, Value> {
+    type Assertion = Assertion<Value>;
+
+    fn has(&self, data: &str) -> Self::Assertion {
+        let expected: Value = match serde_json::from_str(data) {
+            Ok(value) => value,
+            Err(err) => {
+                return Assertion {
+                    predicate: Predicate::Contains,
+                    part: Part::JsonPath,
+                    left: Hand::Empty,
+                    right: Hand::Empty,
+                    result: AssertionResult::Unprocessable(
+                        UnprocessableReason::SerializationFailure(err.to_string()),
+                    ),
+                }
+            }
+        };
+
+        self.has(&expected)
+    }
+
+    fn has_not(&self, data: &str) -> Self::Assertion {
+        let expected: Value = match serde_json::from_str(data) {
+            Ok(value) => value,
+            Err(err) => {
+                return Assertion {
+                    predicate: Predicate::DoesNotContain,
+                    part: Part::JsonPath,
+                    left: Hand::Empty,
+                    right: Hand::Empty,
+                    result: AssertionResult::Unprocessable(
+                        UnprocessableReason::SerializationFailure(err.to_string()),
+                    ),
+                }
+            }
+        };
+
+        self.has_not(&expected)
+    }
+}
+
+impl Container<PathBuf> for JsonPathResult<'_, Value> {
+    type Assertion = Assertion<Value>;
+
+    fn has(&self, json_file: &PathBuf) -> Self::Assertion {
+        let json_file = match fs::read_to_string(json_file) {
+            Ok(content) => content,
+            Err(_) => {
+                return Assertion {
+                    predicate: Predicate::Contains,
+                    part: Part::JsonPath,
+                    left: Hand::Empty,
+                    right: Hand::Empty,
+                    result: AssertionResult::Unprocessable(UnprocessableReason::Other(format!(
+                        "Failed to read json file located at {}",
+                        json_file.display()
+                    ))),
+                }
+            }
+        };
+
+        let expected_json: Value = match serde_json::from_str(&json_file) {
+            Ok(json) => json,
+            Err(_) => {
+                return Assertion {
+                    predicate: Predicate::Contains,
+                    part: Part::JsonPath,
+                    left: Hand::Empty,
+                    right: Hand::Empty,
+                    result: AssertionResult::Unprocessable(
+                        UnprocessableReason::SerializationFailure(
+                            "Failed to serialize json file content".to_string(),
+                        ),
+                    ),
+                }
+            }
+        };
+
+        self.has(&expected_json)
+    }
+
+    fn has_not(&self, json_file: &PathBuf) -> Self::Assertion {
+        let json_file = match fs::read_to_string(json_file) {
+            Ok(content) => content,
+            Err(_) => {
+                return Assertion {
+                    predicate: Predicate::DoesNotContain,
+                    part: Part::JsonPath,
+                    left: Hand::Empty,
+                    right: Hand::Empty,
+                    result: AssertionResult::Unprocessable(UnprocessableReason::Other(format!(
+                        "Failed to read json file located at {}",
+                        json_file.display()
+                    ))),
+                }
+            }
+        };
+
+        let expected_json: Value = match serde_json::from_str(&json_file) {
+            Ok(json) => json,
+            Err(_) => {
+                return Assertion {
+                    predicate: Predicate::DoesNotContain,
+                    part: Part::JsonPath,
+                    left: Hand::Empty,
+                    right: Hand::Empty,
+                    result: AssertionResult::Unprocessable(
+                        UnprocessableReason::SerializationFailure(
+                            "Failed to serialize json file content".to_string(),
+                        ),
+                    ),
+                }
+            }
+        };
+
+        self.has_not(&expected_json)
     }
 }
 
@@ -799,6 +987,148 @@ mod tests {
                 "Serialized assertion is not equals to the expected json {:#?}",
                 assertion
             );
+        }
+    }
+
+    mod has_or_has_not {
+        use std::path::PathBuf;
+
+        use super::{json_stub, JsonPathResult};
+        use crate::assertion::traits::Container;
+        use jsonpath_rust::JsonPathQuery;
+        use serde_json::json;
+
+        #[test]
+        fn impl_has_nested_json() {
+            let path = "$.shop";
+            let value = json_stub().path(path).unwrap();
+            let jsonpath_result = JsonPathResult { path, value };
+            let nested_json_orders = json!({
+                "orders": [
+                    {
+                        "id": 1,
+                        "active": true
+                    },
+                    {
+                        "id": 2
+                    },
+                    {
+                        "id": 3
+                    },
+                    {
+                        "id": 4,
+                        "active": true
+                    }
+                ],
+                "total": 4
+            });
+            let nested_json_order_1 = json!({
+                "id": 1,
+                "active": true
+            });
+
+            let assertion_orders = jsonpath_result.has(&nested_json_orders);
+            assert!(assertion_orders.passed(), "{}", assertion_orders.log());
+
+            let assertion_order_1 = jsonpath_result.has(&nested_json_order_1);
+            assert!(assertion_order_1.passed(), "{}", assertion_order_1.log());
+        }
+
+        #[test]
+        fn impl_has_nested_json_str() {
+            let path = "$.shop";
+            let value = json_stub().path(path).unwrap();
+            let jsonpath_result = JsonPathResult { path, value };
+            let nested_json_orders = r#"{
+                "orders": [
+                    {
+                        "id": 1,
+                        "active": true
+                    },
+                    {
+                        "id": 2
+                    },
+                    {
+                        "id": 3
+                    },
+                    {
+                        "id": 4,
+                        "active": true
+                    }
+                ],
+                "total": 4
+            }"#;
+            let nested_json_order_1 = r#"{
+                "id": 1,
+                "active": true
+            }"#;
+
+            let assertion_orders = jsonpath_result.has(nested_json_orders);
+            assert!(assertion_orders.passed(), "{}", assertion_orders.log());
+
+            let assertion_order_1 = jsonpath_result.has(nested_json_order_1);
+            assert!(assertion_order_1.passed(), "{}", assertion_order_1.log());
+
+            let assertion_orders = jsonpath_result.has(&nested_json_orders.to_string());
+            assert!(assertion_orders.passed(), "{}", assertion_orders.log());
+
+            let assertion_order_1 = jsonpath_result.has(&nested_json_order_1.to_string());
+            assert!(assertion_order_1.passed(), "{}", assertion_order_1.log());
+        }
+
+        #[test]
+        fn impl_has_json_file() {
+            let path = "$.shop";
+            let value = json_stub().path(path).unwrap();
+            let jsonpath_result = JsonPathResult { path, value };
+            let json_file =
+                PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/order4.json");
+
+            let assertion = jsonpath_result.has(&json_file);
+            assert!(assertion.passed(), "{}", assertion.log());
+        }
+
+        #[test]
+        fn impl_has_not_nested_json() {
+            let path = "$.shop";
+            let value = json_stub().path(path).unwrap();
+            let jsonpath_result = JsonPathResult { path, value };
+            let nested_json = json!({
+                "id": 1,
+                "active": false
+            });
+
+            let assertion = jsonpath_result.has_not(&nested_json);
+            assert!(assertion.passed(), "{}", assertion.log());
+        }
+
+        #[test]
+        fn impl_has_not_nested_json_str() {
+            let path = "$.shop";
+            let value = json_stub().path(path).unwrap();
+            let jsonpath_result = JsonPathResult { path, value };
+            let nested_json = r#"{
+                "id": 1,
+                "active": false
+            }"#;
+
+            let assertion_orders = jsonpath_result.has_not(nested_json);
+            assert!(assertion_orders.passed(), "{}", assertion_orders.log());
+
+            let assertion_order_1 = jsonpath_result.has_not(&nested_json.to_string());
+            assert!(assertion_order_1.passed(), "{}", assertion_order_1.log());
+        }
+
+        #[test]
+        fn impl_has_not_json_file() {
+            let path = "$.shop";
+            let value = json_stub().path(path).unwrap();
+            let jsonpath_result = JsonPathResult { path, value };
+            let json_file = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("tests/fixtures/inexistant_order.json");
+
+            let assertion = jsonpath_result.has_not(&json_file);
+            assert!(assertion.passed(), "{}", assertion.log());
         }
     }
 }

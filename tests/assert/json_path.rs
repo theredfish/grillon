@@ -1,6 +1,6 @@
 use crate::HttpMockServer;
 use grillon::{
-    dsl::{is, is_not},
+    dsl::{contains, does_not_contain, is, is_not},
     json, Grillon, Result,
 };
 
@@ -13,7 +13,8 @@ async fn json_path_should_be_equal_to_json() -> Result<()> {
         .get("users/1")
         .assert()
         .await
-        .json_path("$.id", is(json!(1)));
+        .json_path("$.id", is(json!(1)))
+        .json_path("$.id", is("1"));
 
     mock.assert();
 
@@ -73,6 +74,54 @@ async fn json_path_should_not_be_equal() -> Result<()> {
         .assert()
         .await
         .json_path("$", is_not(json));
+
+    mock.assert();
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn json_path_contains() -> Result<()> {
+    let mock_server = HttpMockServer::new();
+    let mock = mock_server.get_valid_user();
+
+    let json = json!({
+        "id": 1,
+        "name": "Isaac",
+    });
+    let raw_json = r#"{
+        "id": 1,
+        "name": "Isaac"
+    }"#;
+
+    Grillon::new(&mock_server.server.url("/"))?
+        .get("users/1")
+        .assert()
+        .await
+        .json_path("$", contains(json))
+        .json_path("$", contains(raw_json))
+        .json_path("$.id", contains("1"));
+
+    mock.assert();
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn json_path_does_not_contain() -> Result<()> {
+    let mock_server = HttpMockServer::new();
+    let mock = mock_server.get_valid_user();
+
+    let json = r#"{
+        "id": 2,
+        "name": "Unknown"
+    }"#;
+
+    Grillon::new(&mock_server.server.url("/"))?
+        .get("users/1")
+        .assert()
+        .await
+        .json_path("$", does_not_contain(json));
 
     mock.assert();
 
