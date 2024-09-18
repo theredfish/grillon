@@ -1,7 +1,7 @@
 use crate::error::Result;
 use crate::Request;
 use http::{HeaderMap, Method};
-use reqwest::Client;
+use reqwest::{Client, ClientBuilder};
 use url::Url;
 
 /// Top-level instance to configure a REST API http client.
@@ -50,9 +50,11 @@ impl Grillon {
     ///
     /// This function fails if the supplied base url cannot be parsed as a [`Url`].
     pub fn new(base_url: &str) -> Result<Grillon> {
+        let client = ClientBuilder::new().cookie_store(false).build()?;
+
         Ok(Grillon {
             base_url: base_url.parse::<Url>()?,
-            client: reqwest::Client::new(),
+            client,
             log_settings: LogSettings::default(),
         })
     }
@@ -65,6 +67,16 @@ impl Grillon {
         self.log_settings = log_settings;
 
         self
+    }
+
+    /// Enable a persistent cookie store for the client. By default,
+    /// no cookie store is used. Enabling the cookie store with `store_cookies()`
+    /// will update the http client and set the store to a default implementation.
+    pub fn store_cookies(mut self, enable: bool) -> Result<Grillon> {
+        let client = ClientBuilder::new().cookie_store(enable).build()?;
+        self.client = client;
+
+        Ok(self)
     }
 
     /// Creates a new [`Request`] initialized with a `GET` method and the given path.

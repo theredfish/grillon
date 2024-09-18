@@ -1,4 +1,5 @@
 mod assert_fn;
+mod cookies;
 mod headers;
 mod json_body;
 mod json_path;

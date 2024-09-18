@@ -9,4 +9,7 @@ pub enum Error {
     /// Url parse error.
     #[error("Invalid URL")]
     UrlParseError(#[from] ParseError),
+    /// Http client error.
+    #[error("Http client error")]
+    HttpClientError(#[from] reqwest::Error),
 }
