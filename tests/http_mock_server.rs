@@ -117,4 +117,21 @@ impl HttpMockServer {
             then.status(500);
         })
     }
+
+    pub fn auth(&self) -> Mock {
+        self.server.mock(|when, then| {
+            when.method(POST).path("/auth");
+            then.status(200)
+                .header("Set-Cookie", "SESSIONID=123; HttpOnly");
+        })
+    }
+
+    pub fn authenticated_request(&self) -> Mock {
+        self.server.mock(|when, then| {
+            when.method(GET)
+                .path("/authenticated/endpoint")
+                .cookie("SESSIONID", "123");
+            then.status(200);
+        })
+    }
 }

@@ -22,7 +22,7 @@ use crate::{
     dsl::{Part, Predicate},
     grillon::LogSettings,
 };
-use jsonschema::paths::JSONPointer;
+use jsonschema::paths::JsonPointer;
 use serde::Serialize;
 use serde_json::{json, Value};
 use std::any::Any;
@@ -97,7 +97,7 @@ pub enum UnprocessableReason {
     /// Unprocessable json body because it's missing.
     JsonBodyMissing,
     /// Unprocessable json schema.
-    InvalidJsonSchema(JSONPointer, JSONPointer),
+    InvalidJsonSchema(JsonPointer, JsonPointer),
     /// Serialization failure.
     SerializationFailure(String),
     /// Unprocessable entity.

@@ -5,7 +5,7 @@ use crate::{
     },
     dsl::{Part, Predicate},
 };
-use jsonschema::{output::BasicOutput, JSONSchema};
+use jsonschema::{output::BasicOutput, Validator};
 use serde_json::Value;
 use std::{fs, path::PathBuf};
 
@@ -199,7 +199,7 @@ impl JsonSchema<Value> for Value {
     type Assertion = Assertion<Value>;
 
     fn matches_schema(&self, schema: &Value) -> Self::Assertion {
-        let schema = match JSONSchema::compile(schema) {
+        let schema = match Validator::new(schema) {
             Ok(schema) => schema,
             Err(err) => {
                 return Assertion {
@@ -640,7 +640,7 @@ mod tests {
         }
 
         #[test]
-        fn impl_schema_compile_error() {
+        fn impl_schema_validation_error() {
             let schema: serde_json::Value = json!({
               "$schema": "http://json-schema.org/draft-04/schema#",
               "title": "Bad json schema",

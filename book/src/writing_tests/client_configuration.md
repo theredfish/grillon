@@ -38,6 +38,29 @@ Refer to the [Requests](./requests.md) chapter for more information about how to
 requests. Note that at the moment Grillon only supports HTTP(s), but later we will extend the use
 for different protocols and frameworks such as gRPC or SSL.
 
+### Store cookies
+
+You can update your client to enable or disable the cookie store with `store_cookies`:
+
+```rust
+// If an http response contains `Set-Cookie` headers, then cookies will be saved for
+// subsequent http requests.
+let grillon = Grillon::new("https://server.com")?.store_cookies(true)?;
+
+grillon.post("auth").assert().await.headers(contains(vec![(
+    SET_COOKIE,
+    HeaderValue::from_static("SESSIONID=123; HttpOnly"),
+)]));
+
+grillon
+    .get("authenticated/endpoint") // An endpoint where the session cookie `SESSIONID=123` is required.
+    .assert()
+    .await
+    .status(is_success());
+```
+
+The cookie store is disabled by default.
+
 ## Use a different client
 
 When you want to use a different client to send your requests and handle the responses, you should
