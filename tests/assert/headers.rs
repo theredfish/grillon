@@ -30,7 +30,13 @@ async fn headers_equality() -> Result<()> {
         .await
         .headers(is(header_map))
         .headers(is(header_vec))
-        .headers(is_not(vec![(CONTENT_LENGTH, content_length)]));
+        .headers(is(vec![
+            ("content-type", "application/json"),
+            ("content-length", "23"),
+            ("date", "today"),
+        ]))
+        .headers(is_not(vec![(CONTENT_LENGTH, content_length)]))
+        .headers(is_not(vec![("content-length", "23")]));
 
     mock.assert();
 
@@ -70,7 +76,8 @@ async fn headers_absent() -> Result<()> {
         .assert()
         .await
         .headers(does_not_contain(vec_header_map))
-        .headers(does_not_contain(header_map));
+        .headers(does_not_contain(header_map))
+        .headers(does_not_contain(vec![("content-type", "text-html")]));
 
     mock.assert();
 
@@ -87,7 +94,7 @@ async fn headers_check_empty_against_not_empty() -> Result<()> {
         .get("empty")
         .assert()
         .await
-        .headers(contains(vec![]));
+        .headers(contains(Vec::<(http::HeaderName, http::HeaderValue)>::new()));
 
     mock.assert();
 

@@ -1,5 +1,5 @@
 use crate::assertion::traits::{Container, Equality};
-use crate::assertion::types::{HeaderTupleVec, Headers};
+use crate::assertion::types::{HeaderStrTupleVec, HeaderTupleVec, Headers};
 use crate::assertion::{Assertion, AssertionResult, Hand};
 use crate::dsl::{Part, Predicate};
 use crate::header::HeaderMap;
@@ -14,6 +14,14 @@ pub fn from_header_tuple_vec(header_tuple_vec: &HeaderTupleVec) -> Headers {
                 header_value.to_str().unwrap().to_string(),
             )
         })
+        .collect()
+}
+
+/// Converts [`HeaderStrTupleVec`] into [`Headers`].
+pub fn from_header_str_tuple_vec(header_str_tuple_vec: &HeaderStrTupleVec) -> Headers {
+    header_str_tuple_vec
+        .iter()
+        .map(|(header_name, header_value)| (header_name.to_string(), header_value.to_string()))
         .collect()
 }
 
@@ -145,6 +153,38 @@ impl Equality<Headers> for HeaderMap {
     }
 }
 
+impl Equality<HeaderStrTupleVec> for HeaderMap {
+    type Assertion = Assertion<Headers>;
+
+    fn is_eq(&self, rhs: &HeaderStrTupleVec) -> Self::Assertion {
+        let mut lhs: Headers = from_header_map(self);
+        let mut rhs: Headers = from_header_str_tuple_vec(rhs);
+        let result = headers_equal_any_order(&mut lhs, &mut rhs);
+
+        Assertion {
+            predicate: Predicate::Is,
+            part: Part::Headers,
+            left: Hand::Left(lhs.clone()),
+            right: Hand::Right(rhs.clone()),
+            result: result.into(),
+        }
+    }
+
+    fn is_ne(&self, rhs: &HeaderStrTupleVec) -> Self::Assertion {
+        let mut lhs: Headers = from_header_map(self);
+        let mut rhs: Headers = from_header_str_tuple_vec(rhs);
+        let result = !headers_equal_any_order(&mut lhs, &mut rhs);
+
+        Assertion {
+            predicate: Predicate::IsNot,
+            part: Part::Headers,
+            left: Hand::Left(lhs.clone()),
+            right: Hand::Right(rhs.clone()),
+            result: result.into(),
+        }
+    }
+}
+
 macro_rules! impl_container {
     ($lhs:ty, $rhs:ty, $from:expr) => {
         impl Container<$rhs> for $lhs {
@@ -175,7 +215,7 @@ macro_rules! impl_container {
                 }
 
                 for (key, expected_val) in rhs {
-                    match self.get(key) {
+                    match self.get(key.clone()) {
                         Some(val) if val.eq(&expected_val) => continue,
                         _ => {
                             return Assertion {
@@ -203,7 +243,7 @@ macro_rules! impl_container {
                 let rhs_headers: Headers = $from(rhs);
 
                 for (key, absent_val) in rhs {
-                    match self.get(key) {
+                    match self.get(key.clone()) {
                         Some(val) if val.eq(absent_val) => {
                             return Assertion {
                                 predicate: Predicate::DoesNotContain,
@@ -231,6 +271,7 @@ macro_rules! impl_container {
 
 impl_container!(HeaderMap, HeaderMap, from_header_map);
 impl_container!(HeaderMap, HeaderTupleVec, from_header_tuple_vec);
+impl_container!(HeaderMap, HeaderStrTupleVec, from_header_str_tuple_vec);
 impl_container!(HeaderMap, Headers, from_headers);
 
 #[cfg(test)]
@@ -238,7 +279,7 @@ mod tests {
     use super::{from_header_map, HeaderTupleVec, Headers};
     use crate::{
         assertion::{
-            impls::header::{from_header_tuple_vec, headers_equal_any_order},
+            impls::header::*,
             traits::{Container, Equality},
         },
         header::{HeaderMap, HeaderValue, CONTENT_LENGTH, CONTENT_TYPE, DATE},
@@ -261,6 +302,14 @@ mod tests {
         ]
     }
 
+    fn header_str_tuple_vec_stub() -> HeaderStrTupleVec {
+        vec![
+            ("content-type", "application/json"),
+            ("content-length", "23"),
+            ("date", "today"),
+        ]
+    }
+
     fn headers_stub() -> Headers {
         vec![
             ("content-type".to_string(), "application/json".to_string()),
@@ -269,267 +318,344 @@ mod tests {
         ]
     }
 
-    #[test]
-    fn it_should_convert_from_header_map() {
-        let headers = from_header_map(&header_map_stub());
-        let expected_headers: Headers = vec![
-            (CONTENT_TYPE.to_string(), "application/json".to_string()),
-            (CONTENT_LENGTH.to_string(), "23".to_string()),
-            (DATE.to_string(), "today".to_string()),
-        ];
+    mod headers {
+        use super::*;
 
-        assert_eq!(
-            headers, expected_headers,
-            "{headers:#?} isn't equals to the expected header {expected_headers:#?}"
-        );
-    }
+        #[test]
+        fn headers_should_be_equal_in_any_order() {
+            let mut permutation1: Headers = vec![
+                (CONTENT_TYPE.to_string(), "application/json".to_string()),
+                (DATE.to_string(), "today".to_string()),
+                (CONTENT_LENGTH.to_string(), "23".to_string()),
+            ];
+            let mut permutation2: Headers = vec![
+                (CONTENT_LENGTH.to_string(), "23".to_string()),
+                (CONTENT_TYPE.to_string(), "application/json".to_string()),
+                (DATE.to_string(), "today".to_string()),
+            ];
+            let mut permutation3: Headers = vec![
+                (CONTENT_TYPE.to_string(), "application/json".to_string()),
+                (DATE.to_string(), "today".to_string()),
+                (CONTENT_LENGTH.to_string(), "23".to_string()),
+            ];
+            let mut permutation4: Headers = vec![
+                (DATE.to_string(), "today".to_string()),
+                (CONTENT_TYPE.to_string(), "application/json".to_string()),
+                (CONTENT_LENGTH.to_string(), "23".to_string()),
+            ];
 
-    #[test]
-    fn it_should_convert_from_header_tuple_vec() {
-        let headers = from_header_tuple_vec(&header_tuple_vec_stub());
-        let expected_headers: Headers = vec![
-            (CONTENT_TYPE.to_string(), "application/json".to_string()),
-            (CONTENT_LENGTH.to_string(), "23".to_string()),
-            (DATE.to_string(), "today".to_string()),
-        ];
+            assert!(headers_equal_any_order(
+                &mut headers_stub(),
+                &mut permutation1
+            ));
 
-        assert_eq!(
-            headers, expected_headers,
-            "{headers:#?} isn't equals to the expected header {expected_headers:#?}"
-        );
-    }
+            assert!(headers_equal_any_order(
+                &mut headers_stub(),
+                &mut permutation2
+            ));
 
-    #[test]
-    fn headers_should_be_equal_in_any_order() {
-        let mut permutation1: Headers = vec![
-            (CONTENT_TYPE.to_string(), "application/json".to_string()),
-            (DATE.to_string(), "today".to_string()),
-            (CONTENT_LENGTH.to_string(), "23".to_string()),
-        ];
-        let mut permutation2: Headers = vec![
-            (CONTENT_LENGTH.to_string(), "23".to_string()),
-            (CONTENT_TYPE.to_string(), "application/json".to_string()),
-            (DATE.to_string(), "today".to_string()),
-        ];
-        let mut permutation3: Headers = vec![
-            (CONTENT_TYPE.to_string(), "application/json".to_string()),
-            (DATE.to_string(), "today".to_string()),
-            (CONTENT_LENGTH.to_string(), "23".to_string()),
-        ];
-        let mut permutation4: Headers = vec![
-            (DATE.to_string(), "today".to_string()),
-            (CONTENT_TYPE.to_string(), "application/json".to_string()),
-            (CONTENT_LENGTH.to_string(), "23".to_string()),
-        ];
+            assert!(headers_equal_any_order(
+                &mut headers_stub(),
+                &mut permutation3
+            ));
 
-        assert!(headers_equal_any_order(
-            &mut headers_stub(),
-            &mut permutation1
-        ));
+            assert!(headers_equal_any_order(
+                &mut headers_stub(),
+                &mut permutation4
+            ));
 
-        assert!(headers_equal_any_order(
-            &mut headers_stub(),
-            &mut permutation2
-        ));
+            // same order
+            assert!(headers_equal_any_order(
+                &mut headers_stub(),
+                &mut headers_stub()
+            ));
+        }
 
-        assert!(headers_equal_any_order(
-            &mut headers_stub(),
-            &mut permutation3
-        ));
+        #[test]
+        fn impl_is_eq_headers() {
+            let assertion = header_map_stub().is_eq(&headers_stub());
 
-        assert!(headers_equal_any_order(
-            &mut headers_stub(),
-            &mut permutation4
-        ));
+            assert!(assertion.passed(), "{}", assertion.log());
+        }
 
-        // same order
-        assert!(headers_equal_any_order(
-            &mut headers_stub(),
-            &mut headers_stub()
-        ));
-    }
+        #[test]
+        fn impl_is_ne_headers() {
+            let mut headers = headers_stub();
+            headers[0] = (
+                "content-type".to_string(),
+                "text/html; charset=utf-8".to_string(),
+            );
 
-    #[test]
-    fn impl_is_eq_header_map() {
-        let assertion = header_map_stub().is_eq(&header_map_stub());
+            let assertion = header_map_stub().is_ne(&headers);
 
-        assert!(assertion.passed(), "{}", assertion.log());
-    }
+            assert!(assertion.passed(), "{}", assertion.log());
+        }
 
-    #[test]
-    fn impl_is_ne_header_map() {
-        let mut header_map = header_map_stub();
-        header_map.insert(
-            CONTENT_TYPE,
-            HeaderValue::from_static("text/html; charset=utf-8"),
-        );
+        #[test]
+        fn impl_has_headers() {
+            let headers_one_item = vec![(CONTENT_TYPE.to_string(), "application/json".to_string())];
+            let headers_two_items = vec![
+                (CONTENT_TYPE.to_string(), "application/json".to_string()),
+                (DATE.to_string(), "today".to_string()),
+            ];
 
-        let assertion = header_map_stub().is_ne(&header_map);
+            let assertion = header_map_stub().has(&headers_one_item);
+            assert!(assertion.passed(), "{}", assertion.log());
 
-        assert!(assertion.passed(), "{}", assertion.log());
-    }
+            let assertion = header_map_stub().has(&headers_two_items);
+            assert!(assertion.passed(), "{}", assertion.log());
+        }
 
-    #[test]
-    fn impl_is_eq_header_tuple_vec() {
-        let assertion = header_map_stub().is_eq(&header_tuple_vec_stub());
-
-        assert!(assertion.passed(), "{}", assertion.log());
-    }
-
-    #[test]
-    fn impl_is_ne_header_tuple_vec() {
-        let mut header_tuple_vec = header_tuple_vec_stub();
-        header_tuple_vec[0] = (
-            CONTENT_TYPE,
-            HeaderValue::from_static("text/html; charset=utf-8"),
-        );
-
-        let assertion = header_map_stub().is_ne(&header_tuple_vec);
-
-        assert!(assertion.passed(), "{}", assertion.log());
-    }
-
-    #[test]
-    fn impl_is_eq_headers() {
-        let assertion = header_map_stub().is_eq(&headers_stub());
-
-        assert!(assertion.passed(), "{}", assertion.log());
-    }
-
-    #[test]
-    fn impl_is_ne_headers() {
-        let mut headers = headers_stub();
-        headers[0] = (
-            "content-type".to_string(),
-            "text/html; charset=utf-8".to_string(),
-        );
-
-        let assertion = header_map_stub().is_ne(&headers);
-
-        assert!(assertion.passed(), "{}", assertion.log());
-    }
-
-    #[test]
-    fn impl_has_header_map() {
-        let mut header_map_one_item = HeaderMap::new();
-        let mut header_map_two_items = HeaderMap::new();
-        header_map_one_item.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
-        header_map_two_items.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
-        header_map_two_items.insert(DATE, HeaderValue::from_static("today"));
-
-        let assertion = header_map_stub().has(&header_map_one_item);
-        assert!(assertion.passed(), "{}", assertion.log());
-
-        let assertion = header_map_stub().has(&header_map_two_items);
-        assert!(assertion.passed(), "{}", assertion.log());
-    }
-
-    #[test]
-    fn impl_has_not_header_map() {
-        let mut header_map_one_item = HeaderMap::new();
-        let mut header_map_two_items = HeaderMap::new();
-        header_map_one_item.insert(
-            CONTENT_TYPE,
-            HeaderValue::from_static("text/html; charset=utf-8"),
-        );
-        header_map_two_items.insert(
-            CONTENT_TYPE,
-            HeaderValue::from_static("text/html; charset=utf-8"),
-        );
-        header_map_two_items.insert(DATE, HeaderValue::from_static("tomorrow"));
-
-        let assertion = header_map_stub().has_not(&header_map_one_item);
-        assert!(assertion.passed(), "{}", assertion.log());
-
-        let assertion = header_map_stub().has_not(&header_map_two_items);
-        assert!(assertion.passed(), "{}", assertion.log());
-    }
-
-    #[test]
-    fn impl_has_not_header_map_fails_if_at_least_one_item_matches() {
-        let mut header_map = HeaderMap::new();
-        header_map.insert(
-            CONTENT_TYPE,
-            HeaderValue::from_static("text/html; charset=utf-8"),
-        );
-        // this item matches
-        header_map.insert(DATE, HeaderValue::from_static("today"));
-
-        let assertion = header_map_stub().has_not(&header_map);
-        assert!(assertion.failed(), "{}", assertion.log());
-    }
-
-    #[test]
-    fn impl_has_header_tuple_vec() {
-        let header_tuple_vec_one_item =
-            vec![(CONTENT_TYPE, HeaderValue::from_static("application/json"))];
-        let header_tuple_vec_two_items = vec![
-            (CONTENT_TYPE, HeaderValue::from_static("application/json")),
-            (DATE, HeaderValue::from_static("today")),
-        ];
-
-        let assertion = header_map_stub().has(&header_tuple_vec_one_item);
-        assert!(assertion.passed(), "{}", assertion.log());
-
-        let assertion = header_map_stub().has(&header_tuple_vec_two_items);
-        assert!(assertion.passed(), "{}", assertion.log());
-    }
-
-    #[test]
-    fn impl_has_not_header_tuple_vec() {
-        let header_tuple_vec_one_item = vec![(
-            CONTENT_TYPE,
-            HeaderValue::from_static("text/html; charset=utf-8"),
-        )];
-        let header_tuple_vec_two_items = vec![
-            (
-                CONTENT_TYPE,
-                HeaderValue::from_static("text/html; charset=utf-8"),
-            ),
-            (DATE, HeaderValue::from_static("tomorrow")),
-        ];
-
-        let assertion = header_map_stub().has_not(&header_tuple_vec_one_item);
-        assert!(assertion.passed(), "{}", assertion.log());
-
-        let assertion = header_map_stub().has_not(&header_tuple_vec_two_items);
-        assert!(assertion.passed(), "{}", assertion.log());
-    }
-
-    #[test]
-    fn impl_has_headers() {
-        let headers_one_item = vec![(CONTENT_TYPE.to_string(), "application/json".to_string())];
-        let headers_two_items = vec![
-            (CONTENT_TYPE.to_string(), "application/json".to_string()),
-            (DATE.to_string(), "today".to_string()),
-        ];
-
-        let assertion = header_map_stub().has(&headers_one_item);
-        assert!(assertion.passed(), "{}", assertion.log());
-
-        let assertion = header_map_stub().has(&headers_two_items);
-        assert!(assertion.passed(), "{}", assertion.log());
-    }
-
-    #[test]
-    fn impl_has_not_headers() {
-        let headers_one_item = vec![(
-            CONTENT_TYPE.to_string(),
-            "text/html; charset=utf-8".to_string(),
-        )];
-        let headers_two_items = vec![
-            (
+        #[test]
+        fn impl_has_not_headers() {
+            let headers_one_item = vec![(
                 CONTENT_TYPE.to_string(),
                 "text/html; charset=utf-8".to_string(),
-            ),
-            (DATE.to_string(), "tomorrow".to_string()),
-        ];
+            )];
+            let headers_two_items = vec![
+                (
+                    CONTENT_TYPE.to_string(),
+                    "text/html; charset=utf-8".to_string(),
+                ),
+                (DATE.to_string(), "tomorrow".to_string()),
+            ];
 
-        let assertion = header_map_stub().has_not(&headers_one_item);
-        assert!(assertion.passed(), "{}", assertion.log());
+            let assertion = header_map_stub().has_not(&headers_one_item);
+            assert!(assertion.passed(), "{}", assertion.log());
 
-        let assertion = header_map_stub().has_not(&headers_two_items);
-        assert!(assertion.passed(), "{}", assertion.log());
+            let assertion = header_map_stub().has_not(&headers_two_items);
+            assert!(assertion.passed(), "{}", assertion.log());
+        }
+    }
+
+    mod header_map {
+        use super::*;
+
+        #[test]
+        fn it_should_convert_from_header_map() {
+            let headers = from_header_map(&header_map_stub());
+            let expected_headers: Headers = vec![
+                (CONTENT_TYPE.to_string(), "application/json".to_string()),
+                (CONTENT_LENGTH.to_string(), "23".to_string()),
+                (DATE.to_string(), "today".to_string()),
+            ];
+
+            assert_eq!(
+                headers, expected_headers,
+                "{headers:#?} isn't equals to the expected header {expected_headers:#?}"
+            );
+        }
+
+        #[test]
+        fn impl_is_eq_header_map() {
+            let assertion = header_map_stub().is_eq(&header_map_stub());
+
+            assert!(assertion.passed(), "{}", assertion.log());
+        }
+
+        #[test]
+        fn impl_is_ne_header_map() {
+            let mut header_map = header_map_stub();
+            header_map.insert(
+                CONTENT_TYPE,
+                HeaderValue::from_static("text/html; charset=utf-8"),
+            );
+
+            let assertion = header_map_stub().is_ne(&header_map);
+
+            assert!(assertion.passed(), "{}", assertion.log());
+        }
+
+        #[test]
+        fn impl_has_header_map() {
+            let mut header_map_one_item = HeaderMap::new();
+            let mut header_map_two_items = HeaderMap::new();
+            header_map_one_item.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
+            header_map_two_items.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
+            header_map_two_items.insert(DATE, HeaderValue::from_static("today"));
+
+            let assertion = header_map_stub().has(&header_map_one_item);
+            assert!(assertion.passed(), "{}", assertion.log());
+
+            let assertion = header_map_stub().has(&header_map_two_items);
+            assert!(assertion.passed(), "{}", assertion.log());
+        }
+
+        #[test]
+        fn impl_has_not_header_map() {
+            let mut header_map_one_item = HeaderMap::new();
+            let mut header_map_two_items = HeaderMap::new();
+            header_map_one_item.insert(
+                CONTENT_TYPE,
+                HeaderValue::from_static("text/html; charset=utf-8"),
+            );
+            header_map_two_items.insert(
+                CONTENT_TYPE,
+                HeaderValue::from_static("text/html; charset=utf-8"),
+            );
+            header_map_two_items.insert(DATE, HeaderValue::from_static("tomorrow"));
+
+            let assertion = header_map_stub().has_not(&header_map_one_item);
+            assert!(assertion.passed(), "{}", assertion.log());
+
+            let assertion = header_map_stub().has_not(&header_map_two_items);
+            assert!(assertion.passed(), "{}", assertion.log());
+        }
+
+        #[test]
+        fn impl_has_not_header_map_fails_if_at_least_one_item_matches() {
+            let mut header_map = HeaderMap::new();
+            header_map.insert(
+                CONTENT_TYPE,
+                HeaderValue::from_static("text/html; charset=utf-8"),
+            );
+            // this item matches
+            header_map.insert(DATE, HeaderValue::from_static("today"));
+
+            let assertion = header_map_stub().has_not(&header_map);
+            assert!(assertion.failed(), "{}", assertion.log());
+        }
+    }
+
+    mod header_tuple_vec {
+        use super::*;
+
+        #[test]
+        fn it_should_convert_from_header_tuple_vec() {
+            let headers = from_header_tuple_vec(&header_tuple_vec_stub());
+            let expected_headers: Headers = vec![
+                (CONTENT_TYPE.to_string(), "application/json".to_string()),
+                (CONTENT_LENGTH.to_string(), "23".to_string()),
+                (DATE.to_string(), "today".to_string()),
+            ];
+
+            assert_eq!(
+                headers, expected_headers,
+                "{headers:#?} isn't equals to the expected header {expected_headers:#?}"
+            );
+        }
+
+        #[test]
+        fn impl_is_eq_header_tuple_vec() {
+            let assertion = header_map_stub().is_eq(&header_tuple_vec_stub());
+
+            assert!(assertion.passed(), "{}", assertion.log());
+        }
+
+        #[test]
+        fn impl_is_ne_header_tuple_vec() {
+            let mut header_tuple_vec = header_tuple_vec_stub();
+            header_tuple_vec[0] = (
+                CONTENT_TYPE,
+                HeaderValue::from_static("text/html; charset=utf-8"),
+            );
+
+            let assertion = header_map_stub().is_ne(&header_tuple_vec);
+
+            assert!(assertion.passed(), "{}", assertion.log());
+        }
+
+        #[test]
+        fn impl_has_header_tuple_vec() {
+            let header_tuple_vec_one_item =
+                vec![(CONTENT_TYPE, HeaderValue::from_static("application/json"))];
+            let header_tuple_vec_two_items = vec![
+                (CONTENT_TYPE, HeaderValue::from_static("application/json")),
+                (DATE, HeaderValue::from_static("today")),
+            ];
+
+            let assertion = header_map_stub().has(&header_tuple_vec_one_item);
+            assert!(assertion.passed(), "{}", assertion.log());
+
+            let assertion = header_map_stub().has(&header_tuple_vec_two_items);
+            assert!(assertion.passed(), "{}", assertion.log());
+        }
+
+        #[test]
+        fn impl_has_not_header_tuple_vec() {
+            let header_tuple_vec_one_item = vec![(
+                CONTENT_TYPE,
+                HeaderValue::from_static("text/html; charset=utf-8"),
+            )];
+            let header_tuple_vec_two_items = vec![
+                (
+                    CONTENT_TYPE,
+                    HeaderValue::from_static("text/html; charset=utf-8"),
+                ),
+                (DATE, HeaderValue::from_static("tomorrow")),
+            ];
+
+            let assertion = header_map_stub().has_not(&header_tuple_vec_one_item);
+            assert!(assertion.passed(), "{}", assertion.log());
+
+            let assertion = header_map_stub().has_not(&header_tuple_vec_two_items);
+            assert!(assertion.passed(), "{}", assertion.log());
+        }
+    }
+
+    mod header_str_tuple_vec {
+        use super::*;
+
+        #[test]
+        fn it_should_convert_from_header_str_tuple_vec() {
+            let headers = from_header_str_tuple_vec(&header_str_tuple_vec_stub());
+            let expected_headers: Headers = vec![
+                (CONTENT_TYPE.to_string(), "application/json".to_string()),
+                (CONTENT_LENGTH.to_string(), "23".to_string()),
+                (DATE.to_string(), "today".to_string()),
+            ];
+
+            assert_eq!(
+                headers, expected_headers,
+                "{headers:#?} isn't equals to the expected header {expected_headers:#?}"
+            );
+        }
+
+        #[test]
+        fn impl_is_eq_header_str_tuple_vec() {
+            let assertion = header_map_stub().is_eq(&header_str_tuple_vec_stub());
+
+            assert!(assertion.passed(), "{}", assertion.log());
+        }
+
+        #[test]
+        fn impl_is_ne_header_str_tuple_vec() {
+            let mut header_str_tuple_vec = header_str_tuple_vec_stub();
+            header_str_tuple_vec[0] = ("content-type", "text/html; charset=utf-8");
+
+            let assertion = header_map_stub().is_ne(&header_str_tuple_vec);
+
+            assert!(assertion.passed(), "{}", assertion.log());
+        }
+
+        #[test]
+        fn impl_has_header_str_tuple_vec() {
+            use super::Container;
+            let header_str_tuple_vec_one_item = vec![("content-type", "application/json")];
+            let header_str_tuple_vec_two_items =
+                vec![("content-type", "application/json"), ("date", "today")];
+
+            let assertion = header_map_stub().has(&header_str_tuple_vec_one_item);
+            assert!(assertion.passed(), "{}", assertion.log());
+
+            let assertion = header_map_stub().has(&header_str_tuple_vec_two_items);
+            assert!(assertion.passed(), "{}", assertion.log());
+        }
+
+        #[test]
+        fn impl_has_not_header_str_tuple_vec() {
+            let header_str_tuple_vec_one_item = vec![("content-type", "text/html; charset=utf-8")];
+            let header_str_tuple_vec_two_items = vec![
+                ("content-type", "text/html; charset=utf-8"),
+                ("date", "tomorrow"),
+            ];
+
+            let assertion = header_map_stub().has_not(&header_str_tuple_vec_one_item);
+            assert!(assertion.passed(), "{}", assertion.log());
+
+            let assertion = header_map_stub().has_not(&header_str_tuple_vec_two_items);
+            assert!(assertion.passed(), "{}", assertion.log());
+        }
     }
 
     mod serialization {

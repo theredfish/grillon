@@ -10,6 +10,7 @@ use crate::{
 };
 
 type HeadersVec = Vec<(HeaderName, HeaderValue)>;
+type HeaderStrVec = Vec<(&'static str, &'static str)>;
 
 /// Http headers DSL to assert the headers of a response.
 pub trait HeadersDsl<T> {
@@ -57,6 +58,24 @@ impl HeadersDsl<HeaderMap> for HeaderMap {
 }
 
 impl HeadersDsl<HeaderMap> for HeadersVec {
+    fn is(&self, actual: HeaderMap) -> Assertion<Headers> {
+        actual.is_eq(self)
+    }
+
+    fn is_not(&self, actual: HeaderMap) -> Assertion<Headers> {
+        actual.is_ne(self)
+    }
+
+    fn contains(&self, actual: HeaderMap) -> Assertion<Headers> {
+        actual.has(self)
+    }
+
+    fn does_not_contain(&self, actual: HeaderMap) -> Assertion<Headers> {
+        actual.has_not(self)
+    }
+}
+
+impl HeadersDsl<HeaderMap> for HeaderStrVec {
     fn is(&self, actual: HeaderMap) -> Assertion<Headers> {
         actual.is_eq(self)
     }
