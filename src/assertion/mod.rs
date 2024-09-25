@@ -39,6 +39,9 @@ pub mod types {
     /// An alias to manipulate an internal representation of headers as tuples
     /// of [`HeaderName`] and [`HeaderValue`].
     pub type HeaderTupleVec = Vec<(HeaderName, HeaderValue)>;
+    /// An alias to manipulate an internal representation of headers as tuples
+    /// of str.
+    pub type HeaderStrTupleVec = Vec<(&'static str, &'static str)>;
 }
 
 /// Represents left or right hands in an [`Assertion`].

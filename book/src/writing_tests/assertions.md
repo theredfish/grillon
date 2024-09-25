@@ -21,13 +21,13 @@ conditions, it's possible. Each assertion produces [logs](../logs.md).
 
 ## HTTP assertion table
 
-| part        | predicates                                   | types                                   |
-|:------------|:---------------------------------------------|:----------------------------------------|
-|headers      |is, is_not, contains, does_not_contain        |Vec<(HeaderName, HeaderValue)>, HeaderMap|
-|status       |is, is_not, is_between                        |u16, StatusCode                          |
-|json_body    |is, is_not, schema                            |String, &str, Value, `json!`, PathBuf    |
-|json_path    |is, is_not, schema, contains, does_not_contain|String, &str, Value, `json!`, PathBuf    |
-|response_time|is_less_than                                  |u64                                      |
+| part        | predicates                                   | types                                                   |
+|:------------|:---------------------------------------------|:--------------------------------------------------------|
+|headers      |is, is_not, contains, does_not_contain        |Vec<(HeaderName, HeaderValue)>, Vec<(&str, &str)>, HeaderMap                                                                                                              |
+|status       |is, is_not, is_between                        |u16, StatusCode                                          |
+|json_body    |is, is_not, schema                            |String, &str, Value, `json!`, PathBuf                    |
+|json_path    |is, is_not, schema, contains, does_not_contain|String, &str, Value, `json!`, PathBuf                    |
+|response_time|is_less_than                                  |u64                                                      |
 
 ### Note about `json_path`
 

@@ -2,8 +2,9 @@
 //! for endpoints under tests.
 //!
 //! Currently powered by the [`Reqwest`](https://github.com/seanmonstar/reqwest) HTTP client.
-use std::time::Instant;
+use std::{str::FromStr, time::Instant};
 
+use crate::error::Result;
 use crate::{assert::Assert, grillon::LogSettings};
 use http::{HeaderMap, HeaderName, HeaderValue, Method};
 use reqwest::{Body, Client};
@@ -29,24 +30,36 @@ pub trait RequestHeaders {
     /// Converts http request headers to an [`HeaderMap`].
     /// Any type implementing this trait's function can be
     /// passed in [`Request::headers()`].
-    fn to_header_map(&self) -> HeaderMap;
+    fn to_header_map(&self) -> Result<HeaderMap>;
 }
 
 impl RequestHeaders for Vec<(HeaderName, HeaderValue)> {
-    fn to_header_map(&self) -> HeaderMap {
+    fn to_header_map(&self) -> Result<HeaderMap> {
         let mut map = HeaderMap::new();
 
         for (key, value) in self {
             map.append(key, value.clone());
         }
 
-        map
+        Ok(map)
+    }
+}
+
+impl RequestHeaders for Vec<(&str, &str)> {
+    fn to_header_map(&self) -> Result<HeaderMap> {
+        let mut map = HeaderMap::new();
+
+        for (key, value) in self {
+            map.append(HeaderName::from_str(key)?, HeaderValue::from_str(value)?);
+        }
+
+        Ok(map)
     }
 }
 
 impl RequestHeaders for HeaderMap {
-    fn to_header_map(&self) -> HeaderMap {
-        self.clone()
+    fn to_header_map(&self) -> Result<HeaderMap> {
+        Ok(self.clone())
     }
 }
 
@@ -59,7 +72,7 @@ pub struct Request<'c> {
     /// The http request url.
     pub url: Url,
     /// The http request headers.
-    pub headers: HeaderMap,
+    pub headers: Result<HeaderMap>,
     /// The http request payload.
     pub payload: Option<Body>,
     /// The client used for this outgoing request.
@@ -142,14 +155,15 @@ impl Request<'_> {
     /// # }
     /// ```
     pub async fn assert(self) -> Assert {
+        // TODO: handle expects with a Result or an Unprocessable result
+        let headers = self.headers.expect("Failed to set the request headers");
         let req = self
             .client
             .request(self.method, self.url)
             .body(self.payload.unwrap_or_default())
-            .headers(self.headers);
+            .headers(headers);
 
         let now = Instant::now();
-        // TODO : replace this expect by an assertion on the response itself.
         let response = req.send().await.expect("Failed to send http request");
 
         // Due to serde limitations with 128bits we need to cast u128 to u64

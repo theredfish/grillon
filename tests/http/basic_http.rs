@@ -191,6 +191,10 @@ async fn connect_request() -> Result<()> {
                 "Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko",
             ),
         )])
+        .headers(vec![(
+            "user-agent",
+            "Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko",
+        )])
         .assert()
         .await
         .status(is_success())

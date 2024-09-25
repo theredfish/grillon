@@ -234,7 +234,7 @@ impl Grillon {
         Request {
             method,
             url,
-            headers: HeaderMap::new(),
+            headers: Ok(HeaderMap::new()),
             payload: None,
             client: &self.client,
             log_settings: &self.log_settings,
