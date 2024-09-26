@@ -74,12 +74,16 @@ async fn custom_response_struct() -> Result<()> {
 
     let response_wrapper = ResponseWrapper { response };
 
-    Assert::new(response_wrapper, response_time_ms, LogSettings::default())
-        .await
-        .status(is_between(200, 299))
-        .assert_fn(|assert| {
-            assert!(assert.status == StatusCode::OK, "Bad status code");
-        });
+    Assert::new(
+        Some(response_wrapper),
+        Some(response_time_ms),
+        LogSettings::default(),
+    )
+    .await
+    .status(is_between(200, 299))
+    .assert_fn(|assert| {
+        assert!(assert.status == Some(StatusCode::OK), "Bad status code");
+    });
 
     mock.assert();
 

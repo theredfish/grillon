@@ -103,6 +103,11 @@ pub enum UnprocessableReason {
     InvalidJsonSchema(JsonPointer, JsonPointer),
     /// Serialization failure.
     SerializationFailure(String),
+    /// Invalid HTTP request headers.
+    InvalidHttpRequestHeaders(String),
+    /// If the HTTP request results in an error while sending request, redirect
+    /// loop was detected or redirect limit was exhausted.
+    HttpRequestFailure(String),
     /// Unprocessable entity.
     Other(String),
 }
@@ -124,6 +129,12 @@ impl std::fmt::Display for UnprocessableReason {
             }
             UnprocessableReason::SerializationFailure(message) => {
                 write!(f, "Serialization failure: {message}")
+            }
+            UnprocessableReason::InvalidHttpRequestHeaders(details) => {
+                write!(f, "Invalid HTTP request headers: {details}")
+            }
+            UnprocessableReason::HttpRequestFailure(details) => {
+                write!(f, "Http request failure: {details}")
             }
             UnprocessableReason::Other(message) => write!(f, "{message}"),
         }

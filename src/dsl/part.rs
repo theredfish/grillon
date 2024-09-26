@@ -33,6 +33,11 @@ pub enum Part {
     #[strum(serialize = "response time")]
     #[serde(rename = "response time")]
     ResponseTime,
+    /// The absence of part to assert from an http response.
+    /// Usually used for an unprocessable assertion.
+    #[strum(serialize = "none")]
+    #[serde(rename = "none")]
+    NoPart,
 }
 
 #[cfg(test)]

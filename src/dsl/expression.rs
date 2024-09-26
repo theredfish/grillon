@@ -44,6 +44,11 @@ pub enum Predicate {
     #[strum(serialize = "should match schema")]
     #[serde(rename = "should match schema")]
     Schema,
+    /// The absence of predicate for an assertion.
+    /// Usually used for an unprocessable assertion.
+    #[strum(serialize = "none")]
+    #[serde(rename = "none")]
+    NoPredicate,
 }
 
 /// Represents a range starting with `left` and ending with `right`.
