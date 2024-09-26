@@ -2,7 +2,7 @@ use crate::HttpMockServer;
 use grillon::{
     dsl::{contains, does_not_contain, is, is_not},
     header::{HeaderMap, HeaderValue, CONTENT_LENGTH, CONTENT_TYPE, DATE},
-    Grillon, Result,
+    Grillon, Method, Result,
 };
 
 #[tokio::test]
@@ -97,6 +97,27 @@ async fn headers_check_empty_against_not_empty() -> Result<()> {
         .headers(contains(Vec::<(http::HeaderName, http::HeaderValue)>::new()));
 
     mock.assert();
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn invalid_request_headers() -> Result<()> {
+    let mock_server = HttpMockServer::new();
+    let mock = mock_server.delete_valid_user();
+
+    let grillon = Grillon::new(mock_server.server.url("/users").as_ref())?
+        .log_settings(grillon::LogSettings::StdOutput);
+
+    grillon
+        .http_request(Method::DELETE, "users/1")
+        .headers(vec![("ééç", "header value")])
+        .assert()
+        .await
+        .headers(is(vec![("ééç", "header value")]))
+        .status(is(204));
+
+    mock.assert_hits(0);
 
     Ok(())
 }

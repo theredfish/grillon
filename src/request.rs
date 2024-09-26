@@ -4,6 +4,8 @@
 //! Currently powered by the [`Reqwest`](https://github.com/seanmonstar/reqwest) HTTP client.
 use std::{str::FromStr, time::Instant};
 
+use crate::assertion::{Assertion, AssertionResult, Hand, UnprocessableReason};
+use crate::dsl::{Part, Predicate};
 use crate::error::Result;
 use crate::{assert::Assert, grillon::LogSettings};
 use http::{HeaderMap, HeaderName, HeaderValue, Method};
@@ -155,8 +157,26 @@ impl Request<'_> {
     /// # }
     /// ```
     pub async fn assert(self) -> Assert {
-        // TODO: handle expects with a Result or an Unprocessable result
-        let headers = self.headers.expect("Failed to set the request headers");
+        let headers = match self.headers {
+            Ok(headers) => headers,
+            Err(err) => {
+                let assertion = Assertion {
+                    part: Part::Headers,
+                    predicate: Predicate::NoPredicate,
+                    left: Hand::Empty::<Value>,
+                    right: Hand::Empty,
+                    result: AssertionResult::Unprocessable(
+                        UnprocessableReason::InvalidHttpRequestHeaders(err.to_string()),
+                    ),
+                };
+
+                assertion.assert(self.log_settings);
+
+                return Assert::new(None::<reqwest::Response>, None, self.log_settings.clone())
+                    .await;
+            }
+        };
+
         let req = self
             .client
             .request(self.method, self.url)
@@ -164,7 +184,25 @@ impl Request<'_> {
             .headers(headers);
 
         let now = Instant::now();
-        let response = req.send().await.expect("Failed to send http request");
+        let response = match req.send().await {
+            Ok(response) => response,
+            Err(err) => {
+                let assertion = Assertion {
+                    part: Part::NoPart,
+                    predicate: Predicate::NoPredicate,
+                    left: Hand::Empty::<Value>,
+                    right: Hand::Empty,
+                    result: AssertionResult::Unprocessable(
+                        UnprocessableReason::HttpRequestFailure(err.to_string()),
+                    ),
+                };
+
+                assertion.assert(self.log_settings);
+
+                return Assert::new(None::<reqwest::Response>, None, self.log_settings.clone())
+                    .await;
+            }
+        };
 
         // Due to serde limitations with 128bits we need to cast u128 to u64
         // with the risk to lose precision. However should be acceptable since
@@ -174,6 +212,11 @@ impl Request<'_> {
         // See https://github.com/serde-rs/serde/issues/1183
         let response_time_ms = now.elapsed().as_millis() as u64;
 
-        Assert::new(response, response_time_ms, self.log_settings.clone()).await
+        Assert::new(
+            Some(response),
+            Some(response_time_ms),
+            self.log_settings.clone(),
+        )
+        .await
     }
 }

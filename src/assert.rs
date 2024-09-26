@@ -56,17 +56,18 @@ use http::{HeaderMap, StatusCode};
 use serde_json::Value;
 
 /// [`Assert`] uses an internal representation of the http response to assert
-/// against.
+/// against. If the HTTP request was successfully sent, then each field will be
+/// `Some`, otherwise `None`.
 #[derive(Clone)]
 pub struct Assert {
     /// The http response header to assert.
-    pub headers: HeaderMap,
+    pub headers: Option<HeaderMap>,
     /// The http response status to assert.
-    pub status: StatusCode,
+    pub status: Option<StatusCode>,
     /// The http response json body to assert.
-    pub json: Option<Value>,
+    pub json: Option<Option<Value>>,
     /// The http response time (in milliseconds) to assert.
-    pub response_time_ms: u64,
+    pub response_time_ms: Option<u64>,
     /// The test results output.
     pub log_settings: LogSettings,
 }
@@ -74,15 +75,26 @@ pub struct Assert {
 impl Assert {
     /// Creates an `Assert` instance with an internal representation
     /// of the given response to assert.
-    pub async fn new<T>(response: T, response_time_ms: u64, log_settings: LogSettings) -> Self
-    where
-        T: Response,
-    {
+    pub async fn new(
+        response: Option<impl Response>,
+        response_time_ms: Option<u64>,
+        log_settings: LogSettings,
+    ) -> Self {
+        if let Some(response) = response {
+            return Assert {
+                headers: Some(response.headers().clone()),
+                status: Some(response.status()),
+                json: Some(response.json().await),
+                response_time_ms,
+                log_settings,
+            };
+        };
+
         Assert {
-            headers: response.headers().clone(),
-            status: response.status(),
-            json: response.json().await,
-            response_time_ms,
+            headers: None,
+            status: None,
+            json: None,
+            response_time_ms: None,
             log_settings,
         }
     }
@@ -126,9 +138,9 @@ impl Assert {
     where
         T: StatusCodeDsl<StatusCode>,
     {
-        let _assertion = expr
-            .value
-            .eval(self.status, expr.predicate, &self.log_settings);
+        if let Some(status) = self.status {
+            let _assertion = expr.value.eval(status, expr.predicate, &self.log_settings);
+        }
 
         self
     }
@@ -138,21 +150,23 @@ impl Assert {
     where
         T: JsonBodyDsl<Value>,
     {
-        let actual = if let Some(body) = self.json.clone() {
-            body
-        } else {
-            let assertion = Assertion {
-                part: Part::JsonPath,
-                predicate: expr.predicate,
-                left: Hand::Empty::<Value>,
-                right: Hand::Empty,
-                result: AssertionResult::Unprocessable(UnprocessableReason::JsonBodyMissing),
-            };
-            assertion.assert(&self.log_settings);
+        if let Some(json) = &self.json {
+            let actual = if let Some(body) = json.clone() {
+                body
+            } else {
+                let assertion = Assertion {
+                    part: Part::JsonPath,
+                    predicate: expr.predicate,
+                    left: Hand::Empty::<Value>,
+                    right: Hand::Empty,
+                    result: AssertionResult::Unprocessable(UnprocessableReason::JsonBodyMissing),
+                };
+                assertion.assert(&self.log_settings);
 
-            return self;
-        };
-        let _assertion = expr.value.eval(actual, expr.predicate, &self.log_settings);
+                return self;
+            };
+            let _assertion = expr.value.eval(actual, expr.predicate, &self.log_settings);
+        }
 
         self
     }
@@ -164,46 +178,48 @@ impl Assert {
     {
         use jsonpath_rust::JsonPathQuery;
 
-        // Check for empty json body
-        let json_body = if let Some(body) = self.json.clone() {
-            body
-        } else {
-            let assertion = Assertion {
-                part: Part::JsonPath,
-                predicate: expr.predicate,
-                left: Hand::Empty::<Value>,
-                right: Hand::Empty,
-                result: AssertionResult::Unprocessable(UnprocessableReason::JsonBodyMissing),
-            };
-            assertion.assert(&self.log_settings);
-
-            return self;
-        };
-
-        // Check for unprocessable json path
-        let jsonpath_value = match json_body.path(path) {
-            Ok(json) => json,
-            Err(_) => {
+        if let Some(json) = &self.json {
+            // Check for empty json body
+            let json_body = if let Some(body) = json.clone() {
+                body
+            } else {
                 let assertion = Assertion {
                     part: Part::JsonPath,
                     predicate: expr.predicate,
                     left: Hand::Empty::<Value>,
                     right: Hand::Empty,
-                    result: AssertionResult::Unprocessable(UnprocessableReason::InvalidJsonPath(
-                        path.to_string(),
-                    )),
+                    result: AssertionResult::Unprocessable(UnprocessableReason::JsonBodyMissing),
                 };
                 assertion.assert(&self.log_settings);
 
                 return self;
-            }
-        };
+            };
 
-        let jsonpath_res = JsonPathResult::new(path, jsonpath_value);
+            // Check for unprocessable json path
+            let jsonpath_value = match json_body.path(path) {
+                Ok(json) => json,
+                Err(_) => {
+                    let assertion = Assertion {
+                        part: Part::JsonPath,
+                        predicate: expr.predicate,
+                        left: Hand::Empty::<Value>,
+                        right: Hand::Empty,
+                        result: AssertionResult::Unprocessable(
+                            UnprocessableReason::InvalidJsonPath(path.to_string()),
+                        ),
+                    };
+                    assertion.assert(&self.log_settings);
 
-        let _assertion = expr
-            .value
-            .eval(jsonpath_res, expr.predicate, &self.log_settings);
+                    return self;
+                }
+            };
+
+            let jsonpath_res = JsonPathResult::new(path, jsonpath_value);
+
+            let _assertion = expr
+                .value
+                .eval(jsonpath_res, expr.predicate, &self.log_settings);
+        }
 
         self
     }
@@ -213,9 +229,11 @@ impl Assert {
     where
         T: TimeDsl<u64>,
     {
-        let _assertion = expr
-            .value
-            .eval(self.response_time_ms, expr.predicate, &self.log_settings);
+        if let Some(response_time_ms) = self.response_time_ms {
+            let _assertion = expr
+                .value
+                .eval(response_time_ms, expr.predicate, &self.log_settings);
+        }
 
         self
     }
@@ -225,9 +243,11 @@ impl Assert {
     where
         T: HeadersDsl<HeaderMap>,
     {
-        let _assertion = expr
-            .value
-            .eval(self.headers.clone(), expr.predicate, &self.log_settings);
+        if let Some(headers) = &self.headers {
+            let _assertion = expr
+                .value
+                .eval(headers.clone(), expr.predicate, &self.log_settings);
+        }
 
         self
     }
