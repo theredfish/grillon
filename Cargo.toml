@@ -20,7 +20,7 @@ futures = "0.3.31"
 strum = { version = "0.26.3", features = ["derive"] }
 strum_macros = "0.26.4"
 jsonpath-rust = "0.7.1"
-jsonschema = "0.20.0"
+jsonschema = "0.22.3"
 reqwest = { version = "0.12.8", features = ["json", "cookies"] }
 thiserror = "1.0.64"
 
