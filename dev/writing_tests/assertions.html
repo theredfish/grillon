@@ -162,7 +162,7 @@ supported yet. With sequential runs, order matters, so if you want to fail early
 conditions, it's possible. Each assertion produces <a href="../logs.html">logs</a>.</p>
 <h2 id="http-assertion-table"><a class="header" href="#http-assertion-table">HTTP assertion table</a></h2>
 <div class="table-wrapper"><table><thead><tr><th style="text-align: left">part</th><th style="text-align: left">predicates</th><th style="text-align: left">types</th></tr></thead><tbody>
-<tr><td style="text-align: left">headers</td><td style="text-align: left">is, is_not, contains, does_not_contain</td><td style="text-align: left">Vec&lt;(HeaderName, HeaderValue)&gt;, HeaderMap</td></tr>
+<tr><td style="text-align: left">headers</td><td style="text-align: left">is, is_not, contains, does_not_contain</td><td style="text-align: left">Vec&lt;(HeaderName, HeaderValue)&gt;, Vec&lt;(&amp;str, &amp;str)&gt;, HeaderMap</td></tr>
 <tr><td style="text-align: left">status</td><td style="text-align: left">is, is_not, is_between</td><td style="text-align: left">u16, StatusCode</td></tr>
 <tr><td style="text-align: left">json_body</td><td style="text-align: left">is, is_not, schema</td><td style="text-align: left">String, &amp;str, Value, <code>json!</code>, PathBuf</td></tr>
 <tr><td style="text-align: left">json_path</td><td style="text-align: left">is, is_not, schema, contains, does_not_contain</td><td style="text-align: left">String, &amp;str, Value, <code>json!</code>, PathBuf</td></tr>
