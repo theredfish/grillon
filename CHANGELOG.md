@@ -1,11 +1,15 @@
 # `grillon` changelog
 
-## [v0.5.0-alpha.1] - 2023
+## [v0.5.0-alpha.2] - 2024-10-22
 
-- [Diff](/../../compare/v0.4.0...v0.5.0-alpha.1)
-- [Milestone](https://github.com/theredfish/grillon/milestone/3)
+- [Diff](/../../compare/v0.4.0...v0.5.0-alpha.2)
+- [Milestone](/../../milestone/3)
 
-[v0.5.0-alpha.1]: /../../tree/v0.5.0-alpha.1
+[v0.5.0-alpha.2]: /../../tree/v0.5.0-alpha.2
+
+### Breaking Changes
+
+- Replace Hyper by Reqwest for the default blanket implementation ([#63], [#73])
 
 ### Changed
 
@@ -13,15 +17,31 @@
 
 ### Added
 
-- TLS support by default with Hyper ([#45])
-- Built-in json path assertions ([#34])
-- Built-in json schema assertion ([#48], [#50])
+- `Equality` json path assertions ([#34])
+- Built-in json schema assertion ([#9], [#48], [#50], [#51], [#55])
+- Extend json path assertions with `contains` and `does_not_contain` ([#40], [#75])
+- Support string literals for the `headers` built-in functions ([#33], [#78])
+- Built-in single header assertion ([#82])
+- Add optional cookie store to the http client ([#54], [#77])
+- Add static links checker ([#43])
 
-[#34]: /../../issues/34
-[#42]: /../../issues/42
-[#45]: /../../issues/45
-[#48]: /../../issues/48
-[#50]: /../../issues/50
+[#9]: /../../issues/9
+[#33]: /../../issues/33
+[#34]: /../../pull/34
+[#40]: /../../issues/40
+[#42]: /../../pull/42
+[#43]: /../../pull/43
+[#48]: /../../pull/48
+[#50]: /../../pull/50
+[#51]: /../../issues/51
+[#54]: /../../issues/54
+[#55]: /../../pull/55
+[#63]: /../../issues/63
+[#73]: /../../issues/73
+[#75]: /../../pull/75
+[#77]: /../../pull/77
+[#78]: /../../pull/78
+[#82]: /../../pull/82
 
 ## [0.4.0] - 2023-01-26
 
