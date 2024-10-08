@@ -30,8 +30,13 @@
 //! }
 
 mod body;
+mod header;
 mod headers;
 mod status;
 mod time;
 
-pub use self::{body::JsonBodyDsl, headers::HeadersDsl, status::*, time::TimeDsl};
+pub use self::body::JsonBodyDsl;
+pub use self::header::HeaderDsl;
+pub use self::headers::HeadersDsl;
+pub use self::status::*;
+pub use self::time::TimeDsl;

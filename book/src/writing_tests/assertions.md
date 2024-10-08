@@ -24,6 +24,7 @@ conditions, it's possible. Each assertion produces [logs](../logs.md).
 | part        | predicates                                   | types                                                   |
 |:------------|:---------------------------------------------|:--------------------------------------------------------|
 |headers      |is, is_not, contains, does_not_contain        |Vec<(HeaderName, HeaderValue)>, Vec<(&str, &str)>, HeaderMap                                                                                                              |
+|header       |is, is_not                                    | String, &str, HeaderValue                               |
 |status       |is, is_not, is_between                        |u16, StatusCode                                          |
 |json_body    |is, is_not, schema                            |String, &str, Value, `json!`, PathBuf                    |
 |json_path    |is, is_not, schema, contains, does_not_contain|String, &str, Value, `json!`, PathBuf                    |

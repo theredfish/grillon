@@ -121,3 +121,36 @@ async fn invalid_request_headers() -> Result<()> {
 
     Ok(())
 }
+
+#[tokio::test]
+async fn single_header_equality() -> Result<()> {
+    let mock_server = HttpMockServer::new();
+    let mock = mock_server.get_valid_user();
+
+    Grillon::new(mock_server.server.url("/").as_ref())?
+        .get("users/1")
+        .assert()
+        .await
+        .header("content-type", is("application/json"))
+        .header(
+            "content-type".to_string(),
+            is("application/json".to_string()),
+        )
+        .header(
+            CONTENT_TYPE,
+            is(HeaderValue::from_static("application/json")),
+        )
+        .header("content-type", is_not("application/html"))
+        .header(
+            "content-type".to_string(),
+            is_not("application/html".to_string()),
+        )
+        .header(
+            CONTENT_TYPE,
+            is_not(HeaderValue::from_static("application/html")),
+        );
+
+    mock.assert();
+
+    Ok(())
+}
