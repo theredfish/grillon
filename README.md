@@ -61,6 +61,7 @@ async fn end_to_end_test() -> Result<()> {
             }
         })))
         .json_path("$.id", is(json!(101)))
+        .header(CONTENT-TYPE, is("application/json"))
         .headers(contains(vec![
             (
                 CONTENT_TYPE,
