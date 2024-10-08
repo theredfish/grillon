@@ -9,10 +9,11 @@ use crate::{
     LogSettings,
 };
 
+// TODO: see to use the low-level types
 type HeadersVec = Vec<(HeaderName, HeaderValue)>;
-type HeaderStrVec = Vec<(&'static str, &'static str)>;
+type HeadersStrVec = Vec<(&'static str, &'static str)>;
 
-/// Http headers DSL to assert the headers of a response.
+/// Http header DSL to assert a specific header of the response.
 pub trait HeadersDsl<T> {
     /// Asserts the headers are strictly equal to the provided ones.
     fn is(&self, actual: T) -> Assertion<Headers>;
@@ -34,7 +35,7 @@ pub trait HeadersDsl<T> {
             Predicate::IsNot => self.is_not(actual).assert(log_settings),
             Predicate::Contains => self.contains(actual).assert(log_settings),
             Predicate::DoesNotContain => self.does_not_contain(actual).assert(log_settings),
-            _ => unimplemented!("Invalid predicate for the header DSL: {predicate}"),
+            _ => unimplemented!("Invalid predicate for the headers DSL: {predicate}"),
         }
     }
 }
@@ -75,7 +76,7 @@ impl HeadersDsl<HeaderMap> for HeadersVec {
     }
 }
 
-impl HeadersDsl<HeaderMap> for HeaderStrVec {
+impl HeadersDsl<HeaderMap> for HeadersStrVec {
     fn is(&self, actual: HeaderMap) -> Assertion<Headers> {
         actual.is_eq(self)
     }

@@ -42,17 +42,14 @@
 //!  }
 //! ```
 
-use crate::{
-    assertion::{Assertion, AssertionResult, Hand, UnprocessableReason},
-    dsl::{
-        http::*,
-        json_path::{JsonPathDsl, JsonPathResult},
-        Expression, Part,
-    },
-    grillon::LogSettings,
-    Response,
-};
-use http::{HeaderMap, StatusCode};
+use crate::assertion::{Assertion, AssertionResult, Hand, UnprocessableReason};
+use crate::dsl::http::*;
+use crate::dsl::json_path::{JsonPathDsl, JsonPathResult};
+use crate::dsl::{Expression, Part};
+use crate::grillon::LogSettings;
+use crate::Response;
+use http::HeaderValue;
+use http::{header::AsHeaderName, HeaderMap, StatusCode};
 use serde_json::Value;
 
 /// [`Assert`] uses an internal representation of the http response to assert
@@ -159,7 +156,7 @@ impl Assert {
                     predicate: expr.predicate,
                     left: Hand::Empty::<Value>,
                     right: Hand::Empty,
-                    result: AssertionResult::Unprocessable(UnprocessableReason::JsonBodyMissing),
+                    result: AssertionResult::Unprocessable(UnprocessableReason::MissingJsonBody),
                 };
                 assertion.assert(&self.log_settings);
 
@@ -188,7 +185,7 @@ impl Assert {
                     predicate: expr.predicate,
                     left: Hand::Empty::<Value>,
                     right: Hand::Empty,
-                    result: AssertionResult::Unprocessable(UnprocessableReason::JsonBodyMissing),
+                    result: AssertionResult::Unprocessable(UnprocessableReason::MissingJsonBody),
                 };
                 assertion.assert(&self.log_settings);
 
@@ -247,6 +244,35 @@ impl Assert {
             let _assertion = expr
                 .value
                 .eval(headers.clone(), expr.predicate, &self.log_settings);
+        }
+
+        self
+    }
+
+    /// Asserts a specific header of the response.
+    pub fn header<H, T>(self, header_name: H, expr: Expression<T>) -> Assert
+    where
+        H: AsHeaderName,
+        T: HeaderDsl<HeaderValue>,
+    {
+        if let Some(headers) = self.headers.clone() {
+            if let Some(actual_header_val) = headers.get(header_name) {
+                let _assertion = expr.value.eval(
+                    actual_header_val.clone(),
+                    expr.predicate,
+                    &self.log_settings,
+                );
+            } else {
+                // Handle missing header name
+                let assertion = Assertion {
+                    part: Part::Header,
+                    predicate: expr.predicate,
+                    left: Hand::Empty::<&str>,
+                    right: Hand::Empty,
+                    result: AssertionResult::Unprocessable(UnprocessableReason::MissingHeader),
+                };
+                assertion.assert(&self.log_settings);
+            }
         }
 
         self

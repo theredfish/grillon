@@ -42,6 +42,9 @@ pub mod types {
     /// An alias to manipulate an internal representation of headers as tuples
     /// of str.
     pub type HeaderStrTupleVec = Vec<(&'static str, &'static str)>;
+    /// An alias to manipulate an internal representation of a header as a
+    /// `String`.
+    pub type Header = String;
 }
 
 /// Represents left or right hands in an [`Assertion`].
@@ -98,13 +101,17 @@ pub enum UnprocessableReason {
     /// Unprocessable json path with the string representation of the path.
     InvalidJsonPath(String),
     /// Unprocessable json body because it's missing.
-    JsonBodyMissing,
+    MissingJsonBody,
+    /// Unprocessable header value because the correspond header key is missing.
+    MissingHeader,
     /// Unprocessable json schema.
     InvalidJsonSchema(JsonPointer, JsonPointer),
     /// Serialization failure.
     SerializationFailure(String),
     /// Invalid HTTP request headers.
     InvalidHttpRequestHeaders(String),
+    /// Invalid HTTP header value.
+    InvalidHeaderValue(String),
     /// If the HTTP request results in an error while sending request, redirect
     /// loop was detected or redirect limit was exhausted.
     HttpRequestFailure(String),
@@ -121,8 +128,11 @@ impl std::fmt::Display for UnprocessableReason {
             UnprocessableReason::InvalidJsonPath(message) => {
                 write!(f, "Unprocessable json path: {message}")
             }
-            UnprocessableReason::JsonBodyMissing => {
+            UnprocessableReason::MissingJsonBody => {
                 write!(f, "Unprocessable json body: missing")
+            }
+            UnprocessableReason::MissingHeader => {
+                write!(f, "Unprocessable header: header key is missing")
             }
             UnprocessableReason::InvalidJsonSchema(schema, instance) => {
                 write!(f, "Invalid json schema: {schema} => {instance}")
@@ -132,6 +142,9 @@ impl std::fmt::Display for UnprocessableReason {
             }
             UnprocessableReason::InvalidHttpRequestHeaders(details) => {
                 write!(f, "Invalid HTTP request headers: {details}")
+            }
+            UnprocessableReason::InvalidHeaderValue(details) => {
+                write!(f, "Invalid HTTP response header value: {details}")
             }
             UnprocessableReason::HttpRequestFailure(details) => {
                 write!(f, "Http request failure: {details}")

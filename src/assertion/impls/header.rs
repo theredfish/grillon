@@ -1,6 +1,8 @@
+use http::HeaderValue;
+
 use crate::assertion::traits::{Container, Equality};
-use crate::assertion::types::{HeaderStrTupleVec, HeaderTupleVec, Headers};
-use crate::assertion::{Assertion, AssertionResult, Hand};
+use crate::assertion::types::{Header, HeaderStrTupleVec, HeaderTupleVec, Headers};
+use crate::assertion::{Assertion, AssertionResult, Hand, UnprocessableReason};
 use crate::dsl::{Part, Predicate};
 use crate::header::HeaderMap;
 
@@ -11,6 +13,7 @@ pub fn from_header_tuple_vec(header_tuple_vec: &HeaderTupleVec) -> Headers {
         .map(|(header_name, header_value)| {
             (
                 header_name.to_string(),
+                // TODO: handle the unprocessable reason
                 header_value.to_str().unwrap().to_string(),
             )
         })
@@ -32,6 +35,7 @@ pub fn from_header_map(header_map: &HeaderMap) -> Headers {
         .map(|(header_name, header_value)| {
             (
                 header_name.to_string(),
+                // TODO: handle the unprocessable reason
                 header_value.to_str().unwrap().to_string(),
             )
         })
@@ -273,6 +277,216 @@ impl_container!(HeaderMap, HeaderMap, from_header_map);
 impl_container!(HeaderMap, HeaderTupleVec, from_header_tuple_vec);
 impl_container!(HeaderMap, HeaderStrTupleVec, from_header_str_tuple_vec);
 impl_container!(HeaderMap, Headers, from_headers);
+
+impl Equality<&str> for HeaderValue {
+    type Assertion = Assertion<Header>;
+
+    fn is_eq(&self, rhs: &&str) -> Self::Assertion {
+        let rhs = match HeaderValue::from_str(rhs) {
+            Ok(header_value) => header_value,
+            Err(err) => {
+                return Assertion {
+                    part: Part::Header,
+                    predicate: Predicate::Is,
+                    left: Hand::Empty,
+                    right: Hand::Empty,
+                    result: AssertionResult::Unprocessable(
+                        UnprocessableReason::InvalidHeaderValue(err.to_string()),
+                    ),
+                }
+            }
+        };
+
+        let result = self == rhs;
+
+        // lhs and rhs should already be valid header values and we shouldn't
+        // panic while transforming them to string.
+        let lhs = self
+            .to_str()
+            .expect("Lhs is an invalid header value")
+            .to_string();
+        let rhs = rhs
+            .to_str()
+            .expect("Rhs is an invalid header value")
+            .to_string();
+
+        Assertion {
+            predicate: Predicate::Is,
+            part: Part::Header,
+            left: Hand::Left(lhs),
+            right: Hand::Right(rhs),
+            result: result.into(),
+        }
+    }
+
+    fn is_ne(&self, rhs: &&str) -> Self::Assertion {
+        let rhs = match HeaderValue::from_str(rhs) {
+            Ok(header_value) => header_value,
+            Err(err) => {
+                return Assertion {
+                    part: Part::Header,
+                    predicate: Predicate::Is,
+                    left: Hand::Empty,
+                    right: Hand::Empty,
+                    result: AssertionResult::Unprocessable(
+                        UnprocessableReason::InvalidHeaderValue(err.to_string()),
+                    ),
+                }
+            }
+        };
+
+        let result = self != rhs;
+
+        // lhs and rhs should already be valid header values and we shouldn't
+        // panic while transforming them to string.
+        let lhs = self
+            .to_str()
+            .expect("Lhs is an invalid header value")
+            .to_string();
+        let rhs = rhs
+            .to_str()
+            .expect("Rhs is an invalid header value")
+            .to_string();
+
+        Assertion {
+            predicate: Predicate::IsNot,
+            part: Part::Header,
+            left: Hand::Left(lhs),
+            right: Hand::Right(rhs),
+            result: result.into(),
+        }
+    }
+}
+
+impl Equality<String> for HeaderValue {
+    type Assertion = Assertion<Header>;
+
+    fn is_eq(&self, rhs: &String) -> Self::Assertion {
+        let rhs = match HeaderValue::from_str(rhs) {
+            Ok(header_value) => header_value,
+            Err(err) => {
+                return Assertion {
+                    part: Part::Header,
+                    predicate: Predicate::Is,
+                    left: Hand::Empty,
+                    right: Hand::Empty,
+                    result: AssertionResult::Unprocessable(
+                        UnprocessableReason::InvalidHeaderValue(err.to_string()),
+                    ),
+                }
+            }
+        };
+
+        let result = self == rhs;
+
+        // lhs and rhs should already be valid header values and we shouldn't
+        // panic while transforming them to string.
+        let lhs = self
+            .to_str()
+            .expect("Lhs is an invalid header value")
+            .to_string();
+        let rhs = rhs
+            .to_str()
+            .expect("Rhs is an invalid header value")
+            .to_string();
+
+        Assertion {
+            predicate: Predicate::Is,
+            part: Part::Header,
+            left: Hand::Left(lhs),
+            right: Hand::Right(rhs),
+            result: result.into(),
+        }
+    }
+
+    fn is_ne(&self, rhs: &String) -> Self::Assertion {
+        let rhs = match HeaderValue::from_str(rhs) {
+            Ok(header_value) => header_value,
+            Err(err) => {
+                return Assertion {
+                    part: Part::Header,
+                    predicate: Predicate::Is,
+                    left: Hand::Empty,
+                    right: Hand::Empty,
+                    result: AssertionResult::Unprocessable(
+                        UnprocessableReason::InvalidHeaderValue(err.to_string()),
+                    ),
+                }
+            }
+        };
+
+        let result = self != rhs;
+
+        // lhs and rhs should already be valid header values and we shouldn't
+        // panic while transforming them to string.
+        let lhs = self
+            .to_str()
+            .expect("Lhs is an invalid header value")
+            .to_string();
+        let rhs = rhs
+            .to_str()
+            .expect("Rhs is an invalid header value")
+            .to_string();
+
+        Assertion {
+            predicate: Predicate::IsNot,
+            part: Part::Header,
+            left: Hand::Left(lhs),
+            right: Hand::Right(rhs),
+            result: result.into(),
+        }
+    }
+}
+
+impl Equality<HeaderValue> for HeaderValue {
+    type Assertion = Assertion<Header>;
+
+    fn is_eq(&self, rhs: &HeaderValue) -> Self::Assertion {
+        // lhs and rhs are already valid header values that we can convert to
+        // `String`.
+        let lhs = self
+            .to_str()
+            .expect("Lhs is an invalid header value")
+            .to_string();
+        let rhs = rhs
+            .to_str()
+            .expect("Rhs is an invalid header value")
+            .to_string();
+
+        let result = lhs == rhs;
+
+        Assertion {
+            predicate: Predicate::Is,
+            part: Part::Header,
+            left: Hand::Left(lhs.clone()),
+            right: Hand::Right(rhs.clone()),
+            result: result.into(),
+        }
+    }
+
+    fn is_ne(&self, rhs: &HeaderValue) -> Self::Assertion {
+        // lhs and rhs are already valid header values that we can convert to
+        // `String`.
+        let lhs = self
+            .to_str()
+            .expect("Lhs is an invalid header value")
+            .to_string();
+        let rhs = rhs
+            .to_str()
+            .expect("Rhs is an invalid header value")
+            .to_string();
+
+        let result = lhs != rhs;
+
+        Assertion {
+            predicate: Predicate::IsNot,
+            part: Part::Header,
+            left: Hand::Left(lhs.clone()),
+            right: Hand::Right(rhs.clone()),
+            result: result.into(),
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -807,6 +1021,78 @@ mod tests {
             });
 
             let assertion = header_map_stub().has_not(&headers_rhs);
+
+            assert_eq!(
+                json!(assertion),
+                expected_json,
+                "Serialized assertion is not equals to the expected json",
+            );
+        }
+
+        #[test]
+        fn it_serializes_header_value_is_str() {
+            let header_value = HeaderValue::from_static("application/json");
+            let header_value_str = header_value.to_str().unwrap();
+
+            let expected_json = json!({
+                "part": "header",
+                "predicate": "should be",
+                "left": header_value_str,
+                "right": header_value_str,
+                "result": "passed"
+            });
+
+            let assertion = header_value.is_eq(&"application/json");
+            let assertion_string = header_value.is_eq(&"application/json".to_string());
+
+            assert_eq!(
+                json!(assertion),
+                expected_json,
+                "Serialized assertion is not equals to the expected json",
+            );
+            assert_eq!(
+                json!(assertion_string),
+                expected_json,
+                "Serialized assertion is not equals to the expected json",
+            );
+        }
+
+        #[test]
+        fn it_serializes_header_value_is_header_value() {
+            let header_value = HeaderValue::from_static("application/json");
+            let header_value_str = header_value.to_str().unwrap();
+
+            let expected_json = json!({
+                "part": "header",
+                "predicate": "should be",
+                "left": header_value_str,
+                "right": header_value_str,
+                "result": "passed"
+            });
+
+            let assertion = header_value.is_eq(&HeaderValue::from_static("application/json"));
+
+            assert_eq!(
+                json!(assertion),
+                expected_json,
+                "Serialized assertion is not equals to the expected json",
+            );
+        }
+
+        #[test]
+        fn it_serializes_header_value_is_not_header_value() {
+            let header_value = HeaderValue::from_static("application/text");
+            let header_value_str = header_value.to_str().unwrap();
+
+            let expected_json = json!({
+                "part": "header",
+                "predicate": "should not be",
+                "left": header_value_str,
+                "right": "application/json",
+                "result": "passed"
+            });
+
+            let assertion = header_value.is_ne(&HeaderValue::from_static("application/json"));
 
             assert_eq!(
                 json!(assertion),
