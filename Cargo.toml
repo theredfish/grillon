@@ -1,6 +1,6 @@
 [package]
 name = "grillon"
-version = "0.5.0-alpha.1"
+version = "0.5.0-alpha.2"
 authors = ["theredfish <did.julian@gmail.com>"]
 description = "Grillon offers an elegant and natural way to approach API testing in Rust."
 repository = "https://github.com/theredfish/grillon"
