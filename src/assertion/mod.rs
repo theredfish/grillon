@@ -22,7 +22,6 @@ use crate::{
     dsl::{Part, Predicate},
     grillon::LogSettings,
 };
-use jsonschema::paths::JsonPointer;
 use serde::Serialize;
 use serde_json::{json, Value};
 use std::any::Any;
@@ -105,7 +104,7 @@ pub enum UnprocessableReason {
     /// Unprocessable header value because the correspond header key is missing.
     MissingHeader,
     /// Unprocessable json schema.
-    InvalidJsonSchema(JsonPointer, JsonPointer),
+    InvalidJsonSchema(String, String),
     /// Serialization failure.
     SerializationFailure(String),
     /// Invalid HTTP request headers.

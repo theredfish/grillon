@@ -12,20 +12,20 @@ include = ["/src", "LICENSE*", "README.md"]
 edition = "2021"
 
 [dependencies]
-serde = { version = "1.0.210", features = ["derive"] }
-serde_json = "1.0.128"
+serde = { version = "1.0.213", features = ["derive"] }
+serde_json = "1.0.132"
 http = "1.1.0"
 url = "2.5.2"
 futures = "0.3.31"
 strum = { version = "0.26.3", features = ["derive"] }
 strum_macros = "0.26.4"
-jsonpath-rust = "0.7.1"
-jsonschema = "0.20.0"
+jsonpath-rust = "0.7.2"
+jsonschema = "0.24.0"
 reqwest = { version = "0.12.8", features = ["json", "cookies"] }
-thiserror = "1.0.64"
+thiserror = "1.0.65"
 
 [dev-dependencies]
-tokio = { version = "1.40.0", features = ["macros"] }
+tokio = { version = "1.41.0", features = ["macros"] }
 httpmock = "0.7.0"
 async-trait = "0.1.83"
 test-case = "3.3.1"

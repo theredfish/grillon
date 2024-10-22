@@ -5,7 +5,7 @@ use crate::{
     },
     dsl::{Part, Predicate},
 };
-use jsonschema::{output::BasicOutput, Validator};
+use jsonschema::{output::BasicOutput, validator_for};
 use serde_json::Value;
 use std::{fs, path::PathBuf};
 
@@ -199,7 +199,7 @@ impl JsonSchema<Value> for Value {
     type Assertion = Assertion<Value>;
 
     fn matches_schema(&self, schema: &Value) -> Self::Assertion {
-        let schema = match Validator::new(schema) {
+        let schema = match validator_for(schema) {
             Ok(schema) => schema,
             Err(err) => {
                 return Assertion {
@@ -208,8 +208,8 @@ impl JsonSchema<Value> for Value {
                     left: Hand::Left(self.clone()),
                     right: Hand::Empty,
                     result: AssertionResult::Unprocessable(UnprocessableReason::InvalidJsonSchema(
-                        err.schema_path,
-                        err.instance_path,
+                        err.instance_path.to_string(),
+                        err.instance.to_string(),
                     )),
                 }
             }
@@ -650,16 +650,18 @@ mod tests {
                   "description": "Age in years",
                   "type": "string",
                   "minimum": 0,
-                  "required": true // Invalid JSON Schema additional property
+                  // Invalid JSON Schema additional property that should be an array
+                  // https://json-schema.org/draft/2020-12/draft-bhutton-json-schema-validation-00#rfc.section.6.5.3
+                  "required": true
                 }
               },
               "required": ["age"]
             });
 
-            let assertion = json!({"age": 12}).matches_schema(&schema);
+            let assertion = json!({"age": "12"}).matches_schema(&schema);
             let log = assertion.log();
             assert!(assertion.failed(), "{log}");
-            assert_eq!(log, "Invalid json schema: /properties/properties/additionalProperties/properties/required/type => /properties/age/required");
+            assert_eq!(log, "Invalid json schema: /properties/age/required => true");
         }
     }
 }
