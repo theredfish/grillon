@@ -115,7 +115,7 @@
                         <a href="../print.html" title="Print this book" aria-label="Print this book">
                             <i id="print-button" class="fa fa-print"></i>
                         </a>
-                        <a href="https://github.com/owlduty/grillon" title="Git repository" aria-label="Git repository">
+                        <a href="https://github.com/theredfish/grillon" title="Git repository" aria-label="Git repository">
                             <i id="git-repository-button" class="fa fa-github"></i>
                         </a>
 
@@ -171,6 +171,23 @@ further changes to the structure of the request when users want to run assertion
 <p>Refer to the <a href="./requests.html">Requests</a> chapter for more information about how to configure your
 requests. Note that at the moment Grillon only supports HTTP(s), but later we will extend the use
 for different protocols and frameworks such as gRPC or SSL.</p>
+<h3 id="store-cookies"><a class="header" href="#store-cookies">Store cookies</a></h3>
+<p>You can update your client to enable or disable the cookie store with <code>store_cookies</code>:</p>
+<pre><code class="language-rust">// If an http response contains `Set-Cookie` headers, then cookies will be saved for
+// subsequent http requests.
+let grillon = Grillon::new(&quot;https://server.com&quot;)?.store_cookies(true)?;
+
+grillon.post(&quot;auth&quot;).assert().await.headers(contains(vec![(
+    SET_COOKIE,
+    HeaderValue::from_static(&quot;SESSIONID=123; HttpOnly&quot;),
+)]));
+
+grillon
+    .get(&quot;authenticated/endpoint&quot;) // An endpoint where the session cookie `SESSIONID=123` is required.
+    .assert()
+    .await
+    .status(is_success());</code></pre>
+<p>The cookie store is disabled by default.</p>
 <h2 id="use-a-different-client"><a class="header" href="#use-a-different-client">Use a different client</a></h2>
 <p>When you want to use a different client to send your requests and handle the responses, you should
 use the internal http response representation to assert. For that you need to use the
