@@ -209,8 +209,8 @@ impl JsonSchema<Value> for JsonPathResult<'_, Value> {
                     left: Hand::Compound(Value::String(self.path.to_string()), self.value.clone()),
                     right: Hand::Empty,
                     result: AssertionResult::Unprocessable(UnprocessableReason::InvalidJsonSchema(
-                        err.schema_path,
-                        err.instance_path,
+                        err.schema_path.to_string(),
+                        err.instance_path.to_string(),
                     )),
                 }
             }
