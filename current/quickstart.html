@@ -153,7 +153,7 @@ named <code>create_posts.rs</code>.</p>
 <p>Add <code>grillon</code> to your development dependencies with <code>tokio</code>, as we need a runtime to run async
 functions in our test environement.</p>
 <pre><code class="language-toml">[dev-dependencies]
-grillon = &quot;0.5.0-alpha.1&quot;
+grillon = &quot;0.5.0&quot;
 tokio = { version = &quot;1&quot;, features = [&quot;macros&quot;] }
 </code></pre>
 <p>Our example will test the <code>/posts</code> endpoint of <code>jsonplaceholder.typicode.com</code>. We will send a json
@@ -164,9 +164,10 @@ payload and we will assert that our resource is correctly created with an accept
 <p>Create a new <code>create_posts.rs</code> file in <code>tests</code> and copy/paste the following example:</p>
 <pre><code class="language-rust noplaypen">use grillon::{dsl::*, dsl::http::*, json, Grillon, StatusCode, Result};
 use grillon::header::{HeaderValue, CONTENT_LENGTH, CONTENT_TYPE};
+use grillon::Assert;
 
 #[tokio::test]
-async fn create_posts_monitoring() -&gt; Result&lt;()&gt; {
+async fn end_to_end_test() -&gt; Result&lt;()&gt; {
     Grillon::new(&quot;https://jsonplaceholder.typicode.com&quot;)?
         .post(&quot;posts&quot;)
         .payload(json!({
@@ -178,29 +179,42 @@ async fn create_posts_monitoring() -&gt; Result&lt;()&gt; {
         .await
         .status(is_success())
         .status(is(201))
-        .response_time(is_less_than(500))
+        .response_time(is_less_than(700))
         .json_body(is(json!({
             &quot;id&quot;: 101,
         })))
+        .json_body(schema(json!({
+            &quot;properties&quot;: {
+                &quot;id&quot;: { &quot;type&quot;: &quot;number&quot; }
+            }
+        })))
+        .json_path(&quot;$.id&quot;, is(json!(101)))
+        .header(CONTENT_TYPE, is(&quot;application/json; charset=utf-8&quot;))
         .headers(contains(vec![
-        (
-            CONTENT_TYPE,
-            HeaderValue::from_static(&quot;application/json; charset=utf-8&quot;),
-        ),
-        (
-            CONTENT_LENGTH, HeaderValue::from_static(&quot;15&quot;)
-        )]))
+            (
+                CONTENT_TYPE,
+                HeaderValue::from_static(&quot;application/json; charset=utf-8&quot;),
+            ),
+            (CONTENT_LENGTH, HeaderValue::from_static(&quot;15&quot;)),
+        ]))
         .assert_fn(|assert| {
-            assert!(!assert.headers.is_empty());
-            assert!(assert.status == StatusCode::CREATED);
-            assert!(assert.json.is_some());
+            let Assert {
+                headers,
+                status,
+                json,
+                ..
+            } = assert.clone();
 
-            // only displayed with --nocapture option
+            assert!(!headers.unwrap().is_empty());
+            assert!(status.unwrap() == StatusCode::CREATED);
+            assert!(json.is_some());
+
             println!(&quot;Json response : {:#?}&quot;, assert.json);
         });
 
     Ok(())
-}</code></pre>
+}
+</code></pre>
 <h2 id="run-the-test"><a class="header" href="#run-the-test">Run the test</a></h2>
 <pre><code class="language-bash">cargo test --test create_posts -- --nocapture
 </code></pre>
