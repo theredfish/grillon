@@ -1,11 +1,11 @@
 # `grillon` changelog
 
-## [v0.5.0-alpha.2] - 2024-10-22
+## [v0.5.0] - 2024-10-27
 
-- [Diff](/../../compare/v0.4.0...v0.5.0-alpha.2)
+- [Diff](/../../compare/v0.4.0...v0.5.0)
 - [Milestone](/../../milestone/3)
 
-[v0.5.0-alpha.2]: /../../tree/v0.5.0-alpha.2
+[v0.5.0]: /../../tree/v0.5.0
 
 ### Breaking Changes
 

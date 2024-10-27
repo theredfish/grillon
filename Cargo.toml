@@ -1,6 +1,6 @@
 [package]
 name = "grillon"
-version = "0.5.0-alpha.2"
+version = "0.5.0"
 authors = ["theredfish <did.julian@gmail.com>"]
 description = "Grillon offers an elegant and natural way to approach API testing in Rust."
 repository = "https://github.com/theredfish/grillon"
@@ -20,7 +20,7 @@ futures = "0.3.31"
 strum = { version = "0.26.3", features = ["derive"] }
 strum_macros = "0.26.4"
 jsonpath-rust = "0.7.2"
-jsonschema = "0.24.0"
+jsonschema = "0.26.0"
 reqwest = { version = "0.12.8", features = ["json", "cookies"] }
 thiserror = "1.0.65"
 

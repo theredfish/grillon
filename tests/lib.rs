@@ -1,5 +1,5 @@
 use grillon::{
-    dsl::is,
+    dsl::*,
     header::{HeaderValue, CONTENT_TYPE},
     json, Grillon, Result, StatusCode,
 };

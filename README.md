@@ -28,7 +28,7 @@ Add `grillon` to `Cargo.toml`
 
 ```toml
 [dev-dependencies]
-grillon = "0.5.0-alpha.1"
+grillon = "0.5.0"
 tokio = { version = "1", features = ["macros"] }
 ```
 
@@ -37,6 +37,7 @@ Then use `grillon` :
 ```rust
 use grillon::{dsl::*, dsl::http::*, json, Grillon, StatusCode, Result};
 use grillon::header::{HeaderValue, CONTENT_LENGTH, CONTENT_TYPE};
+use grillon::Assert;
 
 #[tokio::test]
 async fn end_to_end_test() -> Result<()> {
@@ -61,7 +62,7 @@ async fn end_to_end_test() -> Result<()> {
             }
         })))
         .json_path("$.id", is(json!(101)))
-        .header(CONTENT-TYPE, is("application/json"))
+        .header(CONTENT_TYPE, is("application/json; charset=utf-8"))
         .headers(contains(vec![
             (
                 CONTENT_TYPE,
@@ -70,13 +71,21 @@ async fn end_to_end_test() -> Result<()> {
             (CONTENT_LENGTH, HeaderValue::from_static("15")),
         ]))
         .assert_fn(|assert| {
-            assert!(!assert.headers.is_empty());
-            assert!(assert.status == StatusCode::CREATED);
-            assert!(assert.json.is_some());
+            let Assert {
+                headers,
+                status,
+                json,
+                ..
+            } = assert.clone();
+
+            assert!(!headers.unwrap().is_empty());
+            assert!(status.unwrap() == StatusCode::CREATED);
+            assert!(json.is_some());
 
             println!("Json response : {:#?}", assert.json);
         });
 
     Ok(())
 }
+
 ```
