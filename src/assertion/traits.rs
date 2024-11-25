@@ -52,3 +52,15 @@ pub trait JsonSchema<T: ?Sized> {
     /// Asserts that the json value matches the given schema.
     fn matches_schema(&self, other: &T) -> Self::Assertion;
 }
+
+/// Trait to test if a json value matches the regex.
+pub trait Matches<T: ?Sized> {
+    /// The resulting assertion after applying the match test.
+    type Assertion;
+
+    /// Asserts that the json value matches the given regex.
+    fn is_match(&self, other: &T) -> Self::Assertion;
+
+    /// Asserts that the json value doesn't match the given regex.
+    fn is_not_match(&self, other: &T) -> Self::Assertion;
+}

@@ -1,12 +1,13 @@
 use crate::{
     assertion::{
-        traits::{Container, Equality, JsonSchema},
+        traits::{Container, Equality, JsonSchema, Matches},
         Assertion, AssertionResult, Hand, UnprocessableReason,
     },
     dsl::{json_path::JsonPathResult, Part, Predicate},
 };
 use jsonschema::{output::BasicOutput, Validator};
-use serde_json::Value;
+use regex::Regex;
+use serde_json::{json, Value};
 use std::{fs, path::PathBuf};
 
 impl Equality<Value> for JsonPathResult<'_, Value> {
@@ -521,6 +522,70 @@ impl Container<PathBuf> for JsonPathResult<'_, Value> {
     }
 }
 
+impl Matches<str> for JsonPathResult<'_, Value> {
+    type Assertion = Assertion<Value>;
+
+    fn is_match(&self, re: &str) -> Self::Assertion {
+        // TODO handle exception bad regex
+        // TODO add impl specific to regex to avoid PathBuf
+        // TODO check for Json::Null: could it be expected via Regex?
+        let regex = Regex::new(re).unwrap();
+        let result = match &self.value {
+            Value::Array(items) => {
+                let mut is_matching = true;
+                for item in items {
+                    if !regex.is_match(item.as_str().unwrap()) {
+                        is_matching = false;
+                        break;
+                    }
+                }
+
+                is_matching
+            }
+            Value::Null => false,
+            _ => regex.is_match(self.value.to_string().as_str()),
+        };
+
+        Assertion {
+            predicate: Predicate::Matches,
+            part: Part::JsonPath,
+            left: Hand::Compound(Value::String(self.path.to_string()), self.value.clone()),
+            right: Hand::Right(json!(re)),
+            result: result.into(),
+        }
+    }
+
+    fn is_not_match(&self, re: &str) -> Self::Assertion {
+        // TODO handle exception bad regex
+        // TODO add impl specific to regex to avoid PathBuf
+        // TODO check for Json::Null: could it be expected via Regex?
+        let regex = Regex::new(re).unwrap();
+        let result = match &self.value {
+            Value::Array(items) => {
+                let mut is_matching = true;
+                for item in items {
+                    if regex.is_match(item.as_str().unwrap()) {
+                        is_matching = false;
+                        break;
+                    }
+                }
+
+                is_matching
+            }
+            Value::Null => false,
+            _ => !regex.is_match(self.value.to_string().as_str()),
+        };
+
+        Assertion {
+            predicate: Predicate::Matches,
+            part: Part::JsonPath,
+            left: Hand::Compound(Value::String(self.path.to_string()), self.value.clone()),
+            right: Hand::Right(json!(re)),
+            result: result.into(),
+        }
+    }
+}
+
 /// Make sure the given `Value` will be a `Value::Array` variant
 /// to compare with a `JsonPathResult`; a wrapper around the result
 /// returned by the jsonpath library.
@@ -991,12 +1056,11 @@ mod tests {
     }
 
     mod has_or_has_not {
-        use std::path::PathBuf;
-
         use super::{json_stub, JsonPathResult};
         use crate::assertion::traits::Container;
         use jsonpath_rust::JsonPathQuery;
         use serde_json::json;
+        use std::path::PathBuf;
 
         #[test]
         fn impl_has_nested_json() {
@@ -1129,6 +1193,46 @@ mod tests {
 
             let assertion = jsonpath_result.has_not(&json_file);
             assert!(assertion.passed(), "{}", assertion.log());
+        }
+    }
+
+    mod matches {
+        use super::{json_stub, JsonPathResult};
+        use crate::assertion::traits::Matches;
+        use jsonpath_rust::JsonPathQuery;
+        use serde_json::json;
+
+        #[test]
+        fn impl_matches() {
+            let json = json!({
+                "users": [
+                    { "name": "Isaac", "id": "student-001" },
+                    { "name": "Rayne", "id": "student-abc" },
+                ]
+            });
+
+            let path_user0 = "$.users[0].id";
+            let value_user0 = json.clone().path(path_user0).unwrap();
+            let jsonpath_result0 = JsonPathResult {
+                path: path_user0,
+                value: value_user0,
+            };
+
+            let path_user1 = "$.users[1].id";
+            let value_user1 = json.path(path_user1).unwrap();
+            let jsonpath_result1 = JsonPathResult {
+                path: path_user1,
+                value: value_user1,
+            };
+
+            let should_match = jsonpath_result0.is_match(r"student-\d+");
+            assert!(should_match.passed(), "{}", should_match.log());
+
+            let should_not_match = jsonpath_result1.is_not_match(r"student-\d+");
+            assert!(should_not_match.passed(), "{}", should_not_match.log());
+
+            let should_match_failure = jsonpath_result1.is_match(r"student-\d+");
+            assert!(should_match_failure.failed(), "{}", should_not_match.log());
         }
     }
 }

@@ -5,7 +5,9 @@ use crate::{
         traits::{Container, Equality, JsonSchema},
         Assertion,
     },
-    dsl::expression::Predicate::{self, Contains, DoesNotContain, Is, IsNot, Schema},
+    dsl::expression::Predicate::{
+        self, Contains, DoesNotContain, DoesNotMatch, Is, IsNot, Matches, Schema,
+    },
     LogSettings,
 };
 use serde::{Deserialize, Serialize};
@@ -44,6 +46,8 @@ pub trait JsonPathDsl<T> {
     fn contains(&self, jsonpath_res: JsonPathResult<'_, T>) -> Assertion<Value>;
     /// Asserts that the json path value does not contain the provided value.
     fn does_not_contain(&self, jsonpath_res: JsonPathResult<'_, T>) -> Assertion<Value>;
+    // fn matches(&self, jsonpath_res: JsonPathResult<'_, T>) -> Assertion<Value>;
+    // fn does_not_match(&self, jsonpath_res: JsonPathResult<'_, T>) -> Assertion<Value>;
     /// Evaluates the json body assertion to run based on the [`Predicate`].
     fn eval(
         &self,
@@ -57,6 +61,8 @@ pub trait JsonPathDsl<T> {
             Schema => self.schema(jsonpath_res).assert(log_settings),
             Contains => self.contains(jsonpath_res).assert(log_settings),
             DoesNotContain => self.does_not_contain(jsonpath_res).assert(log_settings),
+            // Matches => self.matches(jsonpath_res).assert(log_settings),
+            // DoesNotMatch => self.does_not_match(jsonpath_res).assert(log_settings),
             _ => unimplemented!("Invalid predicate for the json path DSL: {predicate}"),
         }
     }

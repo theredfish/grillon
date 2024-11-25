@@ -23,6 +23,7 @@ jsonpath-rust = "0.7.2"
 jsonschema = "0.26.0"
 reqwest = { version = "0.12.8", features = ["json", "cookies"] }
 thiserror = "2.0.3"
+regex = "1.11.1"
 
 [dev-dependencies]
 tokio = { version = "1.41.0", features = ["macros"] }
