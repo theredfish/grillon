@@ -138,7 +138,8 @@ async fn json_path_matches() -> Result<()> {
         .assert()
         .await
         .json_path("$.name", matches("Isa+c"))
-        .json_path("$.name", matches(r"Isa[a-z]{2}"));
+        .json_path("$.name", matches(r"Isa[a-z]{2}"))
+        .json_path("$.name", matches("Isaac"));
 
     mock.assert();
 
@@ -173,6 +174,23 @@ async fn json_path_with_invalid_regex_pattern() {
         .assert()
         .await
         .json_path("$.name", does_not_match(r"\"));
+
+    mock.assert_hits(0);
+}
+
+#[tokio::test]
+#[should_panic]
+async fn json_path_regex_fails_with_null_value() {
+    let mock_server: HttpMockServer = HttpMockServer::new();
+    let mock = mock_server.get_valid_user();
+
+    Grillon::new(&mock_server.server.url("/"))
+        .unwrap()
+        .get("users/1")
+        .assert()
+        .await
+        // note the importance of the double quotes to get a valid json `Value`
+        .json_path("$.unknown", matches(r#""Isaac""#));
 
     mock.assert_hits(0);
 }

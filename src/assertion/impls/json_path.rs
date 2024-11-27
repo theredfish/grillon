@@ -1256,5 +1256,32 @@ mod tests {
             let should_match_failure = jsonpath_result1.is_match(r"student-\d+");
             assert!(should_match_failure.failed(), "{}", should_not_match.log());
         }
+
+        #[test]
+        fn impl_matches_null() {
+            let jsonpath_result_null_str = JsonPathResult {
+                path: "$.users[1].unknown",
+                value: json!("null"),
+            };
+
+            let jsonpath_result_null_value = JsonPathResult {
+                path: "$.users[1].unknown",
+                value: json!(null),
+            };
+
+            let should_match_null_str = jsonpath_result_null_str.is_match("null");
+            assert!(
+                should_match_null_str.passed(),
+                "{}",
+                should_match_null_str.log()
+            );
+
+            let should_fail_when_matching_null_path = jsonpath_result_null_value.is_match("Isaac");
+            assert!(
+                should_fail_when_matching_null_path.failed(),
+                "{}",
+                should_fail_when_matching_null_path.log()
+            );
+        }
     }
 }
