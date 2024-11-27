@@ -1,12 +1,13 @@
 use crate::{
     assertion::{
-        traits::{Container, Equality, JsonSchema},
+        traits::{Container, Equality, JsonSchema, Matching},
         Assertion, AssertionResult, Hand, UnprocessableReason,
     },
     dsl::{json_path::JsonPathResult, Part, Predicate},
 };
 use jsonschema::{output::BasicOutput, Validator};
-use serde_json::Value;
+use regex::Regex;
+use serde_json::{json, Value};
 use std::{fs, path::PathBuf};
 
 impl Equality<Value> for JsonPathResult<'_, Value> {
@@ -521,6 +522,92 @@ impl Container<PathBuf> for JsonPathResult<'_, Value> {
     }
 }
 
+impl Matching<str> for JsonPathResult<'_, Value> {
+    type Assertion = Assertion<Value>;
+
+    fn is_match(&self, re: &str) -> Self::Assertion {
+        let regex = match Regex::new(re) {
+            Ok(regex) => regex,
+            Err(_) => {
+                return Assertion {
+                    predicate: Predicate::Matches,
+                    part: Part::JsonPath,
+                    left: Hand::Empty,
+                    right: Hand::Empty,
+                    result: AssertionResult::Unprocessable(UnprocessableReason::InvalidRegex(
+                        re.to_string(),
+                    )),
+                }
+            }
+        };
+
+        let result = match &self.value {
+            Value::Array(items) => {
+                let mut is_matching = true;
+                for item in items {
+                    if !regex.is_match(&item.to_string()) {
+                        is_matching = false;
+                        break;
+                    }
+                }
+
+                is_matching
+            }
+            Value::Null => false,
+            _ => regex.is_match(&self.value.to_string()),
+        };
+
+        Assertion {
+            predicate: Predicate::Matches,
+            part: Part::JsonPath,
+            left: Hand::Compound(Value::String(self.path.to_string()), self.value.clone()),
+            right: Hand::Right(json!(re)),
+            result: result.into(),
+        }
+    }
+
+    fn is_not_match(&self, re: &str) -> Self::Assertion {
+        let regex = match Regex::new(re) {
+            Ok(regex) => regex,
+            Err(_) => {
+                return Assertion {
+                    predicate: Predicate::DoesNotMatch,
+                    part: Part::JsonPath,
+                    left: Hand::Empty,
+                    right: Hand::Empty,
+                    result: AssertionResult::Unprocessable(UnprocessableReason::InvalidRegex(
+                        re.to_string(),
+                    )),
+                }
+            }
+        };
+
+        let result = match &self.value {
+            Value::Array(items) => {
+                let mut is_matching = true;
+                for item in items {
+                    if regex.is_match(&item.to_string()) {
+                        is_matching = false;
+                        break;
+                    }
+                }
+
+                is_matching
+            }
+            Value::Null => false,
+            _ => !regex.is_match(&self.value.to_string()),
+        };
+
+        Assertion {
+            predicate: Predicate::Matches,
+            part: Part::JsonPath,
+            left: Hand::Compound(Value::String(self.path.to_string()), self.value.clone()),
+            right: Hand::Right(json!(re)),
+            result: result.into(),
+        }
+    }
+}
+
 /// Make sure the given `Value` will be a `Value::Array` variant
 /// to compare with a `JsonPathResult`; a wrapper around the result
 /// returned by the jsonpath library.
@@ -991,12 +1078,11 @@ mod tests {
     }
 
     mod has_or_has_not {
-        use std::path::PathBuf;
-
         use super::{json_stub, JsonPathResult};
         use crate::assertion::traits::Container;
         use jsonpath_rust::JsonPathQuery;
         use serde_json::json;
+        use std::path::PathBuf;
 
         #[test]
         fn impl_has_nested_json() {
@@ -1129,6 +1215,73 @@ mod tests {
 
             let assertion = jsonpath_result.has_not(&json_file);
             assert!(assertion.passed(), "{}", assertion.log());
+        }
+    }
+
+    mod matches {
+        use super::JsonPathResult;
+        use crate::assertion::traits::Matching;
+        use jsonpath_rust::JsonPathQuery;
+        use serde_json::json;
+
+        #[test]
+        fn impl_matches() {
+            let json = json!({
+                "users": [
+                    { "name": "Isaac", "id": "student-001" },
+                    { "name": "Rayne", "id": "student-abc" },
+                ]
+            });
+
+            let path_user0 = "$.users[0].id";
+            let value_user0 = json.clone().path(path_user0).unwrap();
+            let jsonpath_result0 = JsonPathResult {
+                path: path_user0,
+                value: value_user0,
+            };
+
+            let path_user1 = "$.users[1].id";
+            let value_user1 = json.path(path_user1).unwrap();
+            let jsonpath_result1 = JsonPathResult {
+                path: path_user1,
+                value: value_user1,
+            };
+
+            let should_match = jsonpath_result0.is_match(r"student-\d+");
+            assert!(should_match.passed(), "{}", should_match.log());
+
+            let should_not_match = jsonpath_result1.is_not_match(r"student-\d+");
+            assert!(should_not_match.passed(), "{}", should_not_match.log());
+
+            let should_match_failure = jsonpath_result1.is_match(r"student-\d+");
+            assert!(should_match_failure.failed(), "{}", should_not_match.log());
+        }
+
+        #[test]
+        fn impl_matches_null() {
+            let jsonpath_result_null_str = JsonPathResult {
+                path: "$.users[1].unknown",
+                value: json!("null"),
+            };
+
+            let jsonpath_result_null_value = JsonPathResult {
+                path: "$.users[1].unknown",
+                value: json!(null),
+            };
+
+            let should_match_null_str = jsonpath_result_null_str.is_match("null");
+            assert!(
+                should_match_null_str.passed(),
+                "{}",
+                should_match_null_str.log()
+            );
+
+            let should_fail_when_matching_null_path = jsonpath_result_null_value.is_match("Isaac");
+            assert!(
+                should_fail_when_matching_null_path.failed(),
+                "{}",
+                should_fail_when_matching_null_path.log()
+            );
         }
     }
 }

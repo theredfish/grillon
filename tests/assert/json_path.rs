@@ -1,6 +1,6 @@
 use crate::HttpMockServer;
 use grillon::{
-    dsl::{contains, does_not_contain, is, is_not},
+    dsl::{contains, does_not_contain, does_not_match, is, is_not, matches},
     json, Grillon, Result,
 };
 
@@ -126,4 +126,71 @@ async fn json_path_does_not_contain() -> Result<()> {
     mock.assert();
 
     Ok(())
+}
+
+#[tokio::test]
+async fn json_path_matches() -> Result<()> {
+    let mock_server = HttpMockServer::new();
+    let mock = mock_server.get_valid_user();
+
+    Grillon::new(&mock_server.server.url("/"))?
+        .get("users/1")
+        .assert()
+        .await
+        .json_path("$.name", matches("Isa+c"))
+        .json_path("$.name", matches(r"Isa[a-z]{2}"))
+        .json_path("$.name", matches("Isaac"));
+
+    mock.assert();
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn json_path_does_not_match() -> Result<()> {
+    let mock_server = HttpMockServer::new();
+    let mock = mock_server.get_valid_user();
+
+    Grillon::new(&mock_server.server.url("/"))?
+        .get("users/1")
+        .assert()
+        .await
+        .json_path("$.name", does_not_match("^Isa$"));
+
+    mock.assert();
+
+    Ok(())
+}
+
+#[tokio::test]
+#[should_panic]
+async fn json_path_with_invalid_regex_pattern() {
+    let mock_server: HttpMockServer = HttpMockServer::new();
+    let mock = mock_server.get_valid_user();
+
+    Grillon::new(&mock_server.server.url("/"))
+        .unwrap()
+        .get("users/1")
+        .assert()
+        .await
+        .json_path("$.name", does_not_match(r"\"));
+
+    mock.assert_hits(0);
+}
+
+#[tokio::test]
+#[should_panic]
+async fn json_path_regex_fails_with_null_value() {
+    let mock_server: HttpMockServer = HttpMockServer::new();
+    let mock = mock_server.get_valid_user();
+
+    Grillon::new(&mock_server.server.url("/"))
+        .unwrap()
+        .get("users/1")
+        .assert()
+        .await
+        // note the importance of the double quotes to get a valid json `Value`
+        .json_path("$.unknown", matches(r#""Isaac""#));
+
+    mock.assert_hits(0);
 }

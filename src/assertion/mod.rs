@@ -111,6 +111,8 @@ pub enum UnprocessableReason {
     InvalidHttpRequestHeaders(String),
     /// Invalid HTTP header value.
     InvalidHeaderValue(String),
+    /// Invalid regex pattern.
+    InvalidRegex(String),
     /// If the HTTP request results in an error while sending request, redirect
     /// loop was detected or redirect limit was exhausted.
     HttpRequestFailure(String),
@@ -144,6 +146,9 @@ impl std::fmt::Display for UnprocessableReason {
             }
             UnprocessableReason::InvalidHeaderValue(details) => {
                 write!(f, "Invalid HTTP response header value: {details}")
+            }
+            UnprocessableReason::InvalidRegex(regex) => {
+                write!(f, "Invalid regex pattern: {regex}")
             }
             UnprocessableReason::HttpRequestFailure(details) => {
                 write!(f, "Http request failure: {details}")
