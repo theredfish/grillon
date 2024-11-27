@@ -63,6 +63,10 @@ pub struct Range<T> {
     pub right: T,
 }
 
+/// Represents a regex wrapper.
+#[derive(Deserialize, Debug, PartialEq, Eq)]
+pub struct RegexWrapper<T>(pub T);
+
 /// Represents an expected `value` associated to a [`Predicate`] to run against
 /// another `value`.
 ///
@@ -105,6 +109,22 @@ pub fn is_between<T>(min: T, max: T) -> Expression<Range<T>> {
     }
 }
 
+/// Creates an expression to assert the actual value matches the regex.
+pub fn matches<T>(re: T) -> Expression<RegexWrapper<T>> {
+    Expression {
+        predicate: Predicate::Matches,
+        value: RegexWrapper(re),
+    }
+}
+
+/// Creates an expression to assert the actual value doesn't match the regex.
+pub fn does_not_match<T>(re: T) -> Expression<RegexWrapper<T>> {
+    Expression {
+        predicate: Predicate::DoesNotMatch,
+        value: RegexWrapper(re),
+    }
+}
+
 predicate!(
     /// Creates an expression to assert that the actual value is strictly equal to the expected one.
     is,
@@ -124,16 +144,6 @@ predicate!(
     /// Creates an expression to assert that the actual value does not contain the expected one.
     does_not_contain,
     Predicate::DoesNotContain
-);
-predicate!(
-    /// Creates an expression to assert that the actual value matches the regex.
-    matches,
-    Predicate::Matches
-);
-predicate!(
-    /// Creates an expression to assert that the actual value does not match the regex.
-    does_not_match,
-    Predicate::DoesNotMatch
 );
 predicate!(
     /// Creates an expression to assert that the actual value is inferior to the provided value.

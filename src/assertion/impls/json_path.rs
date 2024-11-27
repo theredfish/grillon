@@ -1,6 +1,6 @@
 use crate::{
     assertion::{
-        traits::{Container, Equality, JsonSchema, Matches},
+        traits::{Container, Equality, JsonSchema, Matching},
         Assertion, AssertionResult, Hand, UnprocessableReason,
     },
     dsl::{json_path::JsonPathResult, Part, Predicate},
@@ -522,7 +522,7 @@ impl Container<PathBuf> for JsonPathResult<'_, Value> {
     }
 }
 
-impl Matches<str> for JsonPathResult<'_, Value> {
+impl Matching<str> for JsonPathResult<'_, Value> {
     type Assertion = Assertion<Value>;
 
     fn is_match(&self, re: &str) -> Self::Assertion {
@@ -1197,8 +1197,8 @@ mod tests {
     }
 
     mod matches {
-        use super::{json_stub, JsonPathResult};
-        use crate::assertion::traits::Matches;
+        use super::JsonPathResult;
+        use crate::assertion::traits::Matching;
         use jsonpath_rust::JsonPathQuery;
         use serde_json::json;
 

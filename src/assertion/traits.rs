@@ -54,7 +54,7 @@ pub trait JsonSchema<T: ?Sized> {
 }
 
 /// Trait to test if a json value matches the regex.
-pub trait Matches<T: ?Sized> {
+pub trait Matching<T: ?Sized> {
     /// The resulting assertion after applying the match test.
     type Assertion;
 
