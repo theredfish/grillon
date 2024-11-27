@@ -27,7 +27,7 @@ conditions, it's possible. Each assertion produces [logs](../logs.md).
 |header       |is, is_not                                    | String, &str, HeaderValue                               |
 |status       |is, is_not, is_between                        |u16, StatusCode                                          |
 |json_body    |is, is_not, schema                            |String, &str, Value, `json!`, PathBuf                    |
-|json_path    |is, is_not, schema, contains, does_not_contain|String, &str, Value, `json!`, PathBuf                    |
+|json_path    |is, is_not, schema, contains, does_not_contain, matches, does_not_match|String, &str, Value, `json!`, PathBuf                                                                                                                |
 |response_time|is_less_than                                  |u64                                                      |
 
 ### Note about `json_path`
