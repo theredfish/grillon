@@ -545,7 +545,7 @@ impl Matching<str> for JsonPathResult<'_, Value> {
             Value::Array(items) => {
                 let mut is_matching = true;
                 for item in items {
-                    if !regex.is_match(item.as_str().unwrap()) {
+                    if !regex.is_match(&item.to_string()) {
                         is_matching = false;
                         break;
                     }
@@ -554,7 +554,7 @@ impl Matching<str> for JsonPathResult<'_, Value> {
                 is_matching
             }
             Value::Null => false,
-            _ => regex.is_match(self.value.to_string().as_str()),
+            _ => regex.is_match(&self.value.to_string()),
         };
 
         Assertion {
@@ -586,7 +586,7 @@ impl Matching<str> for JsonPathResult<'_, Value> {
             Value::Array(items) => {
                 let mut is_matching = true;
                 for item in items {
-                    if regex.is_match(item.as_str().unwrap()) {
+                    if regex.is_match(&item.to_string()) {
                         is_matching = false;
                         break;
                     }
@@ -595,7 +595,7 @@ impl Matching<str> for JsonPathResult<'_, Value> {
                 is_matching
             }
             Value::Null => false,
-            _ => !regex.is_match(self.value.to_string().as_str()),
+            _ => !regex.is_match(&self.value.to_string()),
         };
 
         Assertion {
