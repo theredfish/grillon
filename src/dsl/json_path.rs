@@ -146,7 +146,7 @@ impl JsonPathDsl<Value> for RegexWrapper<&str> {
         match predicate {
             Matches => self.matches(jsonpath_res).assert(log_settings),
             DoesNotMatch => self.does_not_match(jsonpath_res).assert(log_settings),
-            _ => unimplemented!("[TEST] Invalid predicate for the json path DSL: {predicate}"),
+            _ => unimplemented!("Invalid predicate for the json path DSL: {predicate}"),
         }
     }
 }

@@ -1,6 +1,6 @@
 use crate::HttpMockServer;
 use grillon::{
-    dsl::{contains, does_not_contain, is, is_not, matches},
+    dsl::{contains, does_not_contain, does_not_match, is, is_not, matches},
     json, Grillon, Result,
 };
 
@@ -154,9 +154,25 @@ async fn json_path_does_not_match() -> Result<()> {
         .get("users/1")
         .assert()
         .await
-        .json_path("$.name", matches("Isa"));
+        .json_path("$.name", does_not_match("^Isa$"));
 
     mock.assert();
 
     Ok(())
+}
+
+#[tokio::test]
+#[should_panic]
+async fn json_path_with_invalid_regex_pattern() {
+    let mock_server: HttpMockServer = HttpMockServer::new();
+    let mock = mock_server.get_valid_user();
+
+    Grillon::new(&mock_server.server.url("/"))
+        .unwrap()
+        .get("users/1")
+        .assert()
+        .await
+        .json_path("$.name", does_not_match(r"\"));
+
+    mock.assert_hits(0);
 }

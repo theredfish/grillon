@@ -526,10 +526,21 @@ impl Matching<str> for JsonPathResult<'_, Value> {
     type Assertion = Assertion<Value>;
 
     fn is_match(&self, re: &str) -> Self::Assertion {
-        // TODO handle exception bad regex
-        // TODO add impl specific to regex to avoid PathBuf
-        // TODO check for Json::Null: could it be expected via Regex?
-        let regex = Regex::new(re).unwrap();
+        let regex = match Regex::new(re) {
+            Ok(regex) => regex,
+            Err(_) => {
+                return Assertion {
+                    predicate: Predicate::Matches,
+                    part: Part::JsonPath,
+                    left: Hand::Empty,
+                    right: Hand::Empty,
+                    result: AssertionResult::Unprocessable(UnprocessableReason::InvalidRegex(
+                        re.to_string(),
+                    )),
+                }
+            }
+        };
+
         let result = match &self.value {
             Value::Array(items) => {
                 let mut is_matching = true;
@@ -556,10 +567,21 @@ impl Matching<str> for JsonPathResult<'_, Value> {
     }
 
     fn is_not_match(&self, re: &str) -> Self::Assertion {
-        // TODO handle exception bad regex
-        // TODO add impl specific to regex to avoid PathBuf
-        // TODO check for Json::Null: could it be expected via Regex?
-        let regex = Regex::new(re).unwrap();
+        let regex = match Regex::new(re) {
+            Ok(regex) => regex,
+            Err(_) => {
+                return Assertion {
+                    predicate: Predicate::DoesNotMatch,
+                    part: Part::JsonPath,
+                    left: Hand::Empty,
+                    right: Hand::Empty,
+                    result: AssertionResult::Unprocessable(UnprocessableReason::InvalidRegex(
+                        re.to_string(),
+                    )),
+                }
+            }
+        };
+
         let result = match &self.value {
             Value::Array(items) => {
                 let mut is_matching = true;
