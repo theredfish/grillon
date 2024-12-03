@@ -1,3 +1,5 @@
+use base64::prelude::*;
+use http::header;
 use httpmock::prelude::*;
 use httpmock::{
     Method::{CONNECT, HEAD, PATCH},
@@ -118,18 +120,38 @@ impl HttpMockServer {
         })
     }
 
-    pub fn auth(&self) -> Mock {
+    pub fn basic_auth(&self) -> Mock {
+        let base64_user_pwd = BASE64_STANDARD.encode(b"isaac:rayne");
         self.server.mock(|when, then| {
-            when.method(POST).path("/auth");
+            when.method(GET).path("/auth/basic/endpoint").header(
+                header::AUTHORIZATION.as_str(),
+                format!("Basic {base64_user_pwd}"),
+            );
+            then.status(200);
+        })
+    }
+
+    pub fn bearer_auth(&self) -> Mock {
+        self.server.mock(|when, then| {
+            when.method(GET)
+                .path("/auth/bearer/endpoint")
+                .header(header::AUTHORIZATION.as_str(), "Bearer token-123");
+            then.status(200);
+        })
+    }
+
+    pub fn session_auth(&self) -> Mock {
+        self.server.mock(|when, then| {
+            when.method(POST).path("/auth/session");
             then.status(200)
                 .header("Set-Cookie", "SESSIONID=123; HttpOnly");
         })
     }
 
-    pub fn authenticated_request(&self) -> Mock {
+    pub fn session_based_request(&self) -> Mock {
         self.server.mock(|when, then| {
             when.method(GET)
-                .path("/authenticated/endpoint")
+                .path("/auth/session/endpoint")
                 .cookie("SESSIONID", "123");
             then.status(200);
         })

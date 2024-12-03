@@ -157,7 +157,7 @@ predicate!(
 );
 
 #[cfg(test)]
-pub mod tests {
+mod tests {
     use super::{Expression, Predicate, Range};
     use serde_json::Value;
     use test_case::test_case;
