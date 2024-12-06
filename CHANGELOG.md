@@ -1,5 +1,22 @@
 # `grillon` changelog
 
+## [v0.6.0] - 2024-12-07
+
+- [Diff](/../../compare/v0.5.0...v0.6.0)
+- [Milestone](/../../milestone/4)
+
+[v0.6.0]: /../../tree/v0.6.0
+
+### Added
+
+- Add `json_path` matching capabilities ([#87] [#88])
+- Add built-in authentication methods `basic_auth` and `bearer_auth` ([#37], [#89])
+
+[#37]: /../../issues/37
+[#87]: /../../issues/87
+[#88]: /../../pull/88
+[#89]: /../../pull/89
+
 ## [v0.5.0] - 2024-10-27
 
 - [Diff](/../../compare/v0.4.0...v0.5.0)
