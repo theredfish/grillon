@@ -171,11 +171,12 @@ further changes to the structure of the request when users want to run assertion
 <p>Refer to the <a href="./requests.html">Requests</a> chapter for more information about how to configure your
 requests. Note that at the moment Grillon only supports HTTP(s), but later we will extend the use
 for different protocols and frameworks such as gRPC or SSL.</p>
-<h3 id="store-cookies"><a class="header" href="#store-cookies">Store cookies</a></h3>
+<h3 id="session-and-authentication"><a class="header" href="#session-and-authentication">Session and authentication</a></h3>
+<h4 id="store-cookies"><a class="header" href="#store-cookies">Store cookies</a></h4>
 <p>You can update your client to enable or disable the cookie store with <code>store_cookies</code>:</p>
 <pre><code class="language-rust">// If an http response contains `Set-Cookie` headers, then cookies will be saved for
 // subsequent http requests.
-let grillon = Grillon::new(&quot;https://server.com&quot;)?.store_cookies(true)?;
+let grillon = Grillon::new(&quot;https://server.com/&quot;)?.store_cookies(true)?;
 
 grillon.post(&quot;auth&quot;).assert().await.headers(contains(vec![(
     SET_COOKIE,
@@ -188,6 +189,24 @@ grillon
     .await
     .status(is_success());</code></pre>
 <p>The cookie store is disabled by default.</p>
+<h4 id="basic-auth"><a class="header" href="#basic-auth">Basic Auth</a></h4>
+<p>You can easily configure your headers with the <code>basic_auth</code> function to set a per-request authentication:</p>
+<pre><code class="language-rust">Grillon::new(&quot;https://server.com/&quot;)?
+    .get(&quot;auth/basic/endpoint&quot;)
+    .basic_auth(&quot;isaac&quot;, Some(&quot;rayne&quot;))
+    .assert()
+    .await
+    .status(is_success());</code></pre>
+<p>Note that the header is considered as sensitive and will not be logged.</p>
+<h4 id="bearer-token"><a class="header" href="#bearer-token">Bearer token</a></h4>
+<p>You can also use the <code>bearer_auth</code> function to set your <code>Bearer</code> header per-request:</p>
+<pre><code class="language-rust">Grillon::new(&quot;https://server.com/&quot;)?
+    .get(&quot;auth/bearer/endpoint&quot;)
+    .bearer_auth(&quot;token-123&quot;)
+    .assert()
+    .await
+    .status(is_success());</code></pre>
+<p>This header is also considered as sensitive and will not be logged.</p>
 <h2 id="use-a-different-client"><a class="header" href="#use-a-different-client">Use a different client</a></h2>
 <p>When you want to use a different client to send your requests and handle the responses, you should
 use the internal http response representation to assert. For that you need to use the
