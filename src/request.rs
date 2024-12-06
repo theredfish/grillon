@@ -2,6 +2,7 @@
 //! for endpoints under tests.
 //!
 //! Currently powered by the [`Reqwest`](https://github.com/seanmonstar/reqwest) HTTP client.
+use std::fmt::Display;
 use std::{str::FromStr, time::Instant};
 
 use crate::assertion::{Assertion, AssertionResult, Hand, UnprocessableReason};
@@ -21,6 +22,19 @@ const METHODS_NO_BODY: &[Method] = &[
     Method::OPTIONS,
     Method::TRACE,
 ];
+
+/// Represents the basic authentication information for a [`Request`].
+///
+/// [`Request`]: crate::Request
+pub struct BasicAuth {
+    username: String,
+    password: Option<String>,
+}
+
+/// Represents the bearer authentication information for a [`Request`].
+///
+/// [`Request`]: crate::Request
+pub struct BearerToken(String);
 
 /// A generic http request headers representation.
 ///
@@ -82,6 +96,10 @@ pub struct Request<'c> {
     /// The log settings that will be used to output test results
     /// when asserting the http response.
     pub log_settings: &'c LogSettings,
+    /// Basic authenthication information.
+    pub basic_auth: Option<BasicAuth>,
+    /// Bearer authentication token.
+    pub bearer_auth: Option<BearerToken>,
 }
 
 impl Request<'_> {
@@ -140,6 +158,35 @@ impl Request<'_> {
         self
     }
 
+    /// Enable HTTP basic authentication.
+    ///
+    /// Basic authentication will automatically be considered as a sensitive
+    /// header.
+    pub fn basic_auth<U, P>(mut self, username: U, password: Option<P>) -> Self
+    where
+        U: AsRef<str> + Display,
+        P: AsRef<str> + Display,
+    {
+        self.basic_auth = Some(BasicAuth {
+            username: username.to_string(),
+            password: password.map(|pwd| pwd.to_string()),
+        });
+
+        self
+    }
+
+    /// Enable HTTP bearer authentication.
+    ///
+    /// Bearer authentication will automatically be considered as a sensitive
+    /// header.
+    pub fn bearer_auth<T>(mut self, token: T) -> Self
+    where
+        T: AsRef<str> + Display,
+    {
+        self.bearer_auth = Some(BearerToken(token.to_string()));
+        self
+    }
+
     /// Sends the http request and creates an instance of [`Assert`] with the http response.
     ///
     /// This function consumes the [`Request`].
@@ -177,11 +224,22 @@ impl Request<'_> {
             }
         };
 
-        let req = self
+        let mut req = self
             .client
             .request(self.method, self.url)
             .body(self.payload.unwrap_or_default())
             .headers(headers);
+
+        // Check for auth settings
+        if let Some(basic_auth) = self.basic_auth {
+            let BasicAuth { username, password } = basic_auth;
+            req = req.basic_auth(username, password);
+        }
+
+        if let Some(bearer_auth) = self.bearer_auth {
+            let BearerToken(token) = bearer_auth;
+            req = req.bearer_auth(token);
+        }
 
         let now = Instant::now();
         let response = match req.send().await {

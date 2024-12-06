@@ -38,14 +38,16 @@ Refer to the [Requests](./requests.md) chapter for more information about how to
 requests. Note that at the moment Grillon only supports HTTP(s), but later we will extend the use
 for different protocols and frameworks such as gRPC or SSL.
 
-### Store cookies
+### Session and authentication
+
+#### Store cookies
 
 You can update your client to enable or disable the cookie store with `store_cookies`:
 
 ```rust
 // If an http response contains `Set-Cookie` headers, then cookies will be saved for
 // subsequent http requests.
-let grillon = Grillon::new("https://server.com")?.store_cookies(true)?;
+let grillon = Grillon::new("https://server.com/")?.store_cookies(true)?;
 
 grillon.post("auth").assert().await.headers(contains(vec![(
     SET_COOKIE,
@@ -60,6 +62,36 @@ grillon
 ```
 
 The cookie store is disabled by default.
+
+#### Basic Auth
+
+You can easily configure your headers with the `basic_auth` function to set a per-request authentication:
+
+```rust
+Grillon::new("https://server.com/")?
+    .get("auth/basic/endpoint")
+    .basic_auth("isaac", Some("rayne"))
+    .assert()
+    .await
+    .status(is_success());
+```
+
+Note that the header is considered as sensitive and will not be logged.
+
+#### Bearer token
+
+You can also use the `bearer_auth` function to set your `Bearer` header per-request:
+
+```rust
+Grillon::new("https://server.com/")?
+    .get("auth/bearer/endpoint")
+    .bearer_auth("token-123")
+    .assert()
+    .await
+    .status(is_success());
+```
+
+This header is also considered as sensitive and will not be logged.
 
 ## Use a different client
 

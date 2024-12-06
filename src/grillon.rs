@@ -238,6 +238,8 @@ impl Grillon {
             payload: None,
             client: &self.client,
             log_settings: &self.log_settings,
+            basic_auth: None,
+            bearer_auth: None,
         }
     }
 }
