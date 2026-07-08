@@ -1,5 +1,18 @@
 # `grillon` changelog
 
+## [v0.6.1] - Unreleased
+
+- [Diff](/../../compare/v0.6.0...v0.6.1)
+
+[v0.6.1]: /../../tree/v0.6.1
+
+### Changed
+
+- Update direct dependencies, including `jsonpath-rust`, `jsonschema`, `reqwest`, and `httpmock`.
+- Keep JSONPath assertion results compatible with `jsonpath-rust` 1.x.
+- Migrate JSON Schema assertion output to the current `jsonschema` evaluation API.
+- Update the Lychee link checker GitHub Action.
+
 ## [v0.6.0] - 2024-12-07
 
 - [Diff](/../../compare/v0.5.0...v0.6.0)

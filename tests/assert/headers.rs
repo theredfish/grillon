@@ -117,7 +117,7 @@ async fn invalid_request_headers() -> Result<()> {
         .headers(is(vec![("ééç", "header value")]))
         .status(is(204));
 
-    mock.assert_hits(0);
+    mock.assert_calls(0);
 
     Ok(())
 }

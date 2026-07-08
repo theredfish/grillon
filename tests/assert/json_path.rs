@@ -175,7 +175,7 @@ async fn json_path_with_invalid_regex_pattern() {
         .await
         .json_path("$.name", does_not_match(r"\"));
 
-    mock.assert_hits(0);
+    mock.assert_calls(0);
 }
 
 #[tokio::test]
@@ -192,5 +192,5 @@ async fn json_path_regex_fails_with_null_value() {
         // note the importance of the double quotes to get a valid json `Value`
         .json_path("$.unknown", matches(r#""Isaac""#));
 
-    mock.assert_hits(0);
+    mock.assert_calls(0);
 }
