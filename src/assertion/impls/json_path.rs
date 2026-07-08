@@ -5,7 +5,7 @@ use crate::{
     },
     dsl::{json_path::JsonPathResult, Part, Predicate},
 };
-use jsonschema::{output::BasicOutput, Validator};
+use jsonschema::Validator;
 use regex::Regex;
 use serde_json::{json, Value};
 use std::{fs, path::PathBuf};
@@ -210,8 +210,8 @@ impl JsonSchema<Value> for JsonPathResult<'_, Value> {
                     left: Hand::Compound(Value::String(self.path.to_string()), self.value.clone()),
                     right: Hand::Empty,
                     result: AssertionResult::Unprocessable(UnprocessableReason::InvalidJsonSchema(
-                        err.schema_path.to_string(),
-                        err.instance_path.to_string(),
+                        err.schema_path().to_string(),
+                        err.instance_path().to_string(),
                     )),
                 }
             }
@@ -221,7 +221,8 @@ impl JsonSchema<Value> for JsonPathResult<'_, Value> {
         let result = schema.is_valid(&self.value);
 
         // Generate a json output of the json schema result
-        let output: BasicOutput<'_> = schema.apply(&self.value).basic();
+        let evaluation = schema.evaluate(&self.value);
+        let output = evaluation.list();
         let output = match serde_json::to_value(output) {
             Ok(json_output) => json_output,
             Err(_) => {
@@ -653,7 +654,7 @@ mod tests {
     mod is_eq {
         use super::{json_stub, JsonPathResult};
         use crate::assertion::traits::Equality;
-        use jsonpath_rust::JsonPathQuery;
+        use crate::dsl::json_path::JsonPathQueryExt;
         use serde_json::json;
         use std::path::PathBuf;
 
@@ -806,7 +807,7 @@ mod tests {
     mod is_ne {
         use super::{json_stub, JsonPathResult};
         use crate::assertion::traits::Equality;
-        use jsonpath_rust::JsonPathQuery;
+        use crate::dsl::json_path::JsonPathQueryExt;
         use serde_json::json;
         use std::path::PathBuf;
 
@@ -889,7 +890,7 @@ mod tests {
 
         use super::{json, json_stub, JsonPathResult};
         use crate::assertion::traits::JsonSchema;
-        use jsonpath_rust::JsonPathQuery;
+        use crate::dsl::json_path::JsonPathQueryExt;
 
         #[test]
         fn impl_json_schema_is_valid() {
@@ -1008,7 +1009,7 @@ mod tests {
     mod serialization {
         use super::{json_stub, JsonPathResult};
         use crate::assertion::traits::Equality;
-        use jsonpath_rust::JsonPathQuery;
+        use crate::dsl::json_path::JsonPathQueryExt;
         use serde_json::json;
 
         #[test]
@@ -1080,7 +1081,7 @@ mod tests {
     mod has_or_has_not {
         use super::{json_stub, JsonPathResult};
         use crate::assertion::traits::Container;
-        use jsonpath_rust::JsonPathQuery;
+        use crate::dsl::json_path::JsonPathQueryExt;
         use serde_json::json;
         use std::path::PathBuf;
 
@@ -1221,7 +1222,7 @@ mod tests {
     mod matches {
         use super::JsonPathResult;
         use crate::assertion::traits::Matching;
-        use jsonpath_rust::JsonPathQuery;
+        use crate::dsl::json_path::JsonPathQueryExt;
         use serde_json::json;
 
         #[test]

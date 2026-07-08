@@ -1,6 +1,6 @@
 [package]
 name = "grillon"
-version = "0.6.0"
+version = "0.6.1"
 authors = ["theredfish <did.julian@gmail.com>"]
 description = "Grillon offers an elegant and natural way to approach API testing in Rust."
 repository = "https://github.com/theredfish/grillon"
@@ -12,23 +12,23 @@ include = ["/src", "LICENSE*", "README.md"]
 edition = "2021"
 
 [dependencies]
-serde = { version = "1.0.215", features = ["derive"] }
-serde_json = "1.0.133"
-http = "1.2.0"
-url = "2.5.4"
-futures = "0.3.31"
-strum = { version = "0.27.0", features = ["derive"] }
-strum_macros = "0.27.0"
-jsonpath-rust = "0.7.3"
-jsonschema = "0.30.0"
-reqwest = { version = "0.12.9", features = ["json", "cookies"] }
-thiserror = "2.0.4"
-regex = "1.11.1"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.150"
+http = "1.4.2"
+url = "2.5.8"
+futures = "0.3.32"
+strum = { version = "0.28.0", features = ["derive"] }
+strum_macros = "0.28.0"
+jsonpath-rust = "1.0.4"
+jsonschema = "0.47.0"
+reqwest = { version = "0.13.4", features = ["json", "cookies"] }
+thiserror = "2.0.18"
+regex = "1.12.4"
 
 [dev-dependencies]
-tokio = { version = "1.42.0", features = ["macros"] }
-httpmock = "0.7.0"
-async-trait = "0.1.83"
+tokio = { version = "1.52.3", features = ["macros"] }
+httpmock = "0.8.3"
+async-trait = "0.1.89"
 test-case = "3.3.1"
 surf = "2.3.2"
 base64 = "0.22.1"

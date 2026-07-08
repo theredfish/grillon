@@ -30,7 +30,7 @@ Add `grillon` to `Cargo.toml`
 
 ```toml
 [dev-dependencies]
-grillon = "0.6.0"
+grillon = "0.6.1"
 tokio = { version = "1", features = ["macros"] }
 ```
 

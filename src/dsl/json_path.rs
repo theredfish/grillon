@@ -28,6 +28,20 @@ pub struct JsonPathResult<'p, T> {
     pub value: T,
 }
 
+pub(crate) trait JsonPathQueryExt {
+    fn path(&self, path: &str) -> Result<Value, String>;
+}
+
+impl JsonPathQueryExt for Value {
+    fn path(&self, path: &str) -> Result<Value, String> {
+        use jsonpath_rust::JsonPath;
+
+        self.query(path)
+            .map(|values| Value::Array(values.into_iter().cloned().collect()))
+            .map_err(|err| err.to_string())
+    }
+}
+
 impl<'p, T> JsonPathResult<'p, T> {
     /// Creates a new instance of `JsonPathResult` that is
     /// wrapping the given `path` and the given `value`.

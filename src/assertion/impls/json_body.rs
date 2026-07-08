@@ -5,7 +5,7 @@ use crate::{
     },
     dsl::{Part, Predicate},
 };
-use jsonschema::{output::BasicOutput, validator_for};
+use jsonschema::validator_for;
 use serde_json::Value;
 use std::{fs, path::PathBuf};
 
@@ -208,8 +208,8 @@ impl JsonSchema<Value> for Value {
                     left: Hand::Left(self.clone()),
                     right: Hand::Empty,
                     result: AssertionResult::Unprocessable(UnprocessableReason::InvalidJsonSchema(
-                        err.instance_path.to_string(),
-                        err.instance.to_string(),
+                        err.instance_path().to_string(),
+                        err.instance().to_string(),
                     )),
                 }
             }
@@ -219,7 +219,8 @@ impl JsonSchema<Value> for Value {
         let result = schema.is_valid(self);
 
         // Generate a json output of the json schema result
-        let output: BasicOutput<'_> = schema.apply(self).basic();
+        let evaluation = schema.evaluate(self);
+        let output = evaluation.list();
         let output = match serde_json::to_value(output) {
             Ok(json_output) => json_output,
             Err(_) => {

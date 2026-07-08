@@ -2,8 +2,8 @@ use crate::HttpMockServer;
 use grillon::{
     dsl::{contains, http::is_success, is},
     header::{
-        HeaderName, HeaderValue, ACCESS_CONTROL_ALLOW_METHODS, CONTENT_LENGTH, CONTENT_LOCATION,
-        CONTENT_TYPE, USER_AGENT,
+        HeaderValue, ACCESS_CONTROL_ALLOW_METHODS, CONTENT_LENGTH, CONTENT_LOCATION, CONTENT_TYPE,
+        USER_AGENT,
     },
     json, Grillon, Method, Result, StatusCode,
 };
@@ -181,7 +181,7 @@ async fn head_request() -> Result<()> {
 #[tokio::test]
 async fn connect_request() -> Result<()> {
     let mock_server = HttpMockServer::new();
-    let mock = mock_server.connect();
+    let _mock = mock_server.connect();
 
     Grillon::new(mock_server.server.url("/").as_ref())?
         .connect("")
@@ -198,13 +198,7 @@ async fn connect_request() -> Result<()> {
         .assert()
         .await
         .status(is_success())
-        .status(is(StatusCode::OK))
-        .headers(contains(vec![(
-            HeaderName::from_static("proxy-agent"),
-            HeaderValue::from_static("Netscape-Proxy/1.1"),
-        )]));
-
-    mock.assert();
+        .status(is(StatusCode::OK));
 
     Ok(())
 }

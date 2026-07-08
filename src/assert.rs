@@ -110,8 +110,8 @@ impl Assert {
     ///     .await
     ///     .status(is_between(200, 299))
     ///     .assert_fn(|assert| {
-    ///         assert!(!assert.headers.is_empty());
-    ///         assert!(assert.status == StatusCode::CREATED);
+    ///         assert!(!assert.headers.as_ref().unwrap().is_empty());
+    ///         assert_eq!(assert.status, Some(StatusCode::CREATED));
     ///         assert!(assert.json.is_some());
     ///
     ///         println!("Json response : {:#?}", assert.json);
@@ -173,7 +173,7 @@ impl Assert {
     where
         T: JsonPathDsl<Value>,
     {
-        use jsonpath_rust::JsonPathQuery;
+        use crate::dsl::json_path::JsonPathQueryExt;
 
         if let Some(json) = &self.json {
             // Check for empty json body

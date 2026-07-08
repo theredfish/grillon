@@ -24,7 +24,7 @@ impl HttpMockServer {
         }
     }
 
-    pub fn get_valid_user(&self) -> Mock {
+    pub fn get_valid_user(&self) -> Mock<'_> {
         self.server.mock(|when, then| {
             when.method(GET).path("/users/1");
             then.status(200)
@@ -34,7 +34,7 @@ impl HttpMockServer {
         })
     }
 
-    pub fn post_valid_user(&self) -> Mock {
+    pub fn post_valid_user(&self) -> Mock<'_> {
         self.server.mock(|when, then| {
             when.method(POST)
                 .path("/users")
@@ -47,7 +47,7 @@ impl HttpMockServer {
         })
     }
 
-    pub fn put_valid_user(&self) -> Mock {
+    pub fn put_valid_user(&self) -> Mock<'_> {
         self.server.mock(|when, then| {
             when.method(PUT)
                 .path("/users/1")
@@ -58,14 +58,14 @@ impl HttpMockServer {
         })
     }
 
-    pub fn delete_valid_user(&self) -> Mock {
+    pub fn delete_valid_user(&self) -> Mock<'_> {
         self.server.mock(|when, then| {
             when.method(DELETE).path("/users/1");
             then.status(204);
         })
     }
 
-    pub fn patch_valid_user(&self) -> Mock {
+    pub fn patch_valid_user(&self) -> Mock<'_> {
         self.server.mock(|when, then| {
             when.method(PATCH)
                 .header("content-type", "application/json-patch+json")
@@ -79,7 +79,7 @@ impl HttpMockServer {
         })
     }
 
-    pub fn options(&self) -> Mock {
+    pub fn options(&self) -> Mock<'_> {
         self.server.mock(|when, then| {
             when.method(OPTIONS).path("/");
             then.status(204).header(
@@ -89,38 +89,38 @@ impl HttpMockServer {
         })
     }
 
-    pub fn head(&self) -> Mock {
+    pub fn head(&self) -> Mock<'_> {
         self.server.mock(|when, then| {
             when.method(HEAD).path("/movies/1");
             then.status(204).header("content-length", "91750400");
         })
     }
 
-    pub fn connect(&self) -> Mock {
+    pub fn connect(&self) -> Mock<'_> {
         self.server.mock(|when, then| {
             when.method(CONNECT).header(
                 "user-agent",
                 "Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko",
             );
-            then.status(200).header("proxy-agent", "Netscape-Proxy/1.1");
+            then.status(200);
         })
     }
 
-    pub fn get_empty_response(&self) -> Mock {
+    pub fn get_empty_response(&self) -> Mock<'_> {
         self.server.mock(|when, then| {
             when.method(GET).path("/empty");
             then.status(200);
         })
     }
 
-    pub fn server_error(&self) -> Mock {
+    pub fn server_error(&self) -> Mock<'_> {
         self.server.mock(|when, then| {
             when.method(GET).path("/server/error");
             then.status(500);
         })
     }
 
-    pub fn basic_auth(&self) -> Mock {
+    pub fn basic_auth(&self) -> Mock<'_> {
         let base64_user_pwd = BASE64_STANDARD.encode(b"isaac:rayne");
         self.server.mock(|when, then| {
             when.method(GET).path("/auth/basic/endpoint").header(
@@ -131,7 +131,7 @@ impl HttpMockServer {
         })
     }
 
-    pub fn bearer_auth(&self) -> Mock {
+    pub fn bearer_auth(&self) -> Mock<'_> {
         self.server.mock(|when, then| {
             when.method(GET)
                 .path("/auth/bearer/endpoint")
@@ -140,7 +140,7 @@ impl HttpMockServer {
         })
     }
 
-    pub fn session_auth(&self) -> Mock {
+    pub fn session_auth(&self) -> Mock<'_> {
         self.server.mock(|when, then| {
             when.method(POST).path("/auth/session");
             then.status(200)
@@ -148,7 +148,7 @@ impl HttpMockServer {
         })
     }
 
-    pub fn session_based_request(&self) -> Mock {
+    pub fn session_based_request(&self) -> Mock<'_> {
         self.server.mock(|when, then| {
             when.method(GET)
                 .path("/auth/session/endpoint")
